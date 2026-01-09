@@ -1,0 +1,14 @@
+body {
+    margin: 0 auto;
+    padding: 0;
+}
+
+#left_sidebar_content {
+    width: 300px;
+}
+
+#make_fab {
+    position: absolute;
+    right: 30px;
+    bottom: 30px;
+}

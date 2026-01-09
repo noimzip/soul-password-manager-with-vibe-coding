@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: content: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <title>Soul Password Manager</title>
+
+    <!--scripts-->
+    <!---->
+    <script src="./js/script.js" defer></script>
+    <script type="module" src="./node_modules/@m3e/icon/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/button/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/fab/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/fab-menu/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/dialog/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/icon-button/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/slider/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/form-field/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/icon-button/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/app-bar/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/nav-menu/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/divider/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/heading/dist/index.min.js"></script>
+    <script type="module" src="./node_modules/@m3e/stepper/dist/index.min.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "lit": "https://cdn.jsdelivr.net/npm/lit@3.3.2/+esm",
+        "@m3e/core": "./node_modules/@m3e/core/dist/index.js",
+        "@m3e/core/a11y": "./node_modules/@m3e/core/dist/a11y.js",
+        "@m3e/core/anchoring": "./node_modules/@m3e/core/dist/anchoring.js",
+        "@m3e/core/bidi": "./node_modules/@m3e/core/dist/bidi.js",
+        "@m3e/core/layout": "./node_modules/@m3e/core/dist/layout.js",
+        "@m3e/core/platform": "./node_modules/@m3e/core/dist/platform.js"
+      }
+    }
+    </script>
+
+    <!--stylesheets-->
+    <link rel="stylesheet" href="./css/style.css">
+    <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0"
+    />
+  </head>
+  <body>
+	<header>
+      <m3e-app-bar>
+        <m3e-icon-button slot="leading-icon" aria-label="Back">
+          <m3e-icon name="arrow_back"></m3e-icon>
+        </m3e-icon-button>
+        <span slot="title">Soul Password Manager</span>
+        <m3e-form-field variant="outlined" slot="trailing-icon">
+          <input id="fld" placeholder="Search here"/>
+        </m3e-form-field>
+        <m3e-icon-button variant="filled" slot="trailing-icon" id="theme_toggle_btn">
+          <m3e-icon name="dark_mode"></m3e-icon>
+        </m3e-icon-button>
+        <m3e-icon-button variant="filled" slot="trailing-icon" id="logout_btn">
+          <m3e-icon name="logout"></m3e-icon>
+        </m3e-icon-button>
+      </m3e-app-bar>
+    </header>
+    
+    <section id="left_sidebar_content">
+      <m3e-nav-menu>
+        <m3e-nav-menu-item-group id="password_list">
+          <m3e-heading slot="label" variant="label" size="large">Passwords</m3e-heading>
+          <m3e-nav-menu-item>
+            <m3e-icon slot="icon" name="g_translate"></m3e-icon>
+            <span slot="label">Google.com</span>
+          </m3e-nav-menu-item>
+          <!-- Additional items omitted for brevity -->
+        </m3e-nav-menu-item-group>
+      </m3e-nav-menu>
+    </section>
+
+    <section id="center_content">
+
+    </section>
+
+    <section id="right_sidebar_content">
+
+    </section>
+
+    <footer>
+
+    </footer>
+
+    <m3e-fab id="make_fab" variant="primary" size="large">
+      <m3e-fab-menu-trigger for="fab_menu">
+        <m3e-icon name="add"></m3e-icon>
+      </m3e-fab-menu-trigger>
+    </m3e-fab>
+
+    <m3e-fab-menu id="fab_menu" variant="primary">
+      <m3e-fab-menu-item>
+        <m3e-icon slot="icon" name="person" filled></m3e-icon>
+        <m3e-dialog-trigger for="add_password_dialog">
+          ログイン情報
+        </m3e-dialog-trigger>
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item>
+        <m3e-icon slot="icon" name="notes" filled></m3e-icon>
+        メモ
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item>
+        <m3e-icon slot="icon" name="badge" filled></m3e-icon>
+        個人情報
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item>
+        <m3e-icon slot="icon" name="key" filled></m3e-icon>
+        <m3e-dialog-trigger for="pass_maker">
+        パスワード生成
+        </m3e-dialog-trigger>
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item>
+        <m3e-icon slot="icon" name="check" filled></m3e-icon>
+        <m3e-dialog-trigger for="pass_checker">
+          パスワード安全性チェッカー
+        </m3e-dialog-trigger>
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item id="export_json_btn">
+        <m3e-icon slot="icon" name="file_download" filled></m3e-icon>
+        Export JSON
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item id="import_json_btn">
+        <m3e-icon slot="icon" name="file_upload" filled></m3e-icon>
+        Import JSON
+      </m3e-fab-menu-item>
+      <m3e-fab-menu-item>
+        <m3e-icon slot="icon" name="settings" filled></m3e-icon>
+        <m3e-dialog-trigger for="settings_dialog">
+          Settings
+        </m3e-dialog-trigger>
+      </m3e-fab-menu-item>
+    </m3e-fab-menu>
+
+    <input type="file" id="import_json_input" accept=".json" style="display: none;">
+
+    <m3e-dialog id="pass_maker" dismissible>
+      <span slot="header">パスワードの自動生成</span>
+      <!-- Content omitted for brevity -->
+       <m3e-form-field variant="outlined" label="Length">
+         <input id="password_length" type="number" value="16" min="4" max="2048">
+       </m3e-form-field>
+       大文字
+       <m3e-form-field label="Uppercase">
+         <input id="include_uppercase" type="checkbox" checked>
+       </m3e-form-field>
+       数字
+       <m3e-form-field label="Numbers">
+         <input id="include_numbers" type="checkbox" checked>
+       </m3e-form-field>
+       記号
+       <m3e-form-field label="Symbols">
+         <input id="include_symbols" type="checkbox">
+       </m3e-form-field>
+       <p id="auto_make_password"></p>
+       <m3e-button id="copy_password_btn" variant="tonal">
+         <m3e-icon slot="icon" name="content_copy"></m3e-icon>
+         Copy
+       </m3e-button>
+       <m3e-button id="regenerate_password_btn" variant="tonal">
+         <m3e-icon slot="icon" name="refresh"></m3e-icon>
+         Regenerate
+       </m3e-button>
+
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="ok">Close</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="pass_checker" dismissible>
+      <span slot="header">パスワードの安全性チェック</span>
+      <!-- Content omitted for brevity -->
+      <m3e-form-field variant="outlined">
+        <input id="pass_check_form" placeholder="Enter your password here"/>
+      </m3e-form-field>
+      <p id="pass_check_result" style="font-weight: bold; min-height: 1.5em;"></p>
+      <p id="pass_crack_time"></p>
+
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="ok">Close</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="add_password_dialog" dismissible>
+      <span slot="header">新しいパスワードを追加</span>
+      <m3e-form-field variant="outlined" label="Service Name">
+        <input id="new_pass_title" type="text" placeholder="サービス名">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Username">
+        <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Password">
+        <input id="new_pass_value" type="password" placeholder="パスワード">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="TOTP Secret (Optional)">
+        <input id="new_pass_secret" type="text" placeholder="TOTP 秘密鍵">
+      </m3e-form-field>
+      <div slot="actions">
+        <m3e-button variant="text">
+          <m3e-dialog-action return-value="cancel">Cancel</m3e-dialog-action>
+        </m3e-button>
+        <m3e-button variant="filled" id="save_new_password_btn">
+          <m3e-dialog-action return-value="save">Save</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="detail_password_dialog" dismissible>
+      <span slot="header">パスワード詳細</span>
+      <m3e-form-field variant="outlined" label="Service Name">
+        <input id="detail_pass_title" type="text" placeholder="サービス名">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Username">
+        <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Password">
+        <input id="detail_pass_value" type="text" placeholder="パスワード">
+      </m3e-form-field>
+      TOTP 秘密鍵
+      <p id="detail_pass_strength" style="font-weight: bold; margin-top: -8px; margin-bottom: 4px; font-size: 12px; min-height: 1.5em;"></p>
+      <p id="detail_pass_crack_time" style="font-size: 12px; color: #666; margin-bottom: 16px;"></p>
+      <m3e-form-field variant="outlined" label="TOTP Secret">
+        <input id="detail_pass_secret" type="text">
+      </m3e-form-field>
+      <div id="totp_display_area" style="display: none; margin-top: 16px; text-align: center;">
+        <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; cursor: pointer;" id="totp_code" title="Click to copy"></div>
+        <div style="font-size: 12px; color: #666;" id="totp_timer"></div>
+      </div>
+      <div slot="actions">
+        <m3e-button variant="text" id="delete_password_btn" style="--md-sys-color-primary: #b3261e;">
+          <m3e-icon slot="icon" name="delete"></m3e-icon>
+          Delete
+        </m3e-button>
+        <m3e-button variant="filled" id="update_password_btn">
+          <m3e-icon slot="icon" name="save"></m3e-icon>
+          Update
+        </m3e-button>
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="close">Close</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="settings_dialog" dismissible>
+      <span slot="header">Settings</span>
+      
+      <h3>Change Master Password</h3>
+      <m3e-form-field variant="outlined" label="Current Password">
+        <input id="setting_current_pass" type="password" placeholder="現在のパスワード">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="New Password">
+        <input id="setting_new_pass" type="password" placeholder="新規パスワード">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Confirm New Password">
+        <input id="setting_new_pass_confirm" type="password" placeholder="新規パスワードの確認">
+      </m3e-form-field>
+      <div style="text-align: right; margin-bottom: 16px;">
+        <m3e-button variant="filled" id="update_master_pass_btn">
+          Update Password
+        </m3e-button>
+      </div>
+
+      <m3e-divider></m3e-divider>
+
+      <h3 style="color: #b3261e;">Danger Zone</h3>
+      <p>すべてのパスワードと設定を削除し、アプリを初期化します。</p>
+      <m3e-button variant="filled" id="delete_all_data_btn" style="--md-sys-color-primary: #b3261e; width: 100%;">
+        <m3e-icon slot="icon" name="delete_forever"></m3e-icon>
+        Delete All Data
+      </m3e-button>
+
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="close">Close</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="setup_dialog" disable-close>
+      <span slot="header">初期設定</span>
+      <p>マスターユーザー名とパスワードを設定してください。</p>
+      <m3e-form-field variant="outlined" label="Username">
+        <input id="setup_username" type="text" placeholder="ユーザー名">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Master Password">
+        <input id="setup_password" type="password" placeholder="マスターパスワード">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Confirm Password">
+        <input id="setup_password_confirm" type="password" placeholder="マスターパスワードの確認">
+      </m3e-form-field>
+      <div slot="actions">
+        <m3e-button variant="filled" id="setup_btn">
+          Setup
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="login_dialog" disable-close>
+      <span slot="header">ログイン</span>
+      <m3e-form-field variant="outlined" label="Username">
+        <input id="login_username" type="text" placeholder="ユーザー名">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Master Password">
+        <input id="login_password" type="password" placeholder="マスターパスワード">
+      </m3e-form-field>
+      <div slot="actions">
+        <m3e-button variant="filled" id="login_btn">
+          Login
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="warning_dialog" dismissible>
+      <span slot="header">Ver 26.01.10 (Unstable)</span>
+      <h1>現在のSoulはデモ版です。</h1>
+      開発者向けに設計されていて操作が煩雑な上、期待通りに動作しない可能性が高く、セキュリティやプライバシーも十分ではありません。
+      <h2>はっきり言って使い物になりません。<br><br>他のパスワードマネージャの使用を強く推奨します。</h2>
+      <h5>おすすめパスワードマネージャー:Bitwarden, Proton Pass, KeePass</h5>
+      <h5>おすすめしないパスワードマネージャー:このパスワードマネージャー, 紙で管理するやつ</h5>
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="ok">Close</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+  </body>
+</html>
