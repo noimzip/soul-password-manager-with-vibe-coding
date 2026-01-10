@@ -22,7 +22,6 @@
     <script type="module" src="./node_modules/@m3e/nav-menu/dist/index.min.js"></script>
     <script type="module" src="./node_modules/@m3e/divider/dist/index.min.js"></script>
     <script type="module" src="./node_modules/@m3e/heading/dist/index.min.js"></script>
-    <script type="module" src="./node_modules/@m3e/stepper/dist/index.min.js"></script>
     <script type="importmap">
     {
       "imports": {
@@ -65,12 +64,11 @@
     
     <section id="left_sidebar_content">
       <m3e-nav-menu>
+        <m3e-nav-menu-item-group id="favorite_list">
+          <m3e-heading slot="label" variant="label" size="large">Favorite</m3e-heading>
+        </m3e-nav-menu-item-group>
         <m3e-nav-menu-item-group id="password_list">
           <m3e-heading slot="label" variant="label" size="large">Passwords</m3e-heading>
-          <m3e-nav-menu-item>
-            <m3e-icon slot="icon" name="g_translate"></m3e-icon>
-            <span slot="label">Google.com</span>
-          </m3e-nav-menu-item>
           <!-- Additional items omitted for brevity -->
         </m3e-nav-menu-item-group>
       </m3e-nav-menu>
@@ -158,6 +156,8 @@
          <input id="include_symbols" type="checkbox">
        </m3e-form-field>
        <p id="auto_make_password"></p>
+       <p id="maker_pass_strength" style="font-weight: bold; margin-top: -8px; margin-bottom: 4px; font-size: 12px; min-height: 1.5em;"></p>
+       <p id="maker_pass_crack_time" style="font-size: 12px; color: #666; margin-bottom: 16px;"></p>
        <m3e-button id="copy_password_btn" variant="tonal">
          <m3e-icon slot="icon" name="content_copy"></m3e-icon>
          Copy
@@ -195,12 +195,18 @@
       <m3e-form-field variant="outlined" label="Service Name">
         <input id="new_pass_title" type="text" placeholder="サービス名">
       </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Username">
-        <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Password">
-        <input id="new_pass_value" type="password" placeholder="パスワード">
-      </m3e-form-field>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <m3e-form-field variant="outlined" label="Username" style="flex: 1;">
+          <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
+        </m3e-form-field>
+        <m3e-icon-button id="fill_new_pass_default_username_btn" title="Fill Default Username"><m3e-icon name="person_add"></m3e-icon></m3e-icon-button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <m3e-form-field variant="outlined" label="Password" style="flex: 1;">
+          <input id="new_pass_value" type="password" placeholder="パスワード">
+        </m3e-form-field>
+        <m3e-icon-button id="generate_new_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
+      </div>
       <m3e-form-field variant="outlined" label="TOTP Secret (Optional)">
         <input id="new_pass_secret" type="text" placeholder="TOTP 秘密鍵">
       </m3e-form-field>
@@ -216,15 +222,24 @@
 
     <m3e-dialog id="detail_password_dialog" dismissible>
       <span slot="header">パスワード詳細</span>
-      <m3e-form-field variant="outlined" label="Service Name">
-        <input id="detail_pass_title" type="text" placeholder="サービス名">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Username">
-        <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Password">
-        <input id="detail_pass_value" type="text" placeholder="パスワード">
-      </m3e-form-field>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <m3e-form-field variant="outlined" label="Service Name" style="flex: 1;">
+          <input id="detail_pass_title" type="text" placeholder="サービス名">
+        </m3e-form-field>
+        <m3e-icon-button id="detail_pass_favorite_btn" title="Toggle Favorite"><m3e-icon name="star_border"></m3e-icon></m3e-icon-button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <m3e-form-field variant="outlined" label="Username" style="flex: 1;">
+          <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
+        </m3e-form-field>
+        <m3e-icon-button id="fill_default_username_btn" title="Fill Default Username"><m3e-icon name="person_add"></m3e-icon></m3e-icon-button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <m3e-form-field variant="outlined" label="Password" style="flex: 1;">
+          <input id="detail_pass_value" type="text" placeholder="パスワード">
+        </m3e-form-field>
+        <m3e-icon-button id="generate_detail_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
+      </div>
       TOTP 秘密鍵
       <p id="detail_pass_strength" style="font-weight: bold; margin-top: -8px; margin-bottom: 4px; font-size: 12px; min-height: 1.5em;"></p>
       <p id="detail_pass_crack_time" style="font-size: 12px; color: #666; margin-bottom: 16px;"></p>
@@ -234,6 +249,17 @@
       <div id="totp_display_area" style="display: none; margin-top: 16px; text-align: center;">
         <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; cursor: pointer;" id="totp_code" title="Click to copy"></div>
         <div style="font-size: 12px; color: #666;" id="totp_timer"></div>
+      </div>
+      <div style="margin-top: 16px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 8px;">
+        <div style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); display: flex; justify-content: space-between;">
+            <span>最終更新: <span id="detail_last_modified">-</span></span>
+            <span>変更回数: <span id="detail_revision_count">0</span></span>
+        </div>
+        <details style="margin-top: 8px;">
+            <summary style="font-size: 12px; cursor: pointer; color: var(--md-sys-color-primary);">変更履歴を表示</summary>
+            <div id="detail_history_list" style="max-height: 150px; overflow-y: auto; margin-top: 4px; font-size: 11px; color: var(--md-sys-color-on-surface); background: var(--md-sys-color-surface-container-high); padding: 8px; border-radius: 4px;">
+            </div>
+        </details>
       </div>
       <div slot="actions">
         <m3e-button variant="text" id="delete_password_btn" style="--md-sys-color-primary: #b3261e;">
@@ -253,6 +279,17 @@
     <m3e-dialog id="settings_dialog" dismissible>
       <span slot="header">Settings</span>
       
+      <h3>General Settings</h3>
+      <m3e-form-field variant="outlined" label="Default Username">
+        <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名">
+      </m3e-form-field>
+      <div style="text-align: right; margin-bottom: 16px;">
+        <m3e-button variant="filled" id="save_general_settings_btn">
+          Save Settings
+        </m3e-button>
+      </div>
+      <m3e-divider></m3e-divider>
+
       <h3>Change Master Password</h3>
       <m3e-form-field variant="outlined" label="Current Password">
         <input id="setting_current_pass" type="password" placeholder="現在のパスワード">
