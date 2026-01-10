@@ -46,13 +46,7 @@
   <body>
 	<header>
       <m3e-app-bar>
-        <m3e-icon-button slot="leading-icon" aria-label="Back">
-          <m3e-icon name="arrow_back"></m3e-icon>
-        </m3e-icon-button>
         <span slot="title">Soul Password Manager</span>
-        <m3e-form-field variant="outlined" slot="trailing-icon">
-          <input id="fld" placeholder="Search here"/>
-        </m3e-form-field>
         <m3e-icon-button variant="filled" slot="trailing-icon" id="theme_toggle_btn">
           <m3e-icon name="dark_mode"></m3e-icon>
         </m3e-icon-button>
@@ -61,6 +55,10 @@
         </m3e-icon-button>
       </m3e-app-bar>
     </header>
+
+    <m3e-form-field id="search_passwords" variant="outlined" slot="trailing-icon">
+      <input id="fld" placeholder="Search here"/>
+    </m3e-form-field>
     
     <section id="left_sidebar_content">
       <m3e-nav-menu>
@@ -73,18 +71,6 @@
         </m3e-nav-menu-item-group>
       </m3e-nav-menu>
     </section>
-
-    <section id="center_content">
-
-    </section>
-
-    <section id="right_sidebar_content">
-
-    </section>
-
-    <footer>
-
-    </footer>
 
     <m3e-fab id="make_fab" variant="primary" size="large">
       <m3e-fab-menu-trigger for="fab_menu">
@@ -134,6 +120,8 @@
         </m3e-dialog-trigger>
       </m3e-fab-menu-item>
     </m3e-fab-menu>
+
+    <datalist id="category_list"></datalist>
 
     <input type="file" id="import_json_input" accept=".json" style="display: none;">
 
@@ -195,6 +183,12 @@
       <m3e-form-field variant="outlined" label="Service Name">
         <input id="new_pass_title" type="text" placeholder="サービス名">
       </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Category">
+        <input id="new_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Website URL">
+        <input id="new_pass_website" type="url" placeholder="https://example.com">
+      </m3e-form-field>
       <div style="display: flex; align-items: center; gap: 8px;">
         <m3e-form-field variant="outlined" label="Username" style="flex: 1;">
           <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
@@ -227,6 +221,15 @@
           <input id="detail_pass_title" type="text" placeholder="サービス名">
         </m3e-form-field>
         <m3e-icon-button id="detail_pass_favorite_btn" title="Toggle Favorite"><m3e-icon name="star_border"></m3e-icon></m3e-icon-button>
+      </div>
+      <m3e-form-field variant="outlined" label="Category">
+        <input id="detail_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list">
+      </m3e-form-field>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <m3e-form-field variant="outlined" label="Website URL" style="flex: 1;">
+          <input id="detail_pass_website" type="url" placeholder="https://example.com">
+        </m3e-form-field>
+        <m3e-icon-button id="open_website_btn" title="Open Website"><m3e-icon name="open_in_new"></m3e-icon></m3e-icon-button>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
         <m3e-form-field variant="outlined" label="Username" style="flex: 1;">

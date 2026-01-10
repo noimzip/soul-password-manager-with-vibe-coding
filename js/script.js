@@ -10,6 +10,127 @@ var CONSTANTS = {
     }
 };
 
+// --- Crypto Utilities ---
+const CRYPTO_CONFIG = {
+    PBKDF2_ITERATIONS: 100000,
+    SALT_LENGTH: 16,
+    IV_LENGTH: 12
+};
+
+let appKey = null; // Session key
+
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+function base64ToArrayBuffer(base64) {
+    const binary_string = window.atob(base64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+}
+
+async function generateSalt() {
+    return window.crypto.getRandomValues(new Uint8Array(CRYPTO_CONFIG.SALT_LENGTH));
+}
+
+async function deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
+    );
+    
+    const saltBuffer = typeof salt === 'string' ? base64ToArrayBuffer(salt) : salt;
+    
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: saltBuffer,
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function hashPassword(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits"]
+    );
+    const saltBuffer = typeof salt === 'string' ? base64ToArrayBuffer(salt) : salt;
+    
+    const derivedBits = await window.crypto.subtle.deriveBits(
+        {
+            name: "PBKDF2",
+            salt: saltBuffer,
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        256
+    );
+    return arrayBufferToBase64(derivedBits);
+}
+
+async function encryptData(data, key) {
+    const enc = new TextEncoder();
+    const encoded = enc.encode(JSON.stringify(data));
+    const iv = window.crypto.getRandomValues(new Uint8Array(CRYPTO_CONFIG.IV_LENGTH));
+    
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encoded
+    );
+    
+    return JSON.stringify({
+        iv: arrayBufferToBase64(iv),
+        data: arrayBufferToBase64(encrypted)
+    });
+}
+
+async function decryptData(encryptedJson, key) {
+    try {
+        const raw = JSON.parse(encryptedJson);
+        if (!raw.iv || !raw.data) throw new Error("Invalid encrypted data format");
+        
+        const iv = base64ToArrayBuffer(raw.iv);
+        const data = base64ToArrayBuffer(raw.data);
+        
+        const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            data
+        );
+        
+        const dec = new TextDecoder();
+        return JSON.parse(dec.decode(decrypted));
+    } catch (e) {
+        console.error("Decryption failed", e);
+        throw e;
+    }
+}
+
+async function savePasswordsData() {
+    if (!appKey) return;
+    const encrypted = await encryptData(savedPasswords, appKey);
+    localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, encrypted);
+}
+// --- End Crypto Utilities ---
+
 function generatePasswordString(length, useUpper, useNumbers, useSymbols) {
     var letters = 'abcdefghijklmnopqrstuvwxyz';
     var numbers = '0123456789';
@@ -404,7 +525,7 @@ generatePassword();
         this.classList.remove('over');
      }
 
-     function handleDrop(e) {
+     async function handleDrop(e) {
         if (e.stopPropagation) {
             e.stopPropagation();
         }
@@ -417,7 +538,7 @@ generatePassword();
                 var itemToMove = savedPasswords[srcIndex];
                 savedPasswords.splice(srcIndex, 1);
                 savedPasswords.splice(targetIndex, 0, itemToMove);
-                localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
+                await savePasswordsData();
                 var filterVal = document.getElementById('fld').value;
                 renderPasswordList(filterVal);
             }
@@ -434,18 +555,64 @@ generatePassword();
      }
 
      function renderPasswordList(filterText) {
+        var navMenu = document.querySelector('m3e-nav-menu');
         var favList = document.getElementById('favorite_list');
-        var passList = document.getElementById('password_list');
 
+        // お気に入りリストのクリア
         favList.querySelectorAll('m3e-nav-menu-item').forEach(function(item) { item.remove(); });
-        passList.querySelectorAll('m3e-nav-menu-item').forEach(function(item) { item.remove(); });
+        
+        // 既存のカテゴリグループを削除 (IDがfavorite_list以外のグループ)
+        var groups = navMenu.querySelectorAll('m3e-nav-menu-item-group:not(#favorite_list)');
+        groups.forEach(function(g) { g.remove(); });
+
+        var categories = {};
+        var categoryNames = new Set();
 
         savedPasswords.forEach(function(item, index) {
-            if (!filterText || item.title.toLowerCase().includes(filterText.toLowerCase())) {
-                var targetList = item.favorite ? favList : passList;
-                addPasswordToUI(item, index, targetList);
+            if (filterText && !item.title.toLowerCase().includes(filterText.toLowerCase()) && 
+                !(item.website || '').toLowerCase().includes(filterText.toLowerCase())) {
+                return;
             }
+
+            if (item.favorite) {
+                addPasswordToUI(item, index, favList);
+            } else {
+                var cat = item.category || 'Passwords';
+                if (!categories[cat]) {
+                    categories[cat] = [];
+                }
+                categories[cat].push({item: item, index: index});
+            }
+            if (item.category) categoryNames.add(item.category);
         });
+
+        // カテゴリごとにグループ生成
+        Object.keys(categories).sort().forEach(function(catName) {
+            var group = document.createElement('m3e-nav-menu-item-group');
+            var heading = document.createElement('m3e-heading');
+            heading.slot = 'label';
+            heading.variant = 'label';
+            heading.size = 'large';
+            heading.textContent = catName;
+            group.appendChild(heading);
+            
+            categories[catName].forEach(function(data) {
+                addPasswordToUI(data.item, data.index, group);
+            });
+            
+            navMenu.appendChild(group);
+        });
+
+        // Datalistの更新
+        var dataList = document.getElementById('category_list');
+        if (dataList) {
+            dataList.innerHTML = '';
+            categoryNames.forEach(function(cat) {
+                var opt = document.createElement('option');
+                opt.value = cat;
+                dataList.appendChild(opt);
+            });
+        }
      }
 
      // パスワードリストをUIに追加するヘルパー関数
@@ -462,22 +629,43 @@ generatePassword();
         newItem.addEventListener('dragleave', handleDragLeave);
         newItem.addEventListener('dragend', handleDragEnd);
         
-        var icon = document.createElement('m3e-icon');
-        icon.slot = 'icon';
-        icon.name = 'key';
-
-        var strength = calculatePasswordStrength(item.password);
-        if (strength < 2) {
-            icon.style.color = '#d32f2f'; // Red
-        } else if (strength < 4) {
-            icon.style.color = '#f57c00'; // Orange
+        var icon;
+        if (item.website) {
+            try {
+                var domain = new URL(item.website).hostname;
+                icon = document.createElement('img');
+                icon.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64';
+                icon.style.width = '24px';
+                icon.style.height = '24px';
+                icon.style.objectFit = 'contain';
+            } catch (e) {
+                icon = document.createElement('m3e-icon');
+                icon.name = 'public';
+            }
         } else {
-            icon.style.color = '#388e3c'; // Green
+            icon = document.createElement('m3e-icon');
+            icon.name = 'key';
         }
         
+        icon.slot = 'icon';
+
+        var strength = calculatePasswordStrength(item.password);
+        var strengthColor = '#388e3c'; // Green
+        if (strength < 2) {
+            strengthColor = '#d32f2f'; // Red
+        } else if (strength < 4) {
+            strengthColor = '#f57c00'; // Orange
+        }
+
+        // m3e-iconの場合のみ強度による色付けを行う
+        if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
+            icon.style.color = strengthColor;
+        }
+
         var label = document.createElement('span');
         label.slot = 'label';
         label.textContent = item.title;
+        label.style.color = strengthColor;
 
         newItem.appendChild(icon);
         newItem.appendChild(label);
@@ -494,10 +682,10 @@ generatePassword();
         if (item.favorite) favIcon.style.color = '#fbc02d';
         favBtn.appendChild(favIcon);
 
-        favBtn.addEventListener('click', function(e) {
+        favBtn.addEventListener('click', async function(e) {
             e.stopPropagation();
             item.favorite = !item.favorite;
-            localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
+            await savePasswordsData();
             // 検索ボックスの値を取得して再描画
             var filterVal = document.getElementById('fld').value;
             renderPasswordList(filterVal);
@@ -508,6 +696,8 @@ generatePassword();
         newItem.addEventListener('click', function() {
             currentDetailIndex = index;
             document.getElementById('detail_pass_title').value = item.title;
+            document.getElementById('detail_pass_category').value = item.category || '';
+            document.getElementById('detail_pass_website').value = item.website || '';
             document.getElementById('detail_pass_username').value = item.username || '';
             document.getElementById('detail_pass_value').value = item.password || '';
             document.getElementById('detail_pass_secret').value = item.secret || '';
@@ -543,6 +733,8 @@ generatePassword();
                     var dateStr = new Date(h.date).toLocaleString();
                     infoDiv.innerHTML = '<div style="font-weight:bold; font-size:0.9em;">' + dateStr + '</div>' +
                                     '<div style="opacity: 0.8; font-size: 0.85em;">Title: ' + (h.title || '-') + '</div>' +
+                                    '<div style="opacity: 0.8; font-size: 0.85em;">Cat: ' + (h.category || '-') + '</div>' +
+                                    '<div style="opacity: 0.8; font-size: 0.85em;">URL: ' + (h.website || '-') + '</div>' +
                                     '<div style="opacity: 0.8; font-size: 0.85em;">User: ' + (h.username || '-') + '</div>' +
                                     '<div style="opacity: 0.8; font-size: 0.85em;">Pass: ' + (h.password || '-') + '</div>';
                     
@@ -556,6 +748,8 @@ generatePassword();
                         showConfirmDialog('この履歴の内容を入力フォームに反映しますか？\n(反映後、「更新」ボタンを押すことで保存されます)').then(function(res) {
                             if (res) {
                                 document.getElementById('detail_pass_title').value = h.title || '';
+                                document.getElementById('detail_pass_category').value = h.category || '';
+                                document.getElementById('detail_pass_website').value = h.website || '';
                                 document.getElementById('detail_pass_username').value = h.username || '';
                                 document.getElementById('detail_pass_value').value = h.password || '';
                                 document.getElementById('detail_pass_secret').value = h.secret || '';
@@ -597,8 +791,18 @@ generatePassword();
         dialog.open = true;
      }
 
-     function initApp() {
-         savedPasswords = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSWORDS) || '[]');
+     async function initApp() {
+         const encrypted = localStorage.getItem(CONSTANTS.STORAGE.PASSWORDS);
+         if (encrypted && appKey) {
+             try {
+                 savedPasswords = await decryptData(encrypted, appKey);
+             } catch (e) {
+                 console.error(e);
+                 savedPasswords = [];
+             }
+         } else {
+             savedPasswords = [];
+         }
          renderPasswordList();
          document.getElementById('warning_dialog').open = true;
      }
@@ -609,13 +813,27 @@ generatePassword();
         showLogin();
      }
 
-     document.getElementById('setup_btn').addEventListener('click', function() {
+     document.getElementById('setup_btn').addEventListener('click', async function() {
         var user = document.getElementById('setup_username').value;
         var pass = document.getElementById('setup_password').value;
         var conf = document.getElementById('setup_password_confirm').value;
 
         if (user && pass && pass === conf) {
-            localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify({ username: user, password: pass }));
+            const salt = await generateSalt();
+            const saltB64 = arrayBufferToBase64(salt);
+            const hash = await hashPassword(pass, salt);
+            
+            appKey = await deriveKey(pass, salt);
+            
+            localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify({ 
+                username: user, 
+                hash: hash,
+                salt: saltB64
+            }));
+            
+            savedPasswords = [];
+            await savePasswordsData();
+            
             document.getElementById('setup_dialog').open = false;
             initApp();
         } else {
@@ -623,13 +841,47 @@ generatePassword();
         }
      });
 
-     document.getElementById('login_btn').addEventListener('click', function() {
+     document.getElementById('login_btn').addEventListener('click', async function() {
         var user = document.getElementById('login_username').value;
         var pass = document.getElementById('login_password').value;
 
-        if (masterAuth && user === masterAuth.username && pass === masterAuth.password) {
-            document.getElementById('login_dialog').open = false;
-            initApp();
+        if (!masterAuth) return;
+
+        if (user !== masterAuth.username) {
+             showAlertDialog('ユーザー名またはパスワードが間違っています。');
+             return;
+        }
+
+        // Migration from plaintext password
+        if (masterAuth.password) {
+            if (pass === masterAuth.password) {
+                const salt = await generateSalt();
+                const saltB64 = arrayBufferToBase64(salt);
+                const hash = await hashPassword(pass, salt);
+                
+                appKey = await deriveKey(pass, salt);
+                
+                // Load plaintext data for migration
+                const raw = localStorage.getItem(CONSTANTS.STORAGE.PASSWORDS);
+                savedPasswords = raw ? JSON.parse(raw) : [];
+                await savePasswordsData(); // Save as encrypted
+                
+                masterAuth = { username: user, hash: hash, salt: saltB64 };
+                localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
+                
+                document.getElementById('login_dialog').open = false;
+                initApp();
+                showSnackbar('セキュリティを強化しました（暗号化完了）');
+                return;
+            }
+        } else if (masterAuth.hash && masterAuth.salt) {
+            const hash = await hashPassword(pass, masterAuth.salt);
+            if (hash === masterAuth.hash) {
+                appKey = await deriveKey(pass, masterAuth.salt);
+                document.getElementById('login_dialog').open = false;
+                initApp();
+                return;
+            }
         } else {
             showAlertDialog('ユーザー名またはパスワードが間違っています。');
         }
@@ -647,8 +899,10 @@ generatePassword();
         renderPasswordList(e.target.value);
      });
 
-     document.getElementById('save_new_password_btn').addEventListener('click', function() {
+     document.getElementById('save_new_password_btn').addEventListener('click', async function() {
         var title = document.getElementById('new_pass_title').value;
+        var category = document.getElementById('new_pass_category').value;
+        var website = document.getElementById('new_pass_website').value;
         var username = document.getElementById('new_pass_username').value;
         var password = document.getElementById('new_pass_value').value;
         var secret = document.getElementById('new_pass_secret').value;
@@ -656,16 +910,21 @@ generatePassword();
         if (title) {
             savedPasswords.push({
                 title: title,
+                category: category,
+                website: website,
                 username: username,
                 password: password,
                 secret: secret,
-                favorite: false
+                favorite: false,
+                lastModified: Date.now()
             });
-            localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
+            await savePasswordsData();
             renderPasswordList();
 
             // 入力フィールドのクリア
             document.getElementById('new_pass_title').value = '';
+            document.getElementById('new_pass_category').value = '';
+            document.getElementById('new_pass_website').value = '';
             document.getElementById('new_pass_username').value = '';
             document.getElementById('new_pass_value').value = '';
             document.getElementById('new_pass_secret').value = '';
@@ -684,12 +943,12 @@ generatePassword();
         updateDetailStrength(password);
      });
 
-     document.getElementById('delete_password_btn').addEventListener('click', function() {
+     document.getElementById('delete_password_btn').addEventListener('click', async function() {
         if (currentDetailIndex > -1) {
-            showConfirmDialog("このパスワードを削除してもよろしいですか？").then(function(res) {
+            showConfirmDialog("このパスワードを削除してもよろしいですか？").then(async function(res) {
                 if (res) {
                     savedPasswords.splice(currentDetailIndex, 1);
-                    localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
+                    await savePasswordsData();
                     renderPasswordList();
                     document.getElementById('detail_password_dialog').open = false;
                     showSnackbar('パスワードを削除しました');
@@ -761,10 +1020,13 @@ generatePassword();
                 try {
                     var importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
-                        showConfirmDialog('現在のリストに ' + importedData.length + ' 件のデータを追加しますか？').then(function(res) {
+                        showConfirmDialog('現在のリストに ' + importedData.length + ' 件のデータを追加しますか？').then(async function(res) {
                             if (res) {
+                                importedData.forEach(function(item) {
+                                    if (!item.lastModified) item.lastModified = Date.now();
+                                });
                                 savedPasswords = savedPasswords.concat(importedData);
-                                localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
+                                await savePasswordsData();
                                 renderPasswordList();
                                 showAlertDialog('インポートが完了しました。');
                             }
@@ -802,6 +1064,18 @@ generatePassword();
         }
      });
 
+     document.getElementById('open_website_btn').addEventListener('click', function() {
+        var url = document.getElementById('detail_pass_website').value;
+        if (url) {
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'http://' + url;
+            }
+            window.open(url, '_blank');
+        } else {
+            showSnackbar('URLが設定されていません');
+        }
+     });
+
      document.getElementById('detail_pass_favorite_btn').addEventListener('click', function() {
         var icon = this.querySelector('m3e-icon');
         if (icon.name === 'star') {
@@ -813,9 +1087,11 @@ generatePassword();
         }
      });
 
-     document.getElementById('update_password_btn').addEventListener('click', function() {
+     document.getElementById('update_password_btn').addEventListener('click', async function() {
         if (currentDetailIndex > -1) {
             var title = document.getElementById('detail_pass_title').value;
+            var category = document.getElementById('detail_pass_category').value;
+            var website = document.getElementById('detail_pass_website').value;
             var username = document.getElementById('detail_pass_username').value;
             var password = document.getElementById('detail_pass_value').value;
             var secret = document.getElementById('detail_pass_secret').value;
@@ -826,12 +1102,16 @@ generatePassword();
                 
                 // 変更検知
                 var hasChanged = (oldItem.title !== title) ||
+                                 (oldItem.category !== category) ||
+                                 (oldItem.website !== website) ||
                                  (oldItem.username !== username) ||
                                  (oldItem.password !== password) ||
                                  (oldItem.secret !== secret);
 
                 var newItem = Object.assign({}, oldItem, {
                     title: title,
+                    category: category,
+                    website: website,
                     username: username,
                     password: password,
                     secret: secret,
@@ -844,6 +1124,8 @@ generatePassword();
                     history.push({
                         date: Date.now(),
                         title: oldItem.title,
+                        category: oldItem.category,
+                        website: oldItem.website,
                         username: oldItem.username,
                         password: oldItem.password,
                         secret: oldItem.secret
@@ -853,7 +1135,7 @@ generatePassword();
                 }
 
                 savedPasswords[currentDetailIndex] = newItem;
-                localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
+                await savePasswordsData();
                 renderPasswordList();
                 document.getElementById('detail_password_dialog').open = false;
                 showSnackbar('パスワードを更新しました');
@@ -951,14 +1233,16 @@ generatePassword();
         });
      });
 
-     document.getElementById('update_master_pass_btn').addEventListener('click', function() {
+     document.getElementById('update_master_pass_btn').addEventListener('click', async function() {
         var currentPass = document.getElementById('setting_current_pass').value;
         var newPass = document.getElementById('setting_new_pass').value;
         var confirmPass = document.getElementById('setting_new_pass_confirm').value;
 
         if (!masterAuth) return;
 
-        if (currentPass !== masterAuth.password) {
+        // Verify current password
+        const currentHash = await hashPassword(currentPass, masterAuth.salt);
+        if (currentHash !== masterAuth.hash) {
             showAlertDialog('現在のパスワードが間違っています。');
             return;
         }
@@ -973,7 +1257,18 @@ generatePassword();
             return;
         }
 
-        masterAuth.password = newPass;
+        // Re-encrypt with new key
+        const newSalt = await generateSalt();
+        const newSaltB64 = arrayBufferToBase64(newSalt);
+        const newHash = await hashPassword(newPass, newSalt);
+        
+        appKey = await deriveKey(newPass, newSalt);
+        await savePasswordsData();
+
+        masterAuth.hash = newHash;
+        masterAuth.salt = newSaltB64;
+        delete masterAuth.password; // Ensure plaintext is removed if it existed
+        
         localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
         showSnackbar('マスターパスワードを変更しました。');
         
@@ -1133,3 +1428,70 @@ generatePassword();
         var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         applyTheme(newTheme);
      });
+
+     // ソート機能の追加
+     var searchField = document.getElementById('search_passwords');
+     if (searchField && searchField.parentNode) {
+        var sortContainer = document.createElement('div');
+        sortContainer.style.display = 'flex';
+        sortContainer.style.justifyContent = 'flex-end';
+        sortContainer.style.padding = '0 16px 8px';
+        
+        var sortSelect = document.createElement('select');
+        sortSelect.style.padding = '8px';
+        sortSelect.style.borderRadius = '4px';
+        sortSelect.style.border = '1px solid #ccc';
+        sortSelect.style.backgroundColor = 'var(--md-sys-color-surface, #fff)';
+        sortSelect.style.color = 'var(--md-sys-color-on-surface, #000)';
+        
+        var options = [
+            { value: '', text: '並び替え...' },
+            { value: 'title_asc', text: '名前 (A-Z)' },
+            { value: 'title_desc', text: '名前 (Z-A)' },
+            { value: 'strength_asc', text: '強度 (弱い順)' },
+            { value: 'strength_desc', text: '強度 (強い順)' },
+            { value: 'updated_desc', text: '更新日 (新しい順)' },
+            { value: 'updated_asc', text: '更新日 (古い順)' }
+        ];
+        
+        options.forEach(function(opt) {
+            var o = document.createElement('option');
+            o.value = opt.value;
+            o.textContent = opt.text;
+            sortSelect.appendChild(o);
+        });
+        
+        sortSelect.addEventListener('change', async function() {
+            var val = this.value;
+            if (!val) return;
+            
+            if (savedPasswords.length > 0) {
+                savedPasswords.sort(function(a, b) {
+                    switch (val) {
+                        case 'title_asc':
+                            return (a.title || '').localeCompare(b.title || '');
+                        case 'title_desc':
+                            return (b.title || '').localeCompare(a.title || '');
+                        case 'strength_asc':
+                            return calculatePasswordStrength(a.password) - calculatePasswordStrength(b.password);
+                        case 'strength_desc':
+                            return calculatePasswordStrength(b.password) - calculatePasswordStrength(a.password);
+                        case 'updated_desc':
+                            return (b.lastModified || 0) - (a.lastModified || 0);
+                        case 'updated_asc':
+                            return (a.lastModified || 0) - (b.lastModified || 0);
+                        default:
+                            return 0;
+                    }
+                });
+                
+                await savePasswordsData();
+                renderPasswordList(document.getElementById('fld').value);
+                showSnackbar('リストを並び替えました');
+            }
+            this.value = ''; // Reset
+        });
+        
+        sortContainer.appendChild(sortSelect);
+        searchField.parentNode.insertBefore(sortContainer, searchField.nextSibling);
+     }
