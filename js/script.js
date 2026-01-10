@@ -1,39 +1,55 @@
 // https://qiita.com/delph/items/7786fadbf71ff45d8162
 
-function generatePassword() {
-    //英数字を用意する
+var CONSTANTS = {
+    STORAGE: {
+        PASSWORDS: 'soul_passwords',
+        MASTER_AUTH: 'soul_master_auth',
+        AUTO_LOGOUT: 'soul_auto_logout_minutes',
+        DEFAULT_USER: 'soul_default_username',
+        THEME: 'soul_theme'
+    }
+};
+
+function generatePasswordString(length, useUpper, useNumbers, useSymbols) {
     var letters = 'abcdefghijklmnopqrstuvwxyz';
     var numbers = '0123456789';
     var symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    
+    var pool = letters;
+    if (useUpper) pool += letters.toUpperCase();
+    if (useNumbers) pool += numbers;
+    if (useSymbols) pool += symbols;
 
-    var string = letters;
+    var password = '';
+    for (var i = 0; i < length; i++) {
+        password += pool.charAt(Math.floor(Math.random() * pool.length));
+    }
+    return password;
+}
 
-    var uppercaseInput = document.getElementById('include_uppercase');
-    if (uppercaseInput && uppercaseInput.checked) {
-        string += letters.toUpperCase();
-    }
-    var numbersInput = document.getElementById('include_numbers');
-    if (numbersInput && numbersInput.checked) {
-        string += numbers;
-    }
-    var symbolsInput = document.getElementById('include_symbols');
-    if (symbolsInput && symbolsInput.checked) {
-        string += symbols;
-    }
+function copyToClipboard(text, message) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function() {
+        showSnackbar(message);
+    }).catch(function(err) {
+        console.error('Copy failed', err);
+        showSnackbar('コピーに失敗しました');
+    });
+}
 
+function generatePassword() {
     var len = 8;
     var lengthInput = document.getElementById('password_length');
     if (lengthInput) {
         len = parseInt(lengthInput.value);
     }
-    var password=''; //文字列が空っぽという定義をする
-     
+    
+    var useUpper = document.getElementById('include_uppercase') ? document.getElementById('include_uppercase').checked : true;
+    var useNumbers = document.getElementById('include_numbers') ? document.getElementById('include_numbers').checked : true;
+    var useSymbols = document.getElementById('include_symbols') ? document.getElementById('include_symbols').checked : false;
 
-    for (var i = 0; i < len; i++) {
-    password += string.charAt(Math.floor(Math.random() * string.length));
-    // charAt メソッドを用いて文字列から指定した文字を返す。
-    }
-      
+    var password = generatePasswordString(len, useUpper, useNumbers, useSymbols);
+
      console.log(password);
      document.getElementById('auto_make_password').textContent = password;
 
@@ -78,11 +94,16 @@ generatePassword();
             btnContainer.style.marginTop = '10px';
             btnContainer.style.gap = '8px';
 
+            var createBtn = function(text) {
+                var btn = document.createElement('button');
+                btn.textContent = text;
+                btn.style.cssText = 'border:none; background:transparent; color:#2196f3; font-weight:bold; cursor:pointer; padding:8px 16px; font-size:14px;';
+                return btn;
+            };
+
             var cancelBtn;
             if (isConfirm) {
-                cancelBtn = document.createElement('button');
-                cancelBtn.textContent = 'いいえ';
-                cancelBtn.style.cssText = 'border:none; background:transparent; color:#2196f3; font-weight:bold; cursor:pointer; padding:8px 16px; font-size:14px;';
+                cancelBtn = createBtn('いいえ');
                 cancelBtn.addEventListener('click', function() {
                     dialog.open = false;
                     resolve(false);
@@ -91,9 +112,7 @@ generatePassword();
                 btnContainer.appendChild(cancelBtn);
             }
 
-            var okBtn = document.createElement('button');
-            okBtn.textContent = isConfirm ? 'はい' : 'OK';
-            okBtn.style.cssText = 'border:none; background:transparent; color:#2196f3; font-weight:bold; cursor:pointer; padding:8px 16px; font-size:14px;';
+            var okBtn = createBtn(isConfirm ? 'はい' : 'OK');
             okBtn.addEventListener('click', function() {
                 dialog.open = false;
                 resolve(true);
@@ -131,9 +150,7 @@ generatePassword();
 
      document.getElementById('copy_password_btn').addEventListener('click', function() {
         var passwordText = document.getElementById('auto_make_password').textContent;
-        navigator.clipboard.writeText(passwordText).then(function() {
-            showSnackbar("パスワードをコピーしました");
-        });
+        copyToClipboard(passwordText, "パスワードをコピーしました");
      });
 
      document.getElementById('regenerate_password_btn').addEventListener('click', function() {
@@ -400,7 +417,7 @@ generatePassword();
                 var itemToMove = savedPasswords[srcIndex];
                 savedPasswords.splice(srcIndex, 1);
                 savedPasswords.splice(targetIndex, 0, itemToMove);
-                localStorage.setItem('soul_passwords', JSON.stringify(savedPasswords));
+                localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
                 var filterVal = document.getElementById('fld').value;
                 renderPasswordList(filterVal);
             }
@@ -480,7 +497,7 @@ generatePassword();
         favBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             item.favorite = !item.favorite;
-            localStorage.setItem('soul_passwords', JSON.stringify(savedPasswords));
+            localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
             // 検索ボックスの値を取得して再描画
             var filterVal = document.getElementById('fld').value;
             renderPasswordList(filterVal);
@@ -566,7 +583,7 @@ generatePassword();
      var savedPasswords = [];
 
      // 認証関連の処理
-     var masterAuth = JSON.parse(localStorage.getItem('soul_master_auth'));
+     var masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
 
      function showSetup() {
         var dialog = document.getElementById('setup_dialog');
@@ -581,7 +598,7 @@ generatePassword();
      }
 
      function initApp() {
-         savedPasswords = JSON.parse(localStorage.getItem('soul_passwords') || '[]');
+         savedPasswords = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSWORDS) || '[]');
          renderPasswordList();
          document.getElementById('warning_dialog').open = true;
      }
@@ -598,7 +615,7 @@ generatePassword();
         var conf = document.getElementById('setup_password_confirm').value;
 
         if (user && pass && pass === conf) {
-            localStorage.setItem('soul_master_auth', JSON.stringify({ username: user, password: pass }));
+            localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify({ username: user, password: pass }));
             document.getElementById('setup_dialog').open = false;
             initApp();
         } else {
@@ -644,7 +661,7 @@ generatePassword();
                 secret: secret,
                 favorite: false
             });
-            localStorage.setItem('soul_passwords', JSON.stringify(savedPasswords));
+            localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
             renderPasswordList();
 
             // 入力フィールドのクリア
@@ -657,28 +674,12 @@ generatePassword();
      });
 
      document.getElementById('generate_new_pass_btn').addEventListener('click', function() {
-        var letters = 'abcdefghijklmnopqrstuvwxyz';
-        var numbers = '0123456789';
-        var symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-        var string = letters + letters.toUpperCase() + numbers + symbols;
-        var len = 16;
-        var password = '';
-        for (var i = 0; i < len; i++) {
-            password += string.charAt(Math.floor(Math.random() * string.length));
-        }
+        var password = generatePasswordString(16, true, true, true);
         document.getElementById('new_pass_value').value = password;
      });
 
      document.getElementById('generate_detail_pass_btn').addEventListener('click', function() {
-        var letters = 'abcdefghijklmnopqrstuvwxyz';
-        var numbers = '0123456789';
-        var symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-        var string = letters + letters.toUpperCase() + numbers + symbols;
-        var len = 16;
-        var password = '';
-        for (var i = 0; i < len; i++) {
-            password += string.charAt(Math.floor(Math.random() * string.length));
-        }
+        var password = generatePasswordString(16, true, true, true);
         document.getElementById('detail_pass_value').value = password;
         updateDetailStrength(password);
      });
@@ -688,7 +689,7 @@ generatePassword();
             showConfirmDialog("このパスワードを削除してもよろしいですか？").then(function(res) {
                 if (res) {
                     savedPasswords.splice(currentDetailIndex, 1);
-                    localStorage.setItem('soul_passwords', JSON.stringify(savedPasswords));
+                    localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
                     renderPasswordList();
                     document.getElementById('detail_password_dialog').open = false;
                     showSnackbar('パスワードを削除しました');
@@ -763,7 +764,7 @@ generatePassword();
                         showConfirmDialog('現在のリストに ' + importedData.length + ' 件のデータを追加しますか？').then(function(res) {
                             if (res) {
                                 savedPasswords = savedPasswords.concat(importedData);
-                                localStorage.setItem('soul_passwords', JSON.stringify(savedPasswords));
+                                localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
                                 renderPasswordList();
                                 showAlertDialog('インポートが完了しました。');
                             }
@@ -797,9 +798,7 @@ generatePassword();
      document.getElementById('totp_code').addEventListener('click', function() {
         var code = this.textContent;
         if (code && !code.includes('Invalid')) {
-            navigator.clipboard.writeText(code).then(function() {
-                showSnackbar("TOTPコードをコピーしました");
-            });
+            copyToClipboard(code, "TOTPコードをコピーしました");
         }
      });
 
@@ -854,7 +853,7 @@ generatePassword();
                 }
 
                 savedPasswords[currentDetailIndex] = newItem;
-                localStorage.setItem('soul_passwords', JSON.stringify(savedPasswords));
+                localStorage.setItem(CONSTANTS.STORAGE.PASSWORDS, JSON.stringify(savedPasswords));
                 renderPasswordList();
                 document.getElementById('detail_password_dialog').open = false;
                 showSnackbar('パスワードを更新しました');
@@ -884,15 +883,65 @@ generatePassword();
             btn.appendChild(icon);
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                navigator.clipboard.writeText(el.value).then(function() {
-                    showSnackbar(target.name + "をコピーしました");
-                });
+                copyToClipboard(el.value, target.name + "をコピーしました");
             });
             if (el.parentNode) {
                 el.parentNode.insertBefore(btn, el.nextSibling);
             }
         }
      });
+
+     // パスワード表示切り替え機能の追加
+     function setupPasswordToggles() {
+        var passwordIds = [
+            'new_pass_value',
+            'detail_pass_value',
+            'setup_password',
+            'setup_password_confirm',
+            'login_password',
+            'setting_current_pass',
+            'setting_new_pass',
+            'setting_new_pass_confirm'
+        ];
+
+        passwordIds.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.type = 'password'; // デフォルトで非表示
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.style.background = 'transparent';
+                btn.style.border = 'none';
+                btn.style.cursor = 'pointer';
+                btn.style.padding = '0';
+                btn.style.marginLeft = '4px';
+                btn.title = 'パスワードを表示';
+                
+                var icon = document.createElement('m3e-icon');
+                icon.name = 'visibility';
+                btn.appendChild(icon);
+
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (el.type === 'password') {
+                        el.type = 'text';
+                        icon.name = 'visibility_off';
+                        btn.title = 'パスワードを隠す';
+                    } else {
+                        el.type = 'password';
+                        icon.name = 'visibility';
+                        btn.title = 'パスワードを表示';
+                    }
+                });
+
+                if (el.parentNode) {
+                    el.parentNode.insertBefore(btn, el.nextSibling);
+                }
+            }
+        });
+     }
+     setupPasswordToggles();
 
      document.getElementById('logout_btn').addEventListener('click', function() {
         showConfirmDialog("ログアウトしますか？").then(function(res) {
@@ -925,7 +974,7 @@ generatePassword();
         }
 
         masterAuth.password = newPass;
-        localStorage.setItem('soul_master_auth', JSON.stringify(masterAuth));
+        localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
         showSnackbar('マスターパスワードを変更しました。');
         
         document.getElementById('setting_current_pass').value = '';
@@ -938,10 +987,10 @@ generatePassword();
             if (res1) {
                 showConfirmDialog("最終確認です。全てのパスワードデータと設定が失われます。よろしいですか？").then(function(res2) {
                     if (res2) {
-                        localStorage.removeItem('soul_passwords');
-                        localStorage.removeItem('soul_master_auth');
-                        localStorage.removeItem('soul_auto_logout_minutes');
-                        localStorage.removeItem('soul_default_username');
+                        localStorage.removeItem(CONSTANTS.STORAGE.PASSWORDS);
+                        localStorage.removeItem(CONSTANTS.STORAGE.MASTER_AUTH);
+                        localStorage.removeItem(CONSTANTS.STORAGE.AUTO_LOGOUT);
+                        localStorage.removeItem(CONSTANTS.STORAGE.DEFAULT_USER);
                         showAlertDialog('全データを削除しました。初期設定画面に戻ります。').then(function() {
                             location.reload();
                         });
@@ -966,7 +1015,7 @@ generatePassword();
 
      function resetAutoLogoutTimer() {
         if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
-        var minutes = parseInt(localStorage.getItem('soul_auto_logout_minutes') || '0', 10);
+        var minutes = parseInt(localStorage.getItem(CONSTANTS.STORAGE.AUTO_LOGOUT) || '0', 10);
         if (minutes > 0) {
             autoLogoutTimer = setTimeout(performAutoLogout, minutes * 60 * 1000);
         }
@@ -1016,7 +1065,7 @@ generatePassword();
      resetAutoLogoutTimer();
 
      // デフォルトユーザー名機能
-     var savedDefaultUser = localStorage.getItem('soul_default_username');
+     var savedDefaultUser = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
      if (savedDefaultUser) {
         var settingInput = document.getElementById('setting_default_username');
         if (settingInput) settingInput.value = savedDefaultUser;
@@ -1026,7 +1075,7 @@ generatePassword();
      if (saveGeneralSettingsBtn) {
         saveGeneralSettingsBtn.addEventListener('click', function() {
             var defaultUser = document.getElementById('setting_default_username').value;
-            localStorage.setItem('soul_default_username', defaultUser);
+            localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, defaultUser);
             showSnackbar('設定を保存しました');
         });
      }
@@ -1034,7 +1083,7 @@ generatePassword();
      var fillNewPassBtn = document.getElementById('fill_new_pass_default_username_btn');
      if (fillNewPassBtn) {
         fillNewPassBtn.addEventListener('click', function() {
-            var defaultUser = localStorage.getItem('soul_default_username');
+            var defaultUser = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
             if (defaultUser) {
                 document.getElementById('new_pass_username').value = defaultUser;
             } else {
@@ -1046,7 +1095,7 @@ generatePassword();
      var fillDetailPassBtn = document.getElementById('fill_default_username_btn');
      if (fillDetailPassBtn) {
         fillDetailPassBtn.addEventListener('click', function() {
-            var defaultUser = localStorage.getItem('soul_default_username');
+            var defaultUser = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
             if (defaultUser) {
                 document.getElementById('detail_pass_username').value = defaultUser;
             } else {
@@ -1069,10 +1118,10 @@ generatePassword();
             document.documentElement.style.colorScheme = 'light';
             themeIcon.name = 'dark_mode';
         }
-        localStorage.setItem('soul_theme', theme);
+        localStorage.setItem(CONSTANTS.STORAGE.THEME, theme);
      }
 
-     var savedTheme = localStorage.getItem('soul_theme');
+     var savedTheme = localStorage.getItem(CONSTANTS.STORAGE.THEME);
      if (savedTheme) {
         applyTheme(savedTheme);
      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
