@@ -67,10 +67,10 @@
     <section id="left_sidebar_content">
       <m3e-nav-menu>
         <m3e-nav-menu-item-group id="favorite_list">
-          <m3e-heading slot="label" variant="label" size="large">Favorite</m3e-heading>
+          <m3e-heading slot="label" variant="label" size="large">お気に入り</m3e-heading>
         </m3e-nav-menu-item-group>
         <m3e-nav-menu-item-group id="password_list">
-          <m3e-heading slot="label" variant="label" size="large">Passwords</m3e-heading>
+          <m3e-heading slot="label" variant="label" size="large">パスワード</m3e-heading>
           <!-- Additional items omitted for brevity -->
         </m3e-nav-menu-item-group>
       </m3e-nav-menu>
@@ -111,16 +111,16 @@
       </m3e-fab-menu-item>
       <m3e-fab-menu-item id="export_json_btn">
         <m3e-icon slot="icon" name="file_download" filled></m3e-icon>
-        Export JSON
+        JSONファイルでエクスポート
       </m3e-fab-menu-item>
       <m3e-fab-menu-item id="import_json_btn">
         <m3e-icon slot="icon" name="file_upload" filled></m3e-icon>
-        Import JSON
+        JSONファイルをインポート
       </m3e-fab-menu-item>
       <m3e-fab-menu-item>
         <m3e-icon slot="icon" name="settings" filled></m3e-icon>
         <m3e-dialog-trigger for="settings_dialog">
-          Settings
+          設定
         </m3e-dialog-trigger>
       </m3e-fab-menu-item>
     </m3e-fab-menu>
@@ -152,16 +152,16 @@
        <p id="maker_pass_crack_time" style="font-size: 12px; color: #666; margin-bottom: 16px;"></p>
        <m3e-button id="copy_password_btn" variant="tonal">
          <m3e-icon slot="icon" name="content_copy"></m3e-icon>
-         Copy
+         コピー
        </m3e-button>
        <m3e-button id="regenerate_password_btn" variant="tonal">
          <m3e-icon slot="icon" name="refresh"></m3e-icon>
-         Regenerate
+         再生成
        </m3e-button>
 
       <div slot="actions">
         <m3e-button autofocus>
-          <m3e-dialog-action return-value="ok">Close</m3e-dialog-action>
+          <m3e-dialog-action return-value="ok">とじる</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -177,7 +177,7 @@
 
       <div slot="actions">
         <m3e-button autofocus>
-          <m3e-dialog-action return-value="ok">Close</m3e-dialog-action>
+          <m3e-dialog-action return-value="ok">とじる</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -206,14 +206,14 @@
         <m3e-icon-button id="generate_new_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
       </div>
       <m3e-form-field variant="outlined" label="TOTP Secret (Optional)">
-        <input id="new_pass_secret" type="text" placeholder="TOTP 秘密鍵">
+        <input id="new_pass_secret" type="password" placeholder="TOTP 秘密鍵">
       </m3e-form-field>
       <div slot="actions">
         <m3e-button variant="text">
-          <m3e-dialog-action return-value="cancel">Cancel</m3e-dialog-action>
+          <m3e-dialog-action return-value="cancel">キャンセル</m3e-dialog-action>
         </m3e-button>
         <m3e-button variant="filled" id="save_new_password_btn">
-          <m3e-dialog-action return-value="save">Save</m3e-dialog-action>
+          <m3e-dialog-action return-value="save">保存</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -251,7 +251,7 @@
       <p id="detail_pass_strength" style="font-weight: bold; margin-top: -8px; margin-bottom: 4px; font-size: 12px; min-height: 1.5em;"></p>
       <p id="detail_pass_crack_time" style="font-size: 12px; color: #666; margin-bottom: 16px;"></p>
       <m3e-form-field variant="outlined" label="TOTP Secret">
-        <input id="detail_pass_secret" type="text">
+        <input id="detail_pass_secret" type="password">
       </m3e-form-field>
       <div id="totp_display_area" style="display: none; margin-top: 16px; text-align: center;">
         <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; cursor: pointer;" id="totp_code" title="Click to copy"></div>
@@ -271,33 +271,33 @@
       <div slot="actions">
         <m3e-button variant="text" id="delete_password_btn" style="--md-sys-color-primary: #b3261e;">
           <m3e-icon slot="icon" name="delete"></m3e-icon>
-          Delete
+          削除
         </m3e-button>
         <m3e-button variant="filled" id="update_password_btn">
           <m3e-icon slot="icon" name="save"></m3e-icon>
-          Update
+          更新
         </m3e-button>
         <m3e-button autofocus>
-          <m3e-dialog-action return-value="close">Close</m3e-dialog-action>
+          <m3e-dialog-action return-value="close">とじる</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>
 
     <m3e-dialog id="settings_dialog" dismissible>
-      <span slot="header">Settings</span>
+      <span slot="header">設定</span>
       
-      <h3>General Settings</h3>
+      <h3>全般</h3>
       <m3e-form-field variant="outlined" label="Default Username">
         <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名">
       </m3e-form-field>
       <div style="text-align: right; margin-bottom: 16px;">
         <m3e-button variant="filled" id="save_general_settings_btn">
-          Save Settings
+          保存
         </m3e-button>
       </div>
       <m3e-divider></m3e-divider>
 
-      <h3>Change Master Password</h3>
+      <h3>マスターパスワードを変更</h3>
       <m3e-form-field variant="outlined" label="Current Password">
         <input id="setting_current_pass" type="password" placeholder="現在のパスワード">
       </m3e-form-field>
@@ -309,17 +309,17 @@
       </m3e-form-field>
       <div style="text-align: right; margin-bottom: 16px;">
         <m3e-button variant="filled" id="update_master_pass_btn">
-          Update Password
+          更新
         </m3e-button>
       </div>
 
       <m3e-divider></m3e-divider>
 
-      <h3 style="color: #b3261e;">Danger Zone</h3>
+      <h3 style="color: #b3261e;">危険</h3>
       <p>すべてのパスワードと設定を削除し、アプリを初期化します。</p>
       <m3e-button variant="filled" id="delete_all_data_btn" style="--md-sys-color-primary: #b3261e; width: 100%;">
         <m3e-icon slot="icon" name="delete_forever"></m3e-icon>
-        Delete All Data
+        全データを削除
       </m3e-button>
 
       <div slot="actions">
@@ -343,7 +343,7 @@
       </m3e-form-field>
       <div slot="actions">
         <m3e-button variant="filled" id="setup_btn">
-          Setup
+          セットアップ
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -358,7 +358,7 @@
       </m3e-form-field>
       <div slot="actions">
         <m3e-button variant="filled" id="login_btn">
-          Login
+          ログイン
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -372,7 +372,7 @@
       <h5>おすすめしないパスワードマネージャー:このパスワードマネージャー, 紙で管理するやつ</h5>
       <div slot="actions">
         <m3e-button autofocus>
-          <m3e-dialog-action return-value="ok">Close</m3e-dialog-action>
+          <m3e-dialog-action return-value="ok">とじる</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>

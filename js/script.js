@@ -1183,7 +1183,9 @@ generatePassword();
             'login_password',
             'setting_current_pass',
             'setting_new_pass',
-            'setting_new_pass_confirm'
+            'setting_new_pass_confirm',
+            'new_pass_secret',
+            'detail_pass_secret'
         ];
 
         passwordIds.forEach(function(id) {
