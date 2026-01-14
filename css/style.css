@@ -1,6 +1,7 @@
 body {
     margin: 0 auto;
     padding: 0;
+    font-family: "Google Sans Flex", "Noto Sans JP", sans-serif;
 }
 
 #serach_passwords {
