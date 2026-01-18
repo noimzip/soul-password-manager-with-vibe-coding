@@ -1,6 +1,6 @@
 # Soul Password Manager
 
-A secure password manager built with modern JavaScript, Web Crypto API, and Firebase. It features strong encryption, cloud synchronization, a built-in password generator, and TOTP support.
+A secure password manager built with modern JavaScript, Web Crypto API, Firebase, and Vite. It features strong encryption, cloud synchronization, a built-in password generator, and TOTP support.
 
 ## Features
 
@@ -87,6 +87,8 @@ www/
 │   └── script.js       # Main application logic (Firebase, Crypto, UI)
 ├── node_modules/       # Third-party libraries (@m3e components)
 ├── index.html          # Main entry point
+├── package.json        # Project dependencies and scripts
+├── vite.config.js      # Vite configuration
 └── README.md           # Project documentation
 ```
 
