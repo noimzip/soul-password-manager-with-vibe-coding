@@ -21,13 +21,13 @@ import "@m3e/loading-indicator/dist/index.min.js";
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
-    apiKey: "AIzaSyCPDXCeqKrGk4IKuVe-VWoBPJCtL9C7Q7g",
-    authDomain: "soul-password-manager.firebaseapp.com",
-    projectId: "soul-password-manager",
-    storageBucket: "soul-password-manager.firebasestorage.app",
-    messagingSenderId: "445102232725",
-    appId: "1:445102232725:web:3fed84a3f3e0fbd3f1b79c",
-    measurementId: "G-VM2MLDRE6P"
+    apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTHDOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECTID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGEBUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGINGSENDERID,
+    appId: import.meta.env.VITE_FIREBASE_APPID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENTID
 };
 
 // Initialize Firebase
