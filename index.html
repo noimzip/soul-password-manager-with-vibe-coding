@@ -156,6 +156,18 @@
          <m3e-icon slot="icon" name="refresh"></m3e-icon>
          再生成
        </m3e-button>
+       <div class="mt-3 border-top-variant">
+        <details>
+            <summary class="text-small cursor-pointer" style="color: var(--md-sys-color-primary);">生成履歴</summary>
+            <div id="maker_history_list" class="history-list">
+            </div>
+            <div class="text-right mt-2">
+                <m3e-button variant="text" id="clear_maker_history_btn" class="text-small" style="--md-sys-color-primary: #b3261e;">
+                    履歴をクリア
+                </m3e-button>
+            </div>
+        </details>
+      </div>
 
       <div slot="actions">
         <m3e-button autofocus>
@@ -236,12 +248,14 @@
         <m3e-form-field variant="outlined" label="Username" class="flex-1">
           <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス">
         </m3e-form-field>
+        <m3e-icon-button id="copy_detail_username_btn" title="Copy Username"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="fill_default_username_btn" title="Fill Default Username"><m3e-icon name="person_add"></m3e-icon></m3e-icon-button>
       </div>
       <div class="flex-row-center-gap">
         <m3e-form-field variant="outlined" label="Password" class="flex-1">
           <input id="detail_pass_value" type="text" placeholder="パスワード">
         </m3e-form-field>
+        <m3e-icon-button id="copy_detail_pass_btn" title="Copy Password"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="generate_detail_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
       </div>
       TOTP 秘密鍵
@@ -252,6 +266,9 @@
       </m3e-form-field>
       <div id="totp_display_area" class="totp-display">
         <div class="totp-code" id="totp_code" title="Click to copy"></div>
+        <div class="totp-progress-track">
+          <div id="totp_progress_bar" class="totp-progress-fill"></div>
+        </div>
         <div class="text-small text-secondary" id="totp_timer"></div>
       </div>
       <div class="mt-3 border-top-variant">
@@ -262,6 +279,11 @@
         <details class="mt-2">
             <summary class="text-small cursor-pointer" style="color: var(--md-sys-color-primary);">変更履歴を表示</summary>
             <div id="detail_history_list" class="history-list">
+            </div>
+            <div class="text-right mt-2">
+                <m3e-button variant="text" id="clear_history_btn" class="text-small" style="--md-sys-color-primary: #b3261e;">
+                    履歴をクリア
+                </m3e-button>
             </div>
         </details>
       </div>
@@ -286,6 +308,9 @@
       <h3>全般</h3>
       <m3e-form-field variant="outlined" label="Default Username">
         <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名">
+      </m3e-form-field>
+      <m3e-form-field variant="outlined" label="Auto Logout (Minutes)">
+        <input id="setting_auto_logout" type="number" min="0" placeholder="0 to disable">
       </m3e-form-field>
       <div class="text-right mb-3">
         <m3e-button variant="filled" id="save_general_settings_btn">

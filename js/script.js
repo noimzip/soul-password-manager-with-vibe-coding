@@ -28,7 +28,8 @@ const CONSTANTS = {
         MASTER_AUTH: 'soul_master_auth',
         AUTO_LOGOUT: 'soul_auto_logout_minutes',
         DEFAULT_USER: 'soul_default_username',
-        THEME: 'soul_theme'
+        THEME: 'soul_theme',
+        GENERATOR_HISTORY: 'soul_generator_history'
     }
 };
 
@@ -43,6 +44,8 @@ let savedPasswords = []; // In-memory list of decrypted passwords
 let currentDetailIndex = -1; // Index of currently opened item
 let currentUser = null; // Firebase User
 let dragSrcEl = null; // For Drag and Drop
+let historyDebounceTimer = null; // Timer for debouncing history saves
+let autoLogoutTimer = null; // Timer for auto logout
 
 // --- Crypto Utilities (Local Mode - High Security) ---
 
@@ -441,6 +444,7 @@ function startTOTPUpdate(secret) {
     const displayArea = document.getElementById('totp_display_area');
     const codeEl = document.getElementById('totp_code');
     const timerEl = document.getElementById('totp_timer');
+    const progressBar = document.getElementById('totp_progress_bar');
     
     if (!secret) {
         displayArea.style.display = 'none';
@@ -454,9 +458,13 @@ function startTOTPUpdate(secret) {
         if (result) {
             codeEl.textContent = result.code;
             timerEl.textContent = '更新まで: ' + result.remaining + '秒';
+            if (progressBar) {
+                progressBar.style.width = ((result.remaining / 30) * 100) + '%';
+            }
         } else {
             codeEl.textContent = 'Invalid Secret';
             timerEl.textContent = '';
+            if (progressBar) progressBar.style.width = '0%';
         }
     };
     
@@ -467,6 +475,21 @@ function startTOTPUpdate(secret) {
 function stopTOTPUpdate() {
     if (totpInterval) clearInterval(totpInterval);
     totpInterval = null;
+}
+
+function resetAutoLogoutTimer() {
+    if (autoLogoutTimer) clearTimeout(autoLogoutTimer);
+    
+    const minutes = parseInt(localStorage.getItem(CONSTANTS.STORAGE.AUTO_LOGOUT) || '0');
+    if (minutes > 0) {
+        autoLogoutTimer = setTimeout(() => {
+            if (currentUser) {
+                signOut(auth).then(() => location.reload());
+            } else {
+                location.reload();
+            }
+        }, minutes * 60 * 1000);
+    }
 }
 
 // --- Main App Logic ---
@@ -505,6 +528,12 @@ function generatePassword() {
     if (crackTimeElement) {
         crackTimeElement.textContent = calculateCrackTime(password);
     }
+
+    // Debounce history save to prevent spamming while dragging slider
+    if (historyDebounceTimer) clearTimeout(historyDebounceTimer);
+    historyDebounceTimer = setTimeout(() => {
+        addToGeneratorHistory(password);
+    }, 500);
 }
 
 function updateDetailStrength(password) {
@@ -532,6 +561,62 @@ function updateDetailStrength(password) {
     if (crackTimeElement) {
         crackTimeElement.textContent = calculateCrackTime(password);
     }
+}
+
+function addToGeneratorHistory(password) {
+    const key = CONSTANTS.STORAGE.GENERATOR_HISTORY;
+    let history = JSON.parse(localStorage.getItem(key) || '[]');
+    
+    // Don't add if same as last one (top of list)
+    if (history.length > 0 && history[0] === password) return;
+
+    history.unshift(password);
+    if (history.length > 20) history = history.slice(0, 20);
+    
+    localStorage.setItem(key, JSON.stringify(history));
+    renderGeneratorHistory();
+}
+
+function renderGeneratorHistory() {
+    const list = document.getElementById('maker_history_list');
+    if (!list) return;
+    
+    const history = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.GENERATOR_HISTORY) || '[]');
+    list.innerHTML = '';
+    
+    if (history.length === 0) {
+        list.textContent = '履歴はありません';
+        return;
+    }
+
+    history.forEach(pass => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.style.cursor = 'pointer';
+        item.title = 'クリックしてコピー';
+        
+        const text = document.createElement('span');
+        text.textContent = pass;
+        text.style.fontFamily = 'monospace';
+        text.style.overflow = 'hidden';
+        text.style.textOverflow = 'ellipsis';
+        text.style.whiteSpace = 'nowrap';
+        text.style.flex = '1';
+        text.style.marginRight = '8px';
+
+        const copyIcon = document.createElement('m3e-icon');
+        copyIcon.name = 'content_copy';
+        copyIcon.style.fontSize = '16px';
+
+        item.appendChild(text);
+        item.appendChild(copyIcon);
+        
+        item.addEventListener('click', () => {
+            copyToClipboard(pass, 'パスワードをコピーしました');
+        });
+        
+        list.appendChild(item);
+    });
 }
 
 // --- Drag and Drop Handlers ---
@@ -1144,6 +1229,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.getElementById('copy_detail_pass_btn')?.addEventListener('click', () => {
+        const password = document.getElementById('detail_pass_value').value;
+        copyToClipboard(password, "パスワードをコピーしました");
+    });
+
+    document.getElementById('copy_detail_username_btn')?.addEventListener('click', () => {
+        const username = document.getElementById('detail_pass_username').value;
+        copyToClipboard(username, "ユーザー名をコピーしました");
+    });
+
+    document.getElementById('clear_history_btn')?.addEventListener('click', () => {
+        if (currentDetailIndex > -1) {
+            showConfirmDialog("このパスワードの変更履歴をすべて削除しますか？").then(async res => {
+                if (res) {
+                    const item = savedPasswords[currentDetailIndex];
+                    item.history = [];
+                    await saveOrUpdateItem(item, currentDetailIndex);
+                    document.getElementById('detail_revision_count').textContent = '0';
+                    document.getElementById('detail_history_list').innerHTML = '変更履歴はありません。';
+                    showSnackbar('変更履歴をクリアしました');
+                }
+            });
+        }
+    });
+
+    document.getElementById('clear_maker_history_btn')?.addEventListener('click', () => {
+        showConfirmDialog("生成履歴をすべて削除しますか？").then(res => {
+            if (res) {
+                localStorage.removeItem(CONSTANTS.STORAGE.GENERATOR_HISTORY);
+                renderGeneratorHistory();
+                showSnackbar('生成履歴をクリアしました');
+            }
+        });
+    });
+
+    document.getElementById('totp_code')?.addEventListener('click', function() {
+        const code = this.textContent;
+        if (code && code !== 'Invalid Secret') {
+            copyToClipboard(code, '2FAコードをコピーしました');
+        }
+    });
+
     document.getElementById('detail_pass_favorite_btn')?.addEventListener('click', function() {
         const icon = this.querySelector('m3e-icon');
         if (icon.name === 'star') {
@@ -1157,6 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Generator Run
     generatePassword();
+    renderGeneratorHistory();
 
     // Theme Toggle
     const themeToggleBtn = document.getElementById('theme_toggle_btn');
@@ -1184,12 +1312,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingInput) settingInput.value = savedDefaultUser;
     }
 
-    // Save default username from settings
+    // Load saved auto logout
+    const savedAutoLogout = localStorage.getItem(CONSTANTS.STORAGE.AUTO_LOGOUT);
+    if (savedAutoLogout) {
+        const settingInput = document.getElementById('setting_auto_logout');
+        if (settingInput) settingInput.value = savedAutoLogout;
+    }
+
+    // Save general settings
     document.getElementById('save_general_settings_btn')?.addEventListener('click', () => {
-        const val = document.getElementById('setting_default_username').value;
-        localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, val);
+        const defaultUser = document.getElementById('setting_default_username').value;
+        const autoLogout = document.getElementById('setting_auto_logout').value;
+        localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, defaultUser);
+        localStorage.setItem(CONSTANTS.STORAGE.AUTO_LOGOUT, autoLogout);
         showSnackbar('設定を保存しました');
         document.getElementById('settings_dialog').open = false;
+        resetAutoLogoutTimer();
     });
 
     // Fill default username in "Add Password" dialog
@@ -1388,4 +1526,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deleteAllBtn.parentNode.insertBefore(container, deleteAllBtn);
     }
+
+    // Initialize Auto Logout
+    resetAutoLogoutTimer();
+    ['mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, resetAutoLogoutTimer, { passive: true });
+    });
 });
