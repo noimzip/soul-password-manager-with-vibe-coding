@@ -15,7 +15,11 @@ A secure password manager built with modern JavaScript, Web Crypto API, Firebase
 *   **Zero Knowledge**: The master password is never stored in plain text; only the derived hash is verified.
 *   **Auto-Logout**: Automatically locks the vault after a configurable period of inactivity.
 
-### 🔑 Password Management
+### 🔐 Next-Gen Authentication (Passkeys)
+*   **Biometric Login**: Support for **Passkeys (WebAuthn)** allows logging in with Face ID, Touch ID, or Windows Hello.
+*   **Secure Key Storage**: Utilizes the **`largeBlob`** extension of the WebAuthn standard to store the master password safely within the authenticator. This allows for a seamless "passwordless" experience while maintaining zero-knowledge encryption locally.
+
+###  Password Management
 *   **Organization**: Group passwords by categories and mark important items as favorites.
 *   **Drag & Drop**: Reorder your password list easily.
 *   **History Tracking**: Keeps a revision history of password entries, allowing you to restore previous versions.
@@ -25,6 +29,8 @@ A secure password manager built with modern JavaScript, Web Crypto API, Firebase
 *   **Password Generator**: Generate strong, random passwords with customizable length and character types (uppercase, numbers, symbols).
 *   **Strength Meter**: Real-time feedback on password strength and estimated crack time.
 *   **TOTP Authenticator**: Built-in support for generating 2FA codes (Time-based One-Time Passwords).
+*   **Breach Detection**: Integrated **Have I Been Pwned** check.
+    *   **Privacy-Preserving**: Uses *k-Anonymity* model. Only the first 5 characters of the password's SHA-1 hash are sent to the API; the full hash never leaves your device.
 
 ### ⚙️ Settings & Data
 *   **Import/Export**: Backup your vault to JSON or import data from other sources.
@@ -94,4 +100,10 @@ www/
 
 ## Dependencies
 
-The application uses Firebase SDKs (Auth, Firestore, Analytics) via CDN and custom elements (e.g., `m3e-dialog`, `m3e-icon`) from a Material Design web component library.
+The application relies on the following key libraries:
+
+*   **Firebase SDK**: Authentication, Firestore, and Analytics.
+*   **@m3e/components**: Custom Material Design 3 web components for the UI.
+*   **zxcvbn**: For realistic password strength estimation.
+*   **otpauth**: For TOTP (2FA) code generation.
+*   **DOMPurify**: For sanitizing imported data to prevent XSS attacks.
