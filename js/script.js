@@ -42,6 +42,7 @@ let appKey = null; // Session key for Local Mode
 let savedPasswords = []; // In-memory list of decrypted passwords
 let currentDetailIndex = -1; // Index of currently opened item
 let currentUser = null; // Firebase User
+let dragSrcEl = null; // For Drag and Drop
 
 // --- Crypto Utilities (Local Mode - High Security) ---
 
@@ -533,6 +534,52 @@ function updateDetailStrength(password) {
     }
 }
 
+// --- Drag and Drop Handlers ---
+
+function handleDragStart(e) {
+    this.style.opacity = '0.4';
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    this.classList.add('over');
+    return false;
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('over');
+}
+
+async function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    if (dragSrcEl !== this) {
+        const srcIndex = parseInt(dragSrcEl.dataset.index);
+        const targetIndex = parseInt(this.dataset.index);
+        
+        if (!isNaN(srcIndex) && !isNaN(targetIndex) && srcIndex !== targetIndex) {
+             const item = savedPasswords[srcIndex];
+             savedPasswords.splice(srcIndex, 1);
+             savedPasswords.splice(targetIndex, 0, item);
+             
+             if (!currentUser) await savePasswordsData();
+             renderPasswordList(document.getElementById('fld').value);
+        }
+    }
+    return false;
+}
+
+function handleDragEnd(e) {
+    this.style.opacity = '1';
+    document.querySelectorAll('m3e-nav-menu-item').forEach(item => item.classList.remove('over'));
+}
+
 function renderPasswordList(filterText) {
     const navMenu = document.querySelector('m3e-nav-menu');
     const favList = document.getElementById('favorite_list');
@@ -602,6 +649,11 @@ function addPasswordToUI(item, index, listGroup) {
     // Drag and Drop logic (simplified for module)
     newItem.draggable = true;
     newItem.dataset.index = index;
+    newItem.addEventListener('dragstart', handleDragStart);
+    newItem.addEventListener('dragover', handleDragOver);
+    newItem.addEventListener('dragleave', handleDragLeave);
+    newItem.addEventListener('drop', handleDrop);
+    newItem.addEventListener('dragend', handleDragEnd);
     
     let icon;
     if (item.website) {
@@ -862,6 +914,36 @@ onAuthStateChanged(auth, (user) => {
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Password Checker
+    const passCheckInput = document.getElementById('pass_check_form');
+    if (passCheckInput) {
+        passCheckInput.addEventListener('input', (e) => {
+            const password = e.target.value;
+            const strength = calculatePasswordStrength(password);
+            const resultElement = document.getElementById('pass_check_result');
+            const crackTimeElement = document.getElementById('pass_crack_time');
+
+            if (resultElement) {
+                if (!password) {
+                    resultElement.textContent = '';
+                } else if (strength < 2) {
+                    resultElement.textContent = '弱いパスワード';
+                    resultElement.style.color = '#d32f2f';
+                } else if (strength < 4) {
+                    resultElement.textContent = '中程度のパスワード';
+                    resultElement.style.color = '#f57c00';
+                } else {
+                    resultElement.textContent = '強いパスワード';
+                    resultElement.style.color = '#388e3c';
+                }
+            }
+
+            if (crackTimeElement) {
+                crackTimeElement.textContent = password ? calculateCrackTime(password) : '';
+            }
+        });
+    }
+
     // Setup Dialog
     document.getElementById('setup_btn')?.addEventListener('click', async () => {
         const user = document.getElementById('setup_username').value;
@@ -1092,6 +1174,45 @@ document.addEventListener('DOMContentLoaded', () => {
             themeToggleBtn.querySelector('m3e-icon').name = 'light_mode';
         }
     }
+
+    // --- Default Username Features ---
+    
+    // Load saved default username into settings input
+    const savedDefaultUser = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
+    if (savedDefaultUser) {
+        const settingInput = document.getElementById('setting_default_username');
+        if (settingInput) settingInput.value = savedDefaultUser;
+    }
+
+    // Save default username from settings
+    document.getElementById('save_general_settings_btn')?.addEventListener('click', () => {
+        const val = document.getElementById('setting_default_username').value;
+        localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, val);
+        showSnackbar('設定を保存しました');
+        document.getElementById('settings_dialog').open = false;
+    });
+
+    // Fill default username in "Add Password" dialog
+    document.getElementById('fill_new_pass_default_username_btn')?.addEventListener('click', () => {
+        const val = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
+        if (val) {
+            document.getElementById('new_pass_username').value = val;
+            showSnackbar('デフォルトユーザー名を入力しました');
+        } else {
+            showSnackbar('デフォルトユーザー名が設定されていません');
+        }
+    });
+
+    // Fill default username in "Detail" dialog
+    document.getElementById('fill_default_username_btn')?.addEventListener('click', () => {
+        const val = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
+        if (val) {
+            document.getElementById('detail_pass_username').value = val;
+            showSnackbar('デフォルトユーザー名を入力しました');
+        } else {
+            showSnackbar('デフォルトユーザー名が設定されていません');
+        }
+    });
 
     // Setup Password Toggles
     const passwordIds = [
