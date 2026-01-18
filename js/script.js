@@ -1,8 +1,22 @@
 // Import Firebase SDKs
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+
+// Import UI Components
+import "@m3e/icon/dist/index.min.js";
+import "@m3e/button/dist/index.min.js";
+import "@m3e/fab/dist/index.min.js";
+import "@m3e/fab-menu/dist/index.min.js";
+import "@m3e/dialog/dist/index.min.js";
+import "@m3e/icon-button/dist/index.min.js";
+import "@m3e/slider/dist/index.min.js";
+import "@m3e/form-field/dist/index.min.js";
+import "@m3e/app-bar/dist/index.min.js";
+import "@m3e/nav-menu/dist/index.min.js";
+import "@m3e/divider/dist/index.min.js";
+import "@m3e/heading/dist/index.min.js";
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
