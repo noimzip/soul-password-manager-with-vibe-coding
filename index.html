@@ -21,6 +21,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
   </head>
   <body>
+    <script>
+      if (localStorage.getItem('soul_theme') === 'dark') {
+        document.body.classList.add('dark-theme');
+      }
+    </script>
+    <div id="loading_overlay">
+      <m3e-loading-indicator></m3e-loading-indicator>
+    </div>
 	<header>
       <m3e-app-bar>
         <span slot="title">Soul Password Manager</span>

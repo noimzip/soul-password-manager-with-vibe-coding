@@ -17,6 +17,7 @@ import "@m3e/app-bar/dist/index.min.js";
 import "@m3e/nav-menu/dist/index.min.js";
 import "@m3e/divider/dist/index.min.js";
 import "@m3e/heading/dist/index.min.js";
+import "@m3e/loading-indicator/dist/index.min.js";
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -1546,4 +1547,5 @@ document.addEventListener('DOMContentLoaded', () => {
     ['mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
         document.addEventListener(evt, resetAutoLogoutTimer, { passive: true });
     });
+    document.body.classList.add('loaded');
 });
