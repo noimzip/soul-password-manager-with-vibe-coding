@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@m3e/all": "^1.1.6",
+    "dompurify": "^3.3.1",
     "firebase": "^12.8.0",
-    "lit": "^3.0.0"
+    "lit": "^3.0.0",
+    "otpauth": "^9.4.1",
+    "zxcvbn": "^4.4.2"
   }
 }

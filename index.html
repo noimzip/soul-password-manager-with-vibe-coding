@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: content: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https://www.google.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://api.pwnedpasswords.com; frame-src https://*.firebaseapp.com https://*.google.com; base-uri 'self'; object-src 'none'; frame-ancestors 'none';">
     <title>Soul Password Manager</title>
 
     <!--scripts-->
@@ -21,11 +21,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
   </head>
   <body>
-    <script>
-      if (localStorage.getItem('soul_theme') === 'dark') {
-        document.body.classList.add('dark-theme');
-      }
-    </script>
+    <script src="./js/theme.js"></script>
     <div id="loading_overlay">
       <m3e-loading-indicator></m3e-loading-indicator>
     </div>
@@ -192,19 +188,19 @@
       </div>
       <div class="flex-row-center-gap">
         <m3e-form-field variant="outlined" label="Password" class="flex-1">
-          <input id="new_pass_value" type="password" placeholder="パスワード">
+          <input id="new_pass_value" type="password" placeholder="パスワード" autocomplete="new-password">
         </m3e-form-field>
         <m3e-icon-button id="generate_new_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
       </div>
       <m3e-form-field variant="outlined" label="TOTP Secret (Optional)">
-        <input id="new_pass_secret" type="password" placeholder="TOTP 秘密鍵">
+        <input id="new_pass_secret" type="password" placeholder="TOTP 秘密鍵" autocomplete="new-password">
       </m3e-form-field>
       <div slot="actions">
         <m3e-button variant="text">
           <m3e-dialog-action return-value="cancel">キャンセル</m3e-dialog-action>
         </m3e-button>
         <m3e-button variant="filled" id="save_new_password_btn">
-          <m3e-dialog-action return-value="save">保存</m3e-dialog-action>
+          保存
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -235,7 +231,7 @@
       </div>
       <div class="flex-row-center-gap">
         <m3e-form-field variant="outlined" label="Password" class="flex-1">
-          <input id="detail_pass_value" type="text" placeholder="パスワード">
+          <input id="detail_pass_value" type="text" placeholder="パスワード" autocomplete="new-password">
         </m3e-form-field>
         <m3e-icon-button id="copy_detail_pass_btn" title="Copy Password"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="generate_detail_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
@@ -243,8 +239,12 @@
       TOTP 秘密鍵
       <p id="detail_pass_strength" class="font-bold text-small mt-2 mb-2" style="min-height: 1.5em;"></p>
       <p id="detail_pass_crack_time" class="text-small text-secondary mb-3"></p>
+      <m3e-button id="check_breach_btn" variant="tonal" class="mb-3" style="width:100%">
+        <m3e-icon slot="icon" name="security"></m3e-icon>
+        漏洩チェック (Have I Been Pwned)
+      </m3e-button>
       <m3e-form-field variant="outlined" label="TOTP Secret">
-        <input id="detail_pass_secret" type="password">
+        <input id="detail_pass_secret" type="password" autocomplete="new-password">
       </m3e-form-field>
       <div id="totp_display_area" class="totp-display">
         <div class="totp-code" id="totp_code" title="Click to copy"></div>
@@ -301,15 +301,25 @@
       </div>
       <m3e-divider></m3e-divider>
 
+      <h3>Passkey (生体認証) 設定</h3>
+      <p class="text-small text-secondary">
+        デバイスの生体認証を使ってログインできるようにします。<br>
+        ※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。
+      </p>
+      <div class="text-right mb-3">
+        <m3e-button variant="tonal" id="setup_passkey_btn">Passkeyを登録</m3e-button>
+      </div>
+      <m3e-divider></m3e-divider>
+
       <h3>マスターパスワードを変更</h3>
       <m3e-form-field variant="outlined" label="Current Password">
-        <input id="setting_current_pass" type="password" placeholder="現在のパスワード">
+        <input id="setting_current_pass" type="password" placeholder="現在のパスワード" autocomplete="new-password">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="New Password">
-        <input id="setting_new_pass" type="password" placeholder="新規パスワード">
+        <input id="setting_new_pass" type="password" placeholder="新規パスワード" autocomplete="new-password">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="Confirm New Password">
-        <input id="setting_new_pass_confirm" type="password" placeholder="新規パスワードの確認">
+        <input id="setting_new_pass_confirm" type="password" placeholder="新規パスワードの確認" autocomplete="new-password">
       </m3e-form-field>
       <div class="text-right mb-3">
         <m3e-button variant="filled" id="update_master_pass_btn">
@@ -340,10 +350,10 @@
         <input id="setup_username" type="text" placeholder="ユーザー名">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="Master Password">
-        <input id="setup_password" type="password" placeholder="マスターパスワード">
+        <input id="setup_password" type="password" placeholder="マスターパスワード" autocomplete="new-password">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="Confirm Password">
-        <input id="setup_password_confirm" type="password" placeholder="マスターパスワードの確認">
+        <input id="setup_password_confirm" type="password" placeholder="マスターパスワードの確認" autocomplete="new-password">
       </m3e-form-field>
       <div slot="actions">
         <m3e-button variant="filled" id="setup_btn">
@@ -358,9 +368,13 @@
         <input id="login_username" type="text" placeholder="ユーザー名">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="Master Password">
-        <input id="login_password" type="password" placeholder="マスターパスワード">
+        <input id="login_password" type="password" placeholder="マスターパスワード" autocomplete="new-password">
       </m3e-form-field>
       <div slot="actions">
+        <m3e-button variant="tonal" id="biometric_login_btn">
+          <m3e-icon slot="icon" name="fingerprint"></m3e-icon>
+          生体認証でログイン
+        </m3e-button>
         <m3e-button variant="outlined" id="google_login_btn">
           <m3e-icon slot="icon" name="login"></m3e-icon>
           Googleでログイン

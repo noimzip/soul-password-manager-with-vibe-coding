@@ -19,6 +19,10 @@ import "@m3e/divider/dist/index.min.js";
 import "@m3e/heading/dist/index.min.js";
 import "@m3e/loading-indicator/dist/index.min.js";
 
+import zxcvbn from 'zxcvbn';
+import * as OTPAuth from 'otpauth';
+import DOMPurify from 'dompurify';
+
 // --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
@@ -49,7 +53,7 @@ const CONSTANTS = {
 };
 
 const CRYPTO_CONFIG = {
-    PBKDF2_ITERATIONS: 100000,
+    PBKDF2_ITERATIONS: 600000,
     SALT_LENGTH: 16,
     IV_LENGTH: 12
 };
@@ -172,7 +176,11 @@ async function decryptLocal(encryptedJson, key) {
 // --- Crypto Utilities (Cloud Mode - Demo/Fixed Key) ---
 // Uses a fixed salt/key to allow multi-device sync without complex key exchange in this demo.
 async function getCloudCryptoKey() {
-    const rawKey = new TextEncoder().encode("SoulPasswordManagerDemoKey"); 
+    let keyMaterial = "SoulPasswordManagerDemoKey";
+    if (currentUser && currentUser.uid) {
+        keyMaterial += currentUser.uid;
+    }
+    const rawKey = new TextEncoder().encode(keyMaterial); 
     const keyHash = await window.crypto.subtle.digest('SHA-256', rawKey);
     return window.crypto.subtle.importKey(
       "raw",
@@ -270,6 +278,10 @@ function copyToClipboard(text, message) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(function() {
         showSnackbar(message);
+        // Clear clipboard after 30 seconds for security
+        setTimeout(() => {
+            navigator.clipboard.writeText('').catch(() => {});
+        }, 30000);
     }).catch(function(err) {
         console.error('Copy failed', err);
         showSnackbar('コピーに失敗しました');
@@ -347,37 +359,17 @@ function showSnackbar(message) {
 // --- Password Strength & TOTP ---
 
 function calculatePasswordStrength(password) {
-    let strength = 0;
     if (!password) return 0;
-
-    if (password.length >= 8) strength += 1;
-    if (password.length >= 12) strength += 1;
-    if (password.length >= 16) strength += 1;
-
-    let typeCount = 0;
-    if (/[a-z]/.test(password)) typeCount++;
-    if (/[A-Z]/.test(password)) typeCount++;
-    if (/[0-9]/.test(password)) typeCount++;
-    if (/[^A-Za-z0-9]/.test(password)) typeCount++;
-    strength += typeCount;
-
-    if (password.length < 8 || typeCount <= 1) return Math.min(strength, 1);
-    if (typeCount === 2) return Math.min(strength, 3);
-
-    return strength;
+    // zxcvbn returns a score from 0 (weak) to 4 (very strong)
+    const result = zxcvbn(password);
+    return result.score;
 }
 
 function calculateCrackTime(password) {
-    let poolSize = 0;
-    if (/[a-z]/.test(password)) poolSize += 26;
-    if (/[A-Z]/.test(password)) poolSize += 26;
-    if (/[0-9]/.test(password)) poolSize += 10;
-    if (/[^a-zA-Z0-9]/.test(password)) poolSize += 33;
-
-    if (poolSize === 0) return '';
-
-    const combinations = Math.pow(poolSize, password.length);
-    const seconds = combinations / 1000000000; 
+    if (!password) return '';
+    const result = zxcvbn(password);
+    // Use offline_slow_hashing_1e4_per_second for a conservative estimate (e.g. master password cracking)
+    const seconds = result.crack_times_seconds.offline_slow_hashing_1e4_per_second;
 
     let timeString = '一瞬';
     if (seconds >= 31536000 * 100) timeString = '数世紀以上';
@@ -390,64 +382,156 @@ function calculateCrackTime(password) {
     return '解読にかかる推定時間: ' + timeString;
 }
 
-// Base32 decode helper
-function base32ToBuf(str) {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let length = str.length;
-    let bits = 0;
-    let value = 0;
-    let index = 0;
-    const output = new Uint8Array((length * 5 / 8) | 0);
+async function checkPwnedPassword(password) {
+    if (!password) return null;
+    // Hash password with SHA-1
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
     
-    for (let i = 0; i < length; i++) {
-        const char = str.charAt(i).toUpperCase();
-        const val = alphabet.indexOf(char);
-        if (val === -1) continue;
-        
-        value = (value << 5) | val;
-        bits += 5;
-        
-        if (bits >= 8) {
-            output[index++] = (value >>> (bits - 8)) & 255;
-            bits -= 8;
-        }
+    const prefix = hashHex.substring(0, 5);
+    const suffix = hashHex.substring(5);
+    
+    try {
+        const response = await fetch('https://api.pwnedpasswords.com/range/' + prefix);
+        const text = await response.text();
+        const regex = new RegExp(`^${suffix}:([0-9]+)$`, 'm');
+        const match = text.match(regex);
+        return match ? parseInt(match[1]) : 0;
+    } catch (e) {
+        console.error("HIBP check failed", e);
+        return -1; // Error
     }
-    return output.slice(0, index);
 }
 
 async function generateTOTP(secret) {
     if (!secret) return null;
     try {
-        secret = secret.replace(/\s/g, '');
-        const keyData = base32ToBuf(secret);
-        if (keyData.length === 0) return null;
-
-        const key = await window.crypto.subtle.importKey(
-            "raw", keyData, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
-        );
-
+        // Remove spaces
+        const cleanSecret = secret.replace(/\s/g, '');
+        
+        // Create TOTP object using otpauth library
+        const totp = new OTPAuth.TOTP({
+            algorithm: 'SHA1',
+            digits: 6,
+            period: 30,
+            secret: OTPAuth.Secret.fromBase32(cleanSecret)
+        });
+        
+        const code = totp.generate();
+        
+        // Calculate remaining time
         const epoch = Math.floor(Date.now() / 1000);
-        const timeStep = 30;
-        const counter = Math.floor(epoch / timeStep);
-        
-        const counterBuf = new ArrayBuffer(8);
-        const counterView = new DataView(counterBuf);
-        counterView.setUint32(4, counter, false);
+        const period = 30;
+        const remaining = period - (epoch % period);
 
-        const signature = await window.crypto.subtle.sign("HMAC", key, counterBuf);
-        const hmac = new Uint8Array(signature);
-        
-        const offset = hmac[hmac.length - 1] & 0xf;
-        const code = ((hmac[offset] & 0x7f) << 24) |
-                     ((hmac[offset + 1] & 0xff) << 16) |
-                     ((hmac[offset + 2] & 0xff) << 8) |
-                     (hmac[offset + 3] & 0xff);
-                     
-        const strCode = (code % 1000000).toString().padStart(6, '0');
-        return { code: strCode, remaining: timeStep - (epoch % timeStep) };
+        return { code: code, remaining: remaining };
     } catch (e) {
         console.error("TOTP generation failed", e);
         return null;
+    }
+}
+
+// --- WebAuthn / Passkey Logic ---
+
+function strToBuffer(str) {
+    return new TextEncoder().encode(str);
+}
+
+function bufferToStr(buf) {
+    return new TextDecoder().decode(buf);
+}
+
+async function registerPasskey() {
+    if (!window.PublicKeyCredential) {
+        showAlertDialog("このブラウザはPasskeyをサポートしていません。");
+        return;
+    }
+
+    // We need the plaintext password to store it in the largeBlob.
+    // Since we don't keep it in memory, we must ask the user.
+    const password = prompt("Passkeyに保存するため、現在のマスターパスワードを入力してください:");
+    if (!password) return;
+
+    // Verify password first
+    const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+    if (masterAuth) {
+        const hash = await hashPassword(password, masterAuth.salt);
+        if (hash !== masterAuth.hash) {
+            showAlertDialog("パスワードが間違っています。");
+            return;
+        }
+    }
+
+    try {
+        showSnackbar("生体認証/PINを入力して登録してください...");
+        
+        // 1. Create Credential
+        const userId = new Uint8Array(16);
+        window.crypto.getRandomValues(userId);
+
+        const publicKeyCredentialCreationOptions = {
+            challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+            rp: { name: "Soul Password Manager", id: window.location.hostname },
+            user: { id: userId, name: masterAuth.username, displayName: masterAuth.username },
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+            authenticatorSelection: { authenticatorAttachment: "platform", requireResidentKey: true, userVerification: "required" },
+            timeout: 60000,
+            attestation: "none",
+            extensions: { largeBlob: { support: "required" } }
+        };
+
+        const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
+
+        // 2. Write Password to Large Blob (requires a separate assertion immediately after creation)
+        const passwordBuffer = strToBuffer(password);
+        const assertionOptions = {
+            challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+            rpId: window.location.hostname,
+            allowCredentials: [{ id: credential.rawId, type: 'public-key' }],
+            userVerification: "required",
+            extensions: { largeBlob: { write: passwordBuffer } }
+        };
+
+        await navigator.credentials.get({ publicKey: assertionOptions });
+        showSnackbar("Passkeyを登録しました。");
+
+    } catch (e) {
+        console.error(e);
+        showAlertDialog("Passkeyの登録に失敗しました: " + e.message);
+    }
+}
+
+async function loginWithPasskey() {
+    if (!window.PublicKeyCredential) return;
+
+    try {
+        const assertionOptions = {
+            challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+            rpId: window.location.hostname,
+            userVerification: "required",
+            extensions: { largeBlob: { read: true } }
+        };
+
+        const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
+        const extResults = assertion.getClientExtensionResults();
+
+        if (extResults.largeBlob && extResults.largeBlob.blob) {
+            const password = bufferToStr(extResults.largeBlob.blob);
+            const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+            
+            // Use the retrieved password to login
+            appKey = await deriveKey(password, masterAuth.salt);
+            document.getElementById('login_dialog').open = false;
+            initLocalApp();
+            showSnackbar("生体認証でログインしました");
+        } else {
+            showAlertDialog("Passkeyからデータを読み取れませんでした。");
+        }
+    } catch (e) {
+        console.error(e);
+        showSnackbar("認証キャンセルまたはエラー: " + e.message);
     }
 }
 
@@ -826,6 +910,13 @@ function addPasswordToUI(item, index, listGroup) {
         document.getElementById('detail_pass_value').value = item.password || '';
         document.getElementById('detail_pass_secret').value = item.secret || '';
         
+        // Reset breach check button
+        const breachBtn = document.getElementById('check_breach_btn');
+        if (breachBtn) {
+            breachBtn.textContent = '漏洩チェック (Have I Been Pwned)';
+            breachBtn.style.setProperty('--md-sys-color-primary', '');
+        }
+
         // Store docId for cloud updates
         dialog.dataset.docId = item.id;
         
@@ -851,9 +942,23 @@ function addPasswordToUI(item, index, listGroup) {
                 const infoDiv = document.createElement('div');
                 infoDiv.style.flex = '1';
                 const dateStr = new Date(h.date).toLocaleString();
-                infoDiv.innerHTML = `<div class="font-bold text-small">${dateStr}</div>` +
-                                `<div class="text-small" style="opacity: 0.8;">Title: ${h.title || '-'}</div>` +
-                                `<div class="text-small" style="opacity: 0.8;">User: ${h.username || '-'}</div>`;
+                
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'font-bold text-small';
+                dateDiv.textContent = dateStr;
+                infoDiv.appendChild(dateDiv);
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'text-small';
+                titleDiv.style.opacity = '0.8';
+                titleDiv.textContent = `Title: ${h.title || '-'}`;
+                infoDiv.appendChild(titleDiv);
+
+                const userDiv = document.createElement('div');
+                userDiv.className = 'text-small';
+                userDiv.style.opacity = '0.8';
+                userDiv.textContent = `User: ${h.username || '-'}`;
+                infoDiv.appendChild(userDiv);
                 
                 const restoreBtn = document.createElement('button');
                 restoreBtn.textContent = '復元';
@@ -1098,6 +1203,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showAlertDialog('ユーザー名またはパスワードが間違っています。');
     });
 
+    // Biometric Login
+    document.getElementById('biometric_login_btn')?.addEventListener('click', loginWithPasskey);
+    document.getElementById('setup_passkey_btn')?.addEventListener('click', registerPasskey);
+
     // Google Login
     document.getElementById('google_login_btn')?.addEventListener('click', () => {
         const provider = new GoogleAuthProvider();
@@ -1112,6 +1221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logout_btn')?.addEventListener('click', () => {
         showConfirmDialog("ログアウトしますか？").then(res => {
             if (res) {
+                savedPasswords = []; // Clear memory
                 if (currentUser) {
                     signOut(auth).then(() => location.reload());
                 } else {
@@ -1146,6 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('new_pass_username').value = '';
             document.getElementById('new_pass_value').value = '';
             document.getElementById('new_pass_secret').value = '';
+            document.getElementById('add_password_dialog').open = false;
             showSnackbar('新しいパスワードを作成しました');
         }
     });
@@ -1213,6 +1324,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('new_pass_value').value = password;
     });
 
+    document.getElementById('check_breach_btn')?.addEventListener('click', async function() {
+        const password = document.getElementById('detail_pass_value').value;
+        if (!password) return;
+        
+        this.textContent = 'チェック中...';
+        const count = await checkPwnedPassword(password);
+        
+        if (count === -1) {
+            this.textContent = 'エラーが発生しました';
+        } else if (count === 0) {
+            this.textContent = '漏洩は見つかりませんでした (安全)';
+            this.style.setProperty('--md-sys-color-primary', '#388e3c'); // Green
+        } else {
+            this.textContent = `危険！ ${count.toLocaleString()} 回の漏洩が確認されました`;
+            this.style.setProperty('--md-sys-color-primary', '#b3261e'); // Red
+        }
+    });
+
     document.getElementById('generate_detail_pass_btn')?.addEventListener('click', () => {
         const password = generatePasswordString(16, true, true, true);
         document.getElementById('detail_pass_value').value = password;
@@ -1234,13 +1363,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Detail Dialog Events
-    document.getElementById('detail_password_dialog')?.addEventListener('closed', stopTOTPUpdate);
+    document.getElementById('detail_password_dialog')?.addEventListener('closed', () => {
+        stopTOTPUpdate();
+        // Clear sensitive fields from DOM when dialog closes
+        document.getElementById('detail_pass_value').value = '';
+        document.getElementById('detail_pass_secret').value = '';
+    });
+
+    document.getElementById('add_password_dialog')?.addEventListener('closed', () => {
+        // Clear sensitive fields from DOM when dialog closes
+        document.getElementById('new_pass_value').value = '';
+        document.getElementById('new_pass_secret').value = '';
+    });
+
     document.getElementById('detail_pass_value')?.addEventListener('input', (e) => updateDetailStrength(e.target.value));
     document.getElementById('open_website_btn')?.addEventListener('click', () => {
         let url = document.getElementById('detail_pass_website').value;
         if (url) {
             if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
-            window.open(url, '_blank');
+            const newWindow = window.open(url, '_blank');
+            if (newWindow) newWindow.opener = null;
         }
     });
 
@@ -1505,10 +1647,36 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = (e) => {
                 try {
                     const importedData = JSON.parse(e.target.result);
+                    
+                    // Validate Data Structure
+                    const isValid = Array.isArray(importedData) && importedData.every(item => 
+                        typeof item === 'object' && item !== null && typeof item.title === 'string'
+                    );
+                    if (!isValid) {
+                        showAlertDialog('無効なデータ形式が含まれています。インポートを中止しました。');
+                        return;
+                    }
+
                     if (Array.isArray(importedData)) {
                         showConfirmDialog(`現在のリストに ${importedData.length} 件のデータを追加しますか？`).then(async res => {
                             if (res) {
                                 importedData.forEach(item => {
+                                    // Sanitize imported data using DOMPurify to prevent XSS
+                                    // Note: Password and Secret are NOT sanitized to preserve exact values
+                                    if (typeof item.title === 'string') item.title = DOMPurify.sanitize(item.title);
+                                    if (typeof item.category === 'string') item.category = DOMPurify.sanitize(item.category);
+                                    if (typeof item.website === 'string') item.website = DOMPurify.sanitize(item.website);
+                                    if (typeof item.username === 'string') item.username = DOMPurify.sanitize(item.username);
+
+                                    if (item.history && Array.isArray(item.history)) {
+                                        item.history.forEach(h => {
+                                            if (typeof h.title === 'string') h.title = DOMPurify.sanitize(h.title);
+                                            if (typeof h.category === 'string') h.category = DOMPurify.sanitize(h.category);
+                                            if (typeof h.website === 'string') h.website = DOMPurify.sanitize(h.website);
+                                            if (typeof h.username === 'string') h.username = DOMPurify.sanitize(h.username);
+                                        });
+                                    }
+
                                     if (!item.lastModified) item.lastModified = Date.now();
                                     // If cloud mode, we should probably add them one by one, but for now just local array
                                     if (currentUser) {
@@ -1547,5 +1715,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ['mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
         document.addEventListener(evt, resetAutoLogoutTimer, { passive: true });
     });
+    document.addEventListener('visibilitychange', resetAutoLogoutTimer); // Handle tab switching
     document.body.classList.add('loaded');
 });
