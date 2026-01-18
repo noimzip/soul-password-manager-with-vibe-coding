@@ -48,6 +48,311 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
   </head>
   <body>
+    <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: "",
+    measurementId: ""
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Google Login Logic
+  const googleLoginBtn = document.getElementById('google_login_btn');
+  if (googleLoginBtn) {
+    googleLoginBtn.addEventListener('click', () => {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider)
+        .catch((error) => {
+          console.error("Login failed:", error);
+          alert("Googleログインに失敗しました: " + error.message);
+        });
+    });
+  }
+
+  // Auth State Listener
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("User logged in:", user.email);
+      const loginDialog = document.getElementById('login_dialog');
+      if (loginDialog) loginDialog.open = false;
+      initFirestoreSync(user);
+    } else {
+      loadLocalData();
+    }
+  });
+
+  // Logout Logic
+  const logoutBtn = document.getElementById('logout_btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      signOut(auth).then(() => location.reload());
+    });
+  }
+
+  // Cloud Sync Logic (Save)
+  const saveNewPassBtn = document.getElementById('save_new_password_btn');
+  if (saveNewPassBtn) {
+    saveNewPassBtn.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      const data = {
+        title: document.getElementById('new_pass_title').value,
+        category: document.getElementById('new_pass_category').value,
+        website: document.getElementById('new_pass_website').value,
+        username: document.getElementById('new_pass_username').value,
+        password: await encryptData(document.getElementById('new_pass_value').value),
+        secret: document.getElementById('new_pass_secret').value,
+        timestamp: new Date()
+      };
+
+      if (user) {
+        try {
+          await addDoc(collection(db, "passwords"), {
+            uid: user.uid,
+            ...data
+          });
+          console.log("Password saved to cloud");
+        } catch (e) {
+          console.error("Error saving to cloud:", e);
+        }
+      } else {
+        // Local Storage Fallback
+        try {
+          const localData = JSON.parse(localStorage.getItem('soul_passwords') || '[]');
+          data.id = crypto.randomUUID();
+          localData.push(data);
+          localStorage.setItem('soul_passwords', JSON.stringify(localData));
+          console.log("Password saved locally");
+          loadLocalData();
+        } catch (e) {
+          console.error("Error saving locally:", e);
+        }
+      }
+    });
+  }
+
+  function initFirestoreSync(user) {
+    console.log("Sync initialized for user:", user.uid);
+    const q = query(collection(db, "passwords"), where("uid", "==", user.uid));
+    
+    onSnapshot(q, (querySnapshot) => {
+      const passwordList = document.getElementById('password_list');
+      if (!passwordList) return;
+      // Clear existing items but keep the heading
+      const items = passwordList.querySelectorAll('m3e-nav-menu-item');
+      items.forEach(item => item.remove());
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const item = document.createElement('m3e-nav-menu-item');
+        const iconName = data.website ? 'public' : 'key';
+        
+        item.innerHTML = `
+          <m3e-icon slot="icon" name="${iconName}"></m3e-icon>
+          <span slot="label">${data.title || 'No Title'}</span>
+        `;
+        
+        item.addEventListener('click', async () => {
+            await openDetailDialog(doc.id, data);
+        });
+        
+        passwordList.appendChild(item);
+      });
+    });
+  }
+
+  function loadLocalData() {
+    const passwordList = document.getElementById('password_list');
+    if (!passwordList) return;
+    
+    const items = passwordList.querySelectorAll('m3e-nav-menu-item');
+    items.forEach(item => item.remove());
+
+    const localData = JSON.parse(localStorage.getItem('soul_passwords') || '[]');
+    localData.forEach(data => {
+      const item = document.createElement('m3e-nav-menu-item');
+      const iconName = data.website ? 'public' : 'key';
+      
+      item.innerHTML = `
+        <m3e-icon slot="icon" name="${iconName}"></m3e-icon>
+        <span slot="label">${data.title || 'No Title'}</span>
+      `;
+      
+      item.addEventListener('click', async () => {
+          await openDetailDialog(data.id, data);
+      });
+      
+      passwordList.appendChild(item);
+    });
+  }
+
+  async function openDetailDialog(docId, data) {
+    const dialog = document.getElementById('detail_password_dialog');
+    if (!dialog) return;
+
+    document.getElementById('detail_pass_title').value = data.title || '';
+    document.getElementById('detail_pass_category').value = data.category || '';
+    document.getElementById('detail_pass_website').value = data.website || '';
+    document.getElementById('detail_pass_username').value = data.username || '';
+    document.getElementById('detail_pass_value').value = await decryptData(data.password || '');
+    document.getElementById('detail_pass_secret').value = data.secret || '';
+    
+    // Store docId for update/delete operations
+    dialog.dataset.docId = docId;
+    
+    dialog.open = true;
+  }
+
+  // Update Password Logic
+  const updatePassBtn = document.getElementById('update_password_btn');
+  if (updatePassBtn) {
+    updatePassBtn.addEventListener('click', async () => {
+      const dialog = document.getElementById('detail_password_dialog');
+      const docId = dialog.dataset.docId;
+      if (!docId) return;
+      
+      const user = auth.currentUser;
+      const newData = {
+        title: document.getElementById('detail_pass_title').value,
+        category: document.getElementById('detail_pass_category').value,
+        website: document.getElementById('detail_pass_website').value,
+        username: document.getElementById('detail_pass_username').value,
+        password: await encryptData(document.getElementById('detail_pass_value').value),
+        secret: document.getElementById('detail_pass_secret').value
+      };
+
+      if (user) {
+        try {
+          const passRef = doc(db, "passwords", docId);
+          await updateDoc(passRef, newData);
+          console.log("Document updated");
+          dialog.open = false;
+        } catch (e) {
+          console.error("Error updating document: ", e);
+          alert("更新に失敗しました: " + e.message);
+        }
+      } else {
+        const localData = JSON.parse(localStorage.getItem('soul_passwords') || '[]');
+        const index = localData.findIndex(d => d.id === docId);
+        if (index !== -1) {
+          localData[index] = { ...localData[index], ...newData };
+          localStorage.setItem('soul_passwords', JSON.stringify(localData));
+          loadLocalData();
+          dialog.open = false;
+        }
+      }
+    });
+  }
+
+  // Delete Password Logic
+  const deletePassBtn = document.getElementById('delete_password_btn');
+  if (deletePassBtn) {
+    deletePassBtn.addEventListener('click', async () => {
+      const dialog = document.getElementById('detail_password_dialog');
+      const docId = dialog.dataset.docId;
+      if (!docId) return;
+      
+      const user = auth.currentUser;
+
+      if (confirm("このパスワードを削除してもよろしいですか？")) {
+        if (user) {
+          try {
+            await deleteDoc(doc(db, "passwords", docId));
+            console.log("Document deleted");
+            dialog.open = false;
+          } catch (e) {
+            console.error("Error deleting document: ", e);
+            alert("削除に失敗しました: " + e.message);
+          }
+        } else {
+          let localData = JSON.parse(localStorage.getItem('soul_passwords') || '[]');
+          localData = localData.filter(d => d.id !== docId);
+          localStorage.setItem('soul_passwords', JSON.stringify(localData));
+          loadLocalData();
+          dialog.open = false;
+        }
+      }
+    });
+  }
+
+  // Encryption Helpers
+  async function getCryptoKey() {
+    // In a real app, derive this from the user's master password or a secure key management system.
+    // For this demo, we use a fixed salt/passphrase.
+    const rawKey = new TextEncoder().encode("SoulPasswordManagerDemoKey"); 
+    const keyHash = await window.crypto.subtle.digest('SHA-256', rawKey);
+    return window.crypto.subtle.importKey(
+      "raw",
+      keyHash,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  async function encryptData(plaintext) {
+    if (!plaintext) return "";
+    try {
+      const key = await getCryptoKey();
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const encoded = new TextEncoder().encode(plaintext);
+      const ciphertext = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encoded
+      );
+      const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+      combined.set(iv);
+      combined.set(new Uint8Array(ciphertext), iv.length);
+      return btoa(String.fromCharCode(...combined));
+    } catch (e) {
+      console.error("Encryption failed:", e);
+      return plaintext;
+    }
+  }
+
+  async function decryptData(encryptedBase64) {
+    if (!encryptedBase64) return "";
+    try {
+      const key = await getCryptoKey();
+      const binaryString = atob(encryptedBase64);
+      const combined = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        combined[i] = binaryString.charCodeAt(i);
+      }
+      const iv = combined.slice(0, 12);
+      const ciphertext = combined.slice(12);
+      const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        ciphertext
+      );
+      return new TextDecoder().decode(decrypted);
+    } catch (e) {
+      // Fallback for unencrypted data or errors
+      console.warn("Decryption failed, returning original:", e);
+      return encryptedBase64;
+    }
+  }
+</script>
 	<header>
       <m3e-app-bar>
         <span slot="title">Soul Password Manager</span>
@@ -357,6 +662,10 @@
         <input id="login_password" type="password" placeholder="マスターパスワード">
       </m3e-form-field>
       <div slot="actions">
+        <m3e-button variant="outlined" id="google_login_btn">
+          <m3e-icon slot="icon" name="login"></m3e-icon>
+          Googleでログイン
+        </m3e-button>
         <m3e-button variant="filled" id="login_btn">
           ログイン
         </m3e-button>
