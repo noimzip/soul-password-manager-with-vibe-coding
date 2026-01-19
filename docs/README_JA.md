@@ -1,3 +1,5 @@
+[English](README.md) | 日本語
+
 # Soul Password Manager
 
 モダンなJavaScript、Web Crypto API、Firebase、Viteで構築されたセキュアなパスワードマネージャーです。強力な暗号化、クラウド同期、組み込みのパスワード生成機能、TOTPサポートを備えています。
