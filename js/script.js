@@ -2689,7 +2689,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Language
     const savedLang = localStorage.getItem(CONSTANTS.STORAGE.LANGUAGE);
-    const browserLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
+    
+    let browserLang = 'en';
+    const navLang = navigator.language || '';
+    if (navLang.startsWith('ja')) browserLang = 'ja';
+    else if (navLang.startsWith('zh')) browserLang = 'zh';
+    else if (navLang.startsWith('ko')) browserLang = 'ko';
+    else if (navLang.startsWith('de')) browserLang = 'de';
+    else if (navLang.startsWith('fr')) browserLang = 'fr';
+    else if (navLang.startsWith('it')) browserLang = 'it';
+
     updateLanguage(savedLang || browserLang);
     const langSelect = document.getElementById('setting_language');
     if (langSelect) {
