@@ -48,7 +48,8 @@ const CONSTANTS = {
         AUTO_LOGOUT: 'soul_auto_logout_minutes',
         DEFAULT_USER: 'soul_default_username',
         THEME: 'soul_theme',
-        GENERATOR_HISTORY: 'soul_generator_history'
+        GENERATOR_HISTORY: 'soul_generator_history',
+        LANGUAGE: 'soul_language'
     }
 };
 
@@ -65,6 +66,336 @@ let currentUser = null; // Firebase User
 let dragSrcEl = null; // For Drag and Drop
 let historyDebounceTimer = null; // Timer for debouncing history saves
 let autoLogoutTimer = null; // Timer for auto logout
+let currentLang = 'ja'; // Default language
+
+// --- Translations ---
+const TRANSLATIONS = {
+    ja: {
+        app_title: "Soul Password Manager",
+        favorites: "お気に入り",
+        passwords: "パスワード",
+        login_info: "ログイン情報",
+        notes: "メモ",
+        personal_info: "個人情報",
+        pass_generator: "パスワード生成",
+        pass_checker: "パスワード安全性チェッカー",
+        export_json: "JSONファイルでエクスポート",
+        import_json: "JSONファイルをインポート",
+        settings: "設定",
+        auto_make: "パスワードの自動生成",
+        length: "長さ",
+        uppercase: "大文字",
+        numbers: "数字",
+        symbols: "記号",
+        copy: "コピー",
+        regenerate: "再生成",
+        gen_history: "生成履歴",
+        clear_history: "履歴をクリア",
+        close: "とじる",
+        pass_check_title: "パスワードの安全性チェック",
+        enter_pass: "パスワードを入力してください",
+        add_pass_title: "新しいパスワードを追加",
+        service_name: "サービス名",
+        category: "カテゴリ (任意)",
+        website: "Webサイト URL",
+        username: "ユーザー名/メールアドレス",
+        password: "パスワード",
+        totp_secret_opt: "TOTP 秘密鍵 (任意)",
+        cancel: "キャンセル",
+        save: "保存",
+        detail_title: "パスワード詳細",
+        totp_secret: "TOTP 秘密鍵",
+        check_breach: "漏洩チェック (Have I Been Pwned)",
+        last_modified: "最終更新",
+        revision_count: "変更回数",
+        show_history: "変更履歴を表示",
+        delete: "削除",
+        update: "更新",
+        general: "全般",
+        default_username: "デフォルトユーザー名",
+        auto_logout: "自動ログアウト (分)",
+        passkey_settings: "Passkey (生体認証) 設定",
+        passkey_desc: "デバイスの生体認証を使ってログインできるようにします。<br>※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。",
+        register_passkey: "Passkeyを登録",
+        change_master_pass: "マスターパスワードを変更",
+        current_pass: "現在のパスワード",
+        new_pass: "新規パスワード",
+        confirm_new_pass: "新規パスワードの確認",
+        danger_zone: "危険",
+        delete_all_desc: "すべてのパスワードと設定を削除し、アプリを初期化します。",
+        delete_all_data: "全データを削除",
+        setup_title: "初期設定",
+        setup_desc: "マスターユーザー名とパスワードを設定してください。",
+        master_pass: "マスターパスワード",
+        confirm_pass: "マスターパスワードの確認",
+        setup_btn: "セットアップ",
+        login_title: "ログイン",
+        biometric_login: "生体認証でログイン",
+        google_login: "Googleでログイン",
+        login_btn: "ログイン",
+        warning_title: "Ver 26.01.10 (Unstable)",
+        warning_h1: "現在のSoulはデモ版です。",
+        warning_desc: "開発者向けに設計されていて操作が煩雑な上、期待通りに動作しない可能性が高く、セキュリティやプライバシーも十分ではありません。",
+        warning_h2: "はっきり言って使い物になりません。<br><br>他のパスワードマネージャの使用を強く推奨します。",
+        warning_rec: "おすすめパスワードマネージャー:Bitwarden, Proton Pass, KeePass",
+        warning_not_rec: "おすすめしないパスワードマネージャー:このパスワードマネージャー, 紙で管理するやつ",
+        search_placeholder: "検索...",
+        
+        // JS Strings
+        weak: "弱いパスワード",
+        medium: "中程度のパスワード",
+        strong: "強いパスワード",
+        crack_time: "解読にかかる推定時間: ",
+        instant: "一瞬",
+        centuries: "数世紀以上",
+        year: "年", day: "日", hour: "時間", minute: "分", second: "秒",
+        copy_fail: "コピーに失敗しました",
+        pass_copied: "パスワードをコピーしました",
+        user_copied: "ユーザー名をコピーしました",
+        code_copied: "2FAコードをコピーしました",
+        save_fail: "保存に失敗しました",
+        delete_fail: "削除に失敗しました",
+        login_fail: "ユーザー名またはパスワードが間違っています。",
+        google_login_fail: "Googleログインに失敗しました: ",
+        logout_confirm: "ログアウトしますか？",
+        pass_created: "新しいパスワードを作成しました",
+        pass_updated: "パスワードを更新しました",
+        delete_confirm: "このパスワードを削除してもよろしいですか？",
+        pass_deleted: "パスワードを削除しました",
+        checking: "チェック中...",
+        error: "エラーが発生しました",
+        safe: "漏洩は見つかりませんでした (安全)",
+        breach_found: "危険！ {count} 回の漏洩が確認されました",
+        clear_hist_confirm: "このパスワードの変更履歴をすべて削除しますか？",
+        hist_cleared: "変更履歴をクリアしました",
+        clear_gen_confirm: "生成履歴をすべて削除しますか？",
+        gen_cleared: "生成履歴をクリアしました",
+        settings_saved: "設定を保存しました",
+        default_user_filled: "デフォルトユーザー名を入力しました",
+        no_default_user: "デフォルトユーザー名が設定されていません",
+        list_sorted: "リストを並び替えました",
+        data_mgmt: "データ管理",
+        export_json: "エクスポート (JSON)",
+        import_json: "インポート (JSON)",
+        invalid_data: "無効なデータ形式が含まれています。インポートを中止しました。",
+        import_confirm: "現在のリストに {count} 件のデータを追加しますか？",
+        import_done: "インポートが完了しました。",
+        file_error: "ファイルの読み込みに失敗しました。",
+        history_empty: "履歴はありません",
+        hist_empty_detail: "変更履歴はありません。",
+        restore: "復元",
+        restore_confirm: "この履歴の内容を入力フォームに反映しますか？",
+        sort_placeholder: "並び替え...",
+        sort_name_asc: "名前 (A-Z)",
+        sort_name_desc: "名前 (Z-A)",
+        sort_str_asc: "強度 (弱い順)",
+        sort_str_desc: "強度 (強い順)",
+        sort_date_desc: "更新日 (新しい順)",
+        sort_date_asc: "更新日 (古い順)",
+        language: "言語 / Language",
+        yes: "はい",
+        no: "いいえ",
+        ok: "OK"
+    },
+    en: {
+        app_title: "Soul Password Manager",
+        favorites: "Favorites",
+        passwords: "Passwords",
+        login_info: "Login Info",
+        notes: "Notes",
+        personal_info: "Personal Info",
+        pass_generator: "Password Generator",
+        pass_checker: "Password Health Check",
+        export_json: "Export as JSON",
+        import_json: "Import JSON",
+        settings: "Settings",
+        auto_make: "Auto Generate Password",
+        length: "Length",
+        uppercase: "Uppercase",
+        numbers: "Numbers",
+        symbols: "Symbols",
+        copy: "Copy",
+        regenerate: "Regenerate",
+        gen_history: "History",
+        clear_history: "Clear History",
+        close: "Close",
+        pass_check_title: "Password Health Check",
+        enter_pass: "Enter your password here",
+        add_pass_title: "Add New Password",
+        service_name: "Service Name",
+        category: "Category (Optional)",
+        website: "Website URL",
+        username: "Username / Email",
+        password: "Password",
+        totp_secret_opt: "TOTP Secret (Optional)",
+        cancel: "Cancel",
+        save: "Save",
+        detail_title: "Password Details",
+        totp_secret: "TOTP Secret",
+        check_breach: "Check Breach (Have I Been Pwned)",
+        last_modified: "Last Modified",
+        revision_count: "Revisions",
+        show_history: "Show History",
+        delete: "Delete",
+        update: "Update",
+        general: "General",
+        default_username: "Default Username",
+        auto_logout: "Auto Logout (Minutes)",
+        passkey_settings: "Passkey (Biometric) Settings",
+        passkey_desc: "Enable login using device biometrics.<br>*Requires browser/device support for Passkey 'largeBlob' extension.",
+        register_passkey: "Register Passkey",
+        change_master_pass: "Change Master Password",
+        current_pass: "Current Password",
+        new_pass: "New Password",
+        confirm_new_pass: "Confirm New Password",
+        danger_zone: "Danger Zone",
+        delete_all_desc: "Delete all passwords and settings, and reset the app.",
+        delete_all_data: "Delete All Data",
+        setup_title: "Initial Setup",
+        setup_desc: "Set your master username and password.",
+        master_pass: "Master Password",
+        confirm_pass: "Confirm Password",
+        setup_btn: "Setup",
+        login_title: "Login",
+        biometric_login: "Login with Biometrics",
+        google_login: "Login with Google",
+        login_btn: "Login",
+        warning_title: "Ver 26.01.10 (Unstable)",
+        warning_h1: "This is a DEMO version.",
+        warning_desc: "Designed for developers, it may not work as expected and lacks sufficient security/privacy features.",
+        warning_h2: "Honestly, it's not ready for production.<br><br>We strongly recommend other password managers.",
+        warning_rec: "Recommended: Bitwarden, Proton Pass, KeePass",
+        warning_not_rec: "Not Recommended: This app, Paper",
+        search_placeholder: "Search...",
+
+        // JS Strings
+        weak: "Weak Password",
+        medium: "Medium Password",
+        strong: "Strong Password",
+        crack_time: "Est. Crack Time: ",
+        instant: "Instant",
+        centuries: "Centuries+",
+        year: "y", day: "d", hour: "h", minute: "m", second: "s",
+        copy_fail: "Copy failed",
+        pass_copied: "Password copied",
+        user_copied: "Username copied",
+        code_copied: "2FA code copied",
+        save_fail: "Save failed",
+        delete_fail: "Delete failed",
+        login_fail: "Invalid username or password.",
+        google_login_fail: "Google login failed: ",
+        logout_confirm: "Are you sure you want to logout?",
+        pass_created: "New password created",
+        pass_updated: "Password updated",
+        delete_confirm: "Are you sure you want to delete this password?",
+        pass_deleted: "Password deleted",
+        checking: "Checking...",
+        error: "Error occurred",
+        safe: "No breach found (Safe)",
+        breach_found: "Danger! Found in {count} breaches",
+        clear_hist_confirm: "Delete all history for this password?",
+        hist_cleared: "History cleared",
+        clear_gen_confirm: "Delete all generation history?",
+        gen_cleared: "Generation history cleared",
+        settings_saved: "Settings saved",
+        default_user_filled: "Default username filled",
+        no_default_user: "No default username set",
+        list_sorted: "List sorted",
+        data_mgmt: "Data Management",
+        export_json: "Export (JSON)",
+        import_json: "Import (JSON)",
+        invalid_data: "Invalid data format. Import cancelled.",
+        import_confirm: "Add {count} items to current list?",
+        import_done: "Import complete.",
+        file_error: "Failed to read file.",
+        history_empty: "No history",
+        hist_empty_detail: "No modification history.",
+        restore: "Restore",
+        restore_confirm: "Restore this version to the form?",
+        sort_placeholder: "Sort by...",
+        sort_name_asc: "Name (A-Z)",
+        sort_name_desc: "Name (Z-A)",
+        sort_str_asc: "Strength (Weakest)",
+        sort_str_desc: "Strength (Strongest)",
+        sort_date_desc: "Date (Newest)",
+        sort_date_asc: "Date (Oldest)",
+        language: "Language / 言語",
+        yes: "Yes",
+        no: "No",
+        ok: "OK"
+    }
+};
+
+function t(key, params = {}) {
+    let str = TRANSLATIONS[currentLang][key] || key;
+    for (const [k, v] of Object.entries(params)) {
+        str = str.replace(`{${k}}`, v);
+    }
+    return str;
+}
+
+function updateLanguage(lang) {
+    if (!TRANSLATIONS[lang]) return;
+    currentLang = lang;
+    localStorage.setItem(CONSTANTS.STORAGE.LANGUAGE, lang);
+
+    // Update static elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (TRANSLATIONS[lang][key]) {
+            if (el.tagName === 'INPUT' && el.type === 'button') {
+                el.value = TRANSLATIONS[lang][key];
+            } else {
+                el.innerHTML = TRANSLATIONS[lang][key];
+            }
+        }
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (TRANSLATIONS[lang][key]) {
+            el.placeholder = TRANSLATIONS[lang][key];
+        }
+    });
+    
+    // Update labels (custom attribute for m3e-form-field if needed, or just rely on inner text if structure allows)
+    // m3e-form-field label is an attribute
+    document.querySelectorAll('m3e-form-field[data-i18n-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-label');
+        if (TRANSLATIONS[lang][key]) {
+            el.setAttribute('label', TRANSLATIONS[lang][key]);
+        }
+    });
+
+    // Re-render lists to update headings/sort options
+    renderPasswordList(document.getElementById('fld').value);
+    renderGeneratorHistory();
+    
+    // Update sort dropdown if exists
+    const sortSelect = document.querySelector('.sort-select');
+    if (sortSelect) {
+        // Re-create options
+        const currentVal = sortSelect.value;
+        sortSelect.innerHTML = '';
+        const options = [
+            { value: '', text: t('sort_placeholder') },
+            { value: 'title_asc', text: t('sort_name_asc') },
+            { value: 'title_desc', text: t('sort_name_desc') },
+            { value: 'strength_asc', text: t('sort_str_asc') },
+            { value: 'strength_desc', text: t('sort_str_desc') },
+            { value: 'updated_desc', text: t('sort_date_desc') },
+            { value: 'updated_asc', text: t('sort_date_asc') }
+        ];
+        options.forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt.value;
+            o.textContent = opt.text;
+            sortSelect.appendChild(o);
+        });
+        sortSelect.value = currentVal;
+    }
+}
 
 // --- Crypto Utilities (Local Mode - High Security) ---
 
@@ -284,7 +615,7 @@ function copyToClipboard(text, message) {
         }, 30000);
     }).catch(function(err) {
         console.error('Copy failed', err);
-        showSnackbar('コピーに失敗しました');
+        showSnackbar(t('copy_fail'));
     });
 }
 
@@ -311,7 +642,7 @@ function showDialog(message, isConfirm) {
         };
 
         if (isConfirm) {
-            const cancelBtn = createBtn('いいえ');
+            const cancelBtn = createBtn(t('no'));
             cancelBtn.addEventListener('click', function() {
                 dialog.open = false;
                 resolve(false);
@@ -320,7 +651,7 @@ function showDialog(message, isConfirm) {
             btnContainer.appendChild(cancelBtn);
         }
 
-        const okBtn = createBtn(isConfirm ? 'はい' : 'OK');
+        const okBtn = createBtn(isConfirm ? 'yes' : 'ok');
         okBtn.addEventListener('click', function() {
             dialog.open = false;
             resolve(true);
@@ -373,13 +704,13 @@ function calculateCrackTime(password) {
 
     let timeString = '一瞬';
     if (seconds >= 31536000 * 100) timeString = '数世紀以上';
-    else if (seconds >= 31536000) timeString = Math.floor(seconds / 31536000) + '年';
-    else if (seconds >= 86400) timeString = Math.floor(seconds / 86400) + '日';
-    else if (seconds >= 3600) timeString = Math.floor(seconds / 3600) + '時間';
-    else if (seconds >= 60) timeString = Math.floor(seconds / 60) + '分';
-    else if (seconds >= 1) timeString = Math.floor(seconds) + '秒';
+    else if (seconds >= 31536000) timeString = Math.floor(seconds / 31536000) + t('year');
+    else if (seconds >= 86400) timeString = Math.floor(seconds / 86400) + t('day');
+    else if (seconds >= 3600) timeString = Math.floor(seconds / 3600) + t('hour');
+    else if (seconds >= 60) timeString = Math.floor(seconds / 60) + t('minute');
+    else if (seconds >= 1) timeString = Math.floor(seconds) + t('second');
 
-    return '解読にかかる推定時間: ' + timeString;
+    return t('crack_time') + (timeString === '一瞬' || timeString === '数世紀以上' ? t(timeString === '一瞬' ? 'instant' : 'centuries') : timeString);
 }
 
 async function checkPwnedPassword(password) {
@@ -613,13 +944,13 @@ function generatePassword() {
 
     if (resultElement) {
         if (strength < 2) {
-            resultElement.textContent = '弱いパスワード';
+            resultElement.textContent = t('weak');
             resultElement.style.color = '#d32f2f';
         } else if (strength < 4) {
-            resultElement.textContent = '中程度のパスワード';
+            resultElement.textContent = t('medium');
             resultElement.style.color = '#f57c00';
         } else {
-            resultElement.textContent = '強いパスワード';
+            resultElement.textContent = t('strong');
             resultElement.style.color = '#388e3c';
         }
     }
@@ -647,13 +978,13 @@ function updateDetailStrength(password) {
     }
 
     if (strength < 2) {
-        resultElement.textContent = '弱いパスワード';
+        resultElement.textContent = t('weak');
         resultElement.style.color = '#d32f2f';
     } else if (strength < 4) {
-        resultElement.textContent = '中程度のパスワード';
+        resultElement.textContent = t('medium');
         resultElement.style.color = '#f57c00';
     } else {
-        resultElement.textContent = '強いパスワード';
+        resultElement.textContent = t('strong');
         resultElement.style.color = '#388e3c';
     }
 
@@ -684,7 +1015,7 @@ function renderGeneratorHistory() {
     list.innerHTML = '';
     
     if (history.length === 0) {
-        list.textContent = '履歴はありません';
+        list.textContent = t('history_empty');
         return;
     }
 
@@ -692,7 +1023,7 @@ function renderGeneratorHistory() {
         const item = document.createElement('div');
         item.className = 'history-item';
         item.style.cursor = 'pointer';
-        item.title = 'クリックしてコピー';
+        item.title = t('click_to_copy') || 'Click to copy';
         
         const text = document.createElement('span');
         text.textContent = pass;
@@ -711,7 +1042,7 @@ function renderGeneratorHistory() {
         item.appendChild(copyIcon);
         
         item.addEventListener('click', () => {
-            copyToClipboard(pass, 'パスワードをコピーしました');
+            copyToClipboard(pass, t('pass_copied'));
         });
         
         list.appendChild(item);
@@ -803,7 +1134,7 @@ function renderPasswordList(filterText) {
         const heading = document.createElement('m3e-heading');
         heading.slot = 'label';
         heading.variant = 'label';
-        heading.size = 'large';
+        heading.size = 'large'; 
         heading.textContent = catName;
         group.appendChild(heading);
         
@@ -913,7 +1244,7 @@ function addPasswordToUI(item, index, listGroup) {
         // Reset breach check button
         const breachBtn = document.getElementById('check_breach_btn');
         if (breachBtn) {
-            breachBtn.textContent = '漏洩チェック (Have I Been Pwned)';
+            breachBtn.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('check_breach')}`;
             breachBtn.style.setProperty('--md-sys-color-primary', '');
         }
 
@@ -933,7 +1264,7 @@ function addPasswordToUI(item, index, listGroup) {
         const historyList = document.getElementById('detail_history_list');
         historyList.innerHTML = '';
         if (history.length === 0) {
-            historyList.textContent = '変更履歴はありません。';
+            historyList.textContent = t('hist_empty_detail');
         } else {
             history.slice().reverse().forEach(h => {
                 const div = document.createElement('div');
@@ -961,13 +1292,13 @@ function addPasswordToUI(item, index, listGroup) {
                 infoDiv.appendChild(userDiv);
                 
                 const restoreBtn = document.createElement('button');
-                restoreBtn.textContent = '復元';
+                restoreBtn.textContent = t('restore');
                 restoreBtn.type = 'button';
                 restoreBtn.style.marginLeft = '8px';
                 restoreBtn.className = 'cursor-pointer';
                 
                 restoreBtn.addEventListener('click', function() {
-                    showConfirmDialog('この履歴の内容を入力フォームに反映しますか？').then(res => {
+                    showConfirmDialog(t('restore_confirm')).then(res => {
                         if (res) {
                             document.getElementById('detail_pass_title').value = h.title || '';
                             document.getElementById('detail_pass_category').value = h.category || '';
@@ -1024,7 +1355,7 @@ async function saveOrUpdateItem(item, index) {
             // Note: onSnapshot will handle the UI update
         } catch (e) {
             console.error("Error saving to cloud:", e);
-            showSnackbar("保存に失敗しました: " + e.message);
+            showSnackbar(t('save_fail') + ": " + e.message);
         }
     } else {
         // Local Mode
@@ -1048,7 +1379,7 @@ async function deleteItem(index) {
                 // onSnapshot updates UI
             } catch (e) {
                 console.error("Error deleting from cloud:", e);
-                showSnackbar("削除に失敗しました");
+                showSnackbar(t('delete_fail'));
             }
         }
     } else {
@@ -1132,13 +1463,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!password) {
                     resultElement.textContent = '';
                 } else if (strength < 2) {
-                    resultElement.textContent = '弱いパスワード';
+                    resultElement.textContent = t('weak');
                     resultElement.style.color = '#d32f2f';
                 } else if (strength < 4) {
-                    resultElement.textContent = '中程度のパスワード';
+                    resultElement.textContent = t('medium');
                     resultElement.style.color = '#f57c00';
                 } else {
-                    resultElement.textContent = '強いパスワード';
+                    resultElement.textContent = t('strong');
                     resultElement.style.color = '#388e3c';
                 }
             }
@@ -1174,7 +1505,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('setup_dialog').open = false;
             initLocalApp();
         } else {
-            showAlertDialog('入力内容を確認してください。');
+            showAlertDialog(t('login_fail')); // Reusing login fail or generic error
         }
     });
 
@@ -1187,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!masterAuth) return;
 
         if (user !== masterAuth.username) {
-             showAlertDialog('ユーザー名またはパスワードが間違っています。');
+             showAlertDialog(t('login_fail'));
              return;
         }
 
@@ -1200,7 +1531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         }
-        showAlertDialog('ユーザー名またはパスワードが間違っています。');
+        showAlertDialog(t('login_fail'));
     });
 
     // Biometric Login
@@ -1213,13 +1544,13 @@ document.addEventListener('DOMContentLoaded', () => {
         signInWithPopup(auth, provider)
             .catch((error) => {
                 console.error("Login failed:", error);
-                showAlertDialog("Googleログインに失敗しました: " + error.message);
+                showAlertDialog(t('google_login_fail') + error.message);
             });
     });
 
     // Logout
     document.getElementById('logout_btn')?.addEventListener('click', () => {
-        showConfirmDialog("ログアウトしますか？").then(res => {
+        showConfirmDialog(t('logout_confirm')).then(res => {
             if (res) {
                 savedPasswords = []; // Clear memory
                 if (currentUser) {
@@ -1257,7 +1588,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('new_pass_value').value = '';
             document.getElementById('new_pass_secret').value = '';
             document.getElementById('add_password_dialog').open = false;
-            showSnackbar('新しいパスワードを作成しました');
+            showSnackbar(t('pass_created'));
         }
     });
 
@@ -1300,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await saveOrUpdateItem(newItem, currentDetailIndex);
                 document.getElementById('detail_password_dialog').open = false;
-                showSnackbar('パスワードを更新しました');
+                showSnackbar(t('pass_updated'));
             }
         }
     });
@@ -1308,11 +1639,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete Password
     document.getElementById('delete_password_btn')?.addEventListener('click', () => {
         if (currentDetailIndex > -1) {
-            showConfirmDialog("このパスワードを削除してもよろしいですか？").then(async res => {
+            showConfirmDialog(t('delete_confirm')).then(async res => {
                 if (res) {
                     await deleteItem(currentDetailIndex);
                     document.getElementById('detail_password_dialog').open = false;
-                    showSnackbar('パスワードを削除しました');
+                    showSnackbar(t('pass_deleted'));
                 }
             });
         }
@@ -1328,16 +1659,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('detail_pass_value').value;
         if (!password) return;
         
-        this.textContent = 'チェック中...';
+        this.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('checking')}`;
         const count = await checkPwnedPassword(password);
         
         if (count === -1) {
-            this.textContent = 'エラーが発生しました';
+            this.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('error')}`;
         } else if (count === 0) {
-            this.textContent = '漏洩は見つかりませんでした (安全)';
+            this.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('safe')}`;
             this.style.setProperty('--md-sys-color-primary', '#388e3c'); // Green
         } else {
-            this.textContent = `危険！ ${count.toLocaleString()} 回の漏洩が確認されました`;
+            this.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('breach_found', {count: count.toLocaleString()})}`;
             this.style.setProperty('--md-sys-color-primary', '#b3261e'); // Red
         }
     });
@@ -1354,7 +1685,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('include_numbers')?.addEventListener('change', generatePassword);
     document.getElementById('include_symbols')?.addEventListener('change', generatePassword);
     document.getElementById('copy_password_btn')?.addEventListener('click', () => {
-        copyToClipboard(document.getElementById('auto_make_password').textContent, "パスワードをコピーしました");
+        copyToClipboard(document.getElementById('auto_make_password').textContent, t('pass_copied'));
     });
 
     // Search
@@ -1388,35 +1719,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('copy_detail_pass_btn')?.addEventListener('click', () => {
         const password = document.getElementById('detail_pass_value').value;
-        copyToClipboard(password, "パスワードをコピーしました");
+        copyToClipboard(password, t('pass_copied'));
     });
 
     document.getElementById('copy_detail_username_btn')?.addEventListener('click', () => {
         const username = document.getElementById('detail_pass_username').value;
-        copyToClipboard(username, "ユーザー名をコピーしました");
+        copyToClipboard(username, t('user_copied'));
     });
 
     document.getElementById('clear_history_btn')?.addEventListener('click', () => {
         if (currentDetailIndex > -1) {
-            showConfirmDialog("このパスワードの変更履歴をすべて削除しますか？").then(async res => {
+            showConfirmDialog(t('clear_hist_confirm')).then(async res => {
                 if (res) {
                     const item = savedPasswords[currentDetailIndex];
                     item.history = [];
                     await saveOrUpdateItem(item, currentDetailIndex);
                     document.getElementById('detail_revision_count').textContent = '0';
-                    document.getElementById('detail_history_list').innerHTML = '変更履歴はありません。';
-                    showSnackbar('変更履歴をクリアしました');
+                    document.getElementById('detail_history_list').innerHTML = t('hist_empty_detail');
+                    showSnackbar(t('hist_cleared'));
                 }
             });
         }
     });
 
     document.getElementById('clear_maker_history_btn')?.addEventListener('click', () => {
-        showConfirmDialog("生成履歴をすべて削除しますか？").then(res => {
+        showConfirmDialog(t('clear_gen_confirm')).then(res => {
             if (res) {
                 localStorage.removeItem(CONSTANTS.STORAGE.GENERATOR_HISTORY);
                 renderGeneratorHistory();
-                showSnackbar('生成履歴をクリアしました');
+                showSnackbar(t('gen_cleared'));
             }
         });
     });
@@ -1424,7 +1755,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('totp_code')?.addEventListener('click', function() {
         const code = this.textContent;
         if (code && code !== 'Invalid Secret') {
-            copyToClipboard(code, '2FAコードをコピーしました');
+            copyToClipboard(code, t('code_copied'));
         }
     });
 
@@ -1480,9 +1811,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('save_general_settings_btn')?.addEventListener('click', () => {
         const defaultUser = document.getElementById('setting_default_username').value;
         const autoLogout = document.getElementById('setting_auto_logout').value;
+        const lang = document.getElementById('setting_language').value;
+        
         localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, defaultUser);
         localStorage.setItem(CONSTANTS.STORAGE.AUTO_LOGOUT, autoLogout);
-        showSnackbar('設定を保存しました');
+        updateLanguage(lang);
+        showSnackbar(t('settings_saved'));
         document.getElementById('settings_dialog').open = false;
         resetAutoLogoutTimer();
     });
@@ -1492,9 +1826,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
         if (val) {
             document.getElementById('new_pass_username').value = val;
-            showSnackbar('デフォルトユーザー名を入力しました');
+            showSnackbar(t('default_user_filled'));
         } else {
-            showSnackbar('デフォルトユーザー名が設定されていません');
+            showSnackbar(t('no_default_user'));
         }
     });
 
@@ -1503,9 +1837,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
         if (val) {
             document.getElementById('detail_pass_username').value = val;
-            showSnackbar('デフォルトユーザー名を入力しました');
+            showSnackbar(t('default_user_filled'));
         } else {
-            showSnackbar('デフォルトユーザー名が設定されていません');
+            showSnackbar(t('no_default_user'));
         }
     });
 
@@ -1548,14 +1882,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortSelect = document.createElement('select');
         sortSelect.className = 'sort-select';
         
-        const options = [
-            { value: '', text: '並び替え...' },
-            { value: 'title_asc', text: '名前 (A-Z)' },
-            { value: 'title_desc', text: '名前 (Z-A)' },
-            { value: 'strength_asc', text: '強度 (弱い順)' },
-            { value: 'strength_desc', text: '強度 (強い順)' },
-            { value: 'updated_desc', text: '更新日 (新しい順)' },
-            { value: 'updated_asc', text: '更新日 (古い順)' }
+        const options = [ // Initial options, will be updated by updateLanguage
+            { value: '', text: t('sort_placeholder') },
+            { value: 'title_asc', text: t('sort_name_asc') },
+            { value: 'title_desc', text: t('sort_name_desc') },
+            { value: 'strength_asc', text: t('sort_str_asc') },
+            { value: 'strength_desc', text: t('sort_str_desc') },
+            { value: 'updated_desc', text: t('sort_date_desc') },
+            { value: 'updated_asc', text: t('sort_date_asc') }
         ];
         
         options.forEach(opt => {
@@ -1585,7 +1919,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If local, save order. If cloud, just re-render (order not persisted in this simple impl)
                 if (!currentUser) await savePasswordsData();
                 renderPasswordList(document.getElementById('fld').value);
-                showSnackbar('リストを並び替えました');
+                showSnackbar(t('list_sorted'));
             }
             this.value = '';
         });
@@ -1601,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.className = 'data-management-container';
 
         const title = document.createElement('h4');
-        title.textContent = 'データ管理';
+        title.textContent = t('data_mgmt');
         title.className = 'mt-2 mb-2';
         container.appendChild(title);
 
@@ -1609,7 +1943,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnContainer.className = 'flex-row-center-gap';
 
         const exportBtn = document.createElement('button');
-        exportBtn.textContent = 'エクスポート (JSON)';
+        exportBtn.textContent = t('export_json');
         exportBtn.type = 'button';
         exportBtn.className = 'cursor-pointer';
         exportBtn.style.padding = '8px 16px';
@@ -1628,7 +1962,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const importBtn = document.createElement('button');
-        importBtn.textContent = 'インポート (JSON)';
+        importBtn.textContent = t('import_json');
         importBtn.type = 'button';
         importBtn.className = 'cursor-pointer';
         importBtn.style.padding = '8px 16px';
@@ -1653,12 +1987,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         typeof item === 'object' && item !== null && typeof item.title === 'string'
                     );
                     if (!isValid) {
-                        showAlertDialog('無効なデータ形式が含まれています。インポートを中止しました。');
+                        showAlertDialog(t('invalid_data'));
                         return;
                     }
 
                     if (Array.isArray(importedData)) {
-                        showConfirmDialog(`現在のリストに ${importedData.length} 件のデータを追加しますか？`).then(async res => {
+                        showConfirmDialog(t('import_confirm', {count: importedData.length})).then(async res => {
                             if (res) {
                                 importedData.forEach(item => {
                                     // Sanitize imported data using DOMPurify to prevent XSS
@@ -1689,13 +2023,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     await savePasswordsData();
                                     renderPasswordList();
                                 }
-                                showAlertDialog('インポートが完了しました。');
+                                showAlertDialog(t('import_done'));
                             }
                         });
                     }
                 } catch (error) {
                     console.error(error);
-                    showAlertDialog('ファイルの読み込みに失敗しました。');
+                    showAlertDialog(t('file_error'));
                 }
                 e.target.value = '';
             };
@@ -1717,4 +2051,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('visibilitychange', resetAutoLogoutTimer); // Handle tab switching
     document.body.classList.add('loaded');
+
+    // Initialize Language
+    const savedLang = localStorage.getItem(CONSTANTS.STORAGE.LANGUAGE);
+    const browserLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
+    updateLanguage(savedLang || browserLang);
+    const langSelect = document.getElementById('setting_language');
+    if (langSelect) {
+        langSelect.value = currentLang;
+    }
 });
