@@ -1,7 +1,7 @@
 // Import Firebase SDKs
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence } from "firebase/firestore";
 
 // Import UI Components
 import "@m3e/icon/dist/index.min.js";
@@ -39,6 +39,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Enable Offline Persistence
+enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition' || err.code == 'unimplemented') {
+        console.warn("Firestore persistence could not be enabled:", err.code);
+    }
+});
 
 // --- Constants & State ---
 const CONSTANTS = {
