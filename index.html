@@ -106,6 +106,12 @@
         <span data-i18n="pass_generator">パスワード生成</span>
         </m3e-dialog-trigger>
       </m3e-fab-menu-item>
+      <m3e-fab-menu-item id="open_security_hub_btn">
+        <m3e-icon slot="icon" name="shield" filled></m3e-icon>
+        <m3e-dialog-trigger for="security_hub_dialog">
+          <span data-i18n="security_hub">セキュリティハブ</span>
+        </m3e-dialog-trigger>
+      </m3e-fab-menu-item>
       <m3e-fab-menu-item>
         <m3e-icon slot="icon" name="check" filled></m3e-icon>
         <m3e-dialog-trigger for="pass_checker">
@@ -188,6 +194,64 @@
       <div slot="actions">
         <m3e-button autofocus>
           <m3e-dialog-action return-value="ok" data-i18n="close">とじる</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="security_hub_dialog" dismissible>
+      <span slot="header" data-i18n="security_hub">セキュリティハブ</span>
+      
+      <div class="security-dashboard">
+          <!-- Score Circle -->
+          <div class="score-circle-container">
+              <div class="score-circle" id="hub_score_circle">
+                  <div class="score-inner">
+                      <div class="score-value" id="hub_score">--</div>
+                      <div class="score-label" data-i18n="security_score">Score</div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="security-stats-grid">
+              <div class="stat-card ripple-surface" id="hub_weak_item">
+                  <m3e-icon name="warning" class="stat-icon color-error"></m3e-icon>
+                  <div class="stat-value" id="hub_weak_count">0</div>
+                  <div class="stat-label" data-i18n="weak_pass_count">Weak</div>
+              </div>
+              <div class="stat-card ripple-surface" id="hub_no_2fa_item">
+                  <m3e-icon name="no_encryption" class="stat-icon text-warning"></m3e-icon>
+                  <div class="stat-value" id="hub_no_2fa_count">0</div>
+                  <div class="stat-label" data-i18n="no_2fa_count">No 2FA</div>
+              </div>
+              <div class="stat-card ripple-surface" id="hub_reused_item">
+                  <m3e-icon name="sync_problem" class="stat-icon color-error"></m3e-icon>
+                  <div class="stat-value" id="hub_reused_count">0</div>
+                  <div class="stat-label" data-i18n="reused_pass_count">Reused</div>
+              </div>
+          </div>
+          
+          <!-- Breakdown -->
+          <details class="score-details-accordion">
+              <summary class="text-small cursor-pointer text-secondary" style="text-align: center; margin-top: 16px;" data-i18n="score_breakdown">スコアの内訳</summary>
+              <div id="hub_score_details" class="text-small mt-2 score-breakdown-content"></div>
+          </details>
+      </div>
+
+
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="ok" data-i18n="close">とじる</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="security_list_dialog" dismissible>
+      <span slot="header" id="security_list_title"></span>
+      <div id="security_list_content" class="security-list-container"></div>
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="close" data-i18n="close">とじる</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -305,6 +369,7 @@
           <span id="detail_pass_strength" class="font-bold text-small"></span>
           <span id="detail_pass_crack_time" class="text-small text-secondary"></span>
       </div>
+      <div id="detail_security_risks" class="mb-3" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
 
       <m3e-button id="check_breach_btn" variant="tonal" class="mb-3 w-100">
         <m3e-icon slot="icon" name="security"></m3e-icon>

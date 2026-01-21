@@ -75,6 +75,11 @@ let dragSrcEl = null; // For Drag and Drop
 let historyDebounceTimer = null; // Timer for debouncing history saves
 let autoLogoutTimer = null; // Timer for auto logout
 let currentLang = 'ja'; // Default language
+let securityHubLists = {
+    weak: [],
+    no2fa: [],
+    reused: []
+};
 
 // --- Translations ---
 const TRANSLATIONS = {
@@ -87,6 +92,24 @@ const TRANSLATIONS = {
         personal_info: "個人情報",
         pass_generator: "パスワード生成",
         pass_checker: "パスワード安全性チェッカー",
+        security_hub: "セキュリティハブ",
+        security_score: "セキュリティスコア",
+        weak_pass_count: "脆弱なパスワード",
+        no_2fa_count: "2FA未設定",
+        reused_pass_count: "使い回しのパスワード",
+        security_list_weak: "脆弱なパスワード一覧",
+        security_list_no_2fa: "2FA未設定のアカウント一覧",
+        security_list_reused: "使い回されているパスワード一覧",
+        score_breakdown: "スコアの内訳",
+        risk_weak: "脆弱",
+        risk_medium: "強度不足",
+        risk_no_2fa: "2FA未設定",
+        risk_reused: "使い回し",
+        risk_solution: "解決策",
+        advice_weak: "パスワード生成ツールを使用して、より強力なパスワードに変更することをお勧めします。",
+        advice_medium: "もう少し長くするか、複雑にすることをお勧めします。",
+        advice_no_2fa: "サービスの2段階認証設定を有効にし、シークレットキーをここに保存してください。",
+        advice_reused: "他のサービスと同じパスワードが使われています。ユニークなパスワードに変更してください。",
         export_json: "JSONファイルでエクスポート",
         import_json: "JSONファイルをインポート",
         settings: "設定",
@@ -217,6 +240,24 @@ const TRANSLATIONS = {
         personal_info: "Personal Info",
         pass_generator: "Password Generator",
         pass_checker: "Password Health Check",
+        security_hub: "Security Hub",
+        security_score: "Security Score",
+        weak_pass_count: "Weak Passwords",
+        no_2fa_count: "Missing 2FA",
+        reused_pass_count: "Reused Passwords",
+        security_list_weak: "Weak Passwords List",
+        security_list_no_2fa: "Accounts Missing 2FA",
+        security_list_reused: "Reused Passwords List",
+        score_breakdown: "Score Breakdown",
+        risk_weak: "Weak",
+        risk_medium: "Medium Strength",
+        risk_no_2fa: "No 2FA",
+        risk_reused: "Reused",
+        risk_solution: "Solution",
+        advice_weak: "We recommend using the generator to create a stronger password.",
+        advice_medium: "Consider making it longer or more complex.",
+        advice_no_2fa: "Enable 2FA on the service and save the secret key here.",
+        advice_reused: "This password is used elsewhere. Change it to a unique one.",
         export_json: "Export as JSON",
         import_json: "Import JSON",
         settings: "Settings",
@@ -347,6 +388,24 @@ const TRANSLATIONS = {
         personal_info: "个人信息",
         pass_generator: "密码生成器",
         pass_checker: "密码安全检查",
+        security_hub: "安全中心",
+        security_score: "安全评分",
+        weak_pass_count: "弱密码",
+        no_2fa_count: "未设置 2FA",
+        reused_pass_count: "重复使用的密码",
+        security_list_weak: "弱密码列表",
+        security_list_no_2fa: "未设置 2FA 的账户",
+        security_list_reused: "重复使用的密码列表",
+        score_breakdown: "评分详情",
+        risk_weak: "弱密码",
+        risk_medium: "强度不足",
+        risk_no_2fa: "未设置 2FA",
+        risk_reused: "重复使用",
+        risk_solution: "解决方案",
+        advice_weak: "建议使用生成器创建一个更强的密码。",
+        advice_medium: "考虑增加长度或复杂度。",
+        advice_no_2fa: "在服务上启用 2FA 并在此处保存密钥。",
+        advice_reused: "此密码在其他地方使用。请更改为唯一的密码。",
         export_json: "导出 JSON",
         import_json: "导入 JSON",
         settings: "设置",
@@ -477,6 +536,24 @@ const TRANSLATIONS = {
         personal_info: "개인 정보",
         pass_generator: "비밀번호 생성기",
         pass_checker: "비밀번호 안전성 검사",
+        security_hub: "보안 허브",
+        security_score: "보안 점수",
+        weak_pass_count: "취약한 비밀번호",
+        no_2fa_count: "2FA 미설정",
+        reused_pass_count: "재사용된 비밀번호",
+        security_list_weak: "취약한 비밀번호 목록",
+        security_list_no_2fa: "2FA 미설정 계정 목록",
+        security_list_reused: "재사용된 비밀번호 목록",
+        score_breakdown: "점수 내역",
+        risk_weak: "취약함",
+        risk_medium: "강도 부족",
+        risk_no_2fa: "2FA 미설정",
+        risk_reused: "재사용됨",
+        risk_solution: "해결책",
+        advice_weak: "생성기를 사용하여 더 강력한 비밀번호를 만드는 것이 좋습니다.",
+        advice_medium: "길이를 늘리거나 복잡하게 만드는 것을 고려하세요.",
+        advice_no_2fa: "서비스에서 2FA를 활성화하고 여기에 비밀키를 저장하세요.",
+        advice_reused: "이 비밀번호는 다른 곳에서도 사용됩니다. 고유한 비밀번호로 변경하세요.",
         export_json: "JSON 내보내기",
         import_json: "JSON 가져오기",
         settings: "설정",
@@ -607,6 +684,24 @@ const TRANSLATIONS = {
         personal_info: "Persönliche Infos",
         pass_generator: "Passwort-Generator",
         pass_checker: "Passwort-Check",
+        security_hub: "Sicherheits-Hub",
+        security_score: "Sicherheitsbewertung",
+        weak_pass_count: "Schwache Passwörter",
+        no_2fa_count: "Fehlende 2FA",
+        reused_pass_count: "Wiederverwendete Passwörter",
+        security_list_weak: "Liste schwacher Passwörter",
+        security_list_no_2fa: "Konten ohne 2FA",
+        security_list_reused: "Liste wiederverwendeter Passwörter",
+        score_breakdown: "Bewertungsdetails",
+        risk_weak: "Schwach",
+        risk_medium: "Mittel",
+        risk_no_2fa: "Kein 2FA",
+        risk_reused: "Wiederverwendet",
+        risk_solution: "Lösung",
+        advice_weak: "Wir empfehlen, den Generator für ein stärkeres Passwort zu verwenden.",
+        advice_medium: "Erwägen Sie, es länger oder komplexer zu machen.",
+        advice_no_2fa: "Aktivieren Sie 2FA beim Dienst und speichern Sie das Geheimnis hier.",
+        advice_reused: "Dieses Passwort wird woanders verwendet. Ändern Sie es in ein einzigartiges.",
         export_json: "Als JSON exportieren",
         import_json: "JSON importieren",
         settings: "Einstellungen",
@@ -737,6 +832,24 @@ const TRANSLATIONS = {
         personal_info: "Infos personnelles",
         pass_generator: "Générateur de mot de passe",
         pass_checker: "Vérification de sécurité",
+        security_hub: "Centre de sécurité",
+        security_score: "Score de sécurité",
+        weak_pass_count: "Mots de passe faibles",
+        no_2fa_count: "2FA manquant",
+        reused_pass_count: "Mots de passe réutilisés",
+        security_list_weak: "Liste des mots de passe faibles",
+        security_list_no_2fa: "Comptes sans 2FA",
+        security_list_reused: "Liste des mots de passe réutilisés",
+        score_breakdown: "Détails du score",
+        risk_weak: "Faible",
+        risk_medium: "Moyen",
+        risk_no_2fa: "Pas de 2FA",
+        risk_reused: "Réutilisé",
+        risk_solution: "Solution",
+        advice_weak: "Nous recommandons d'utiliser le générateur pour créer un mot de passe plus fort.",
+        advice_medium: "Envisagez de le rendre plus long ou plus complexe.",
+        advice_no_2fa: "Activez la 2FA sur le service et enregistrez le secret ici.",
+        advice_reused: "Ce mot de passe est utilisé ailleurs. Changez-le pour un unique.",
         export_json: "Exporter en JSON",
         import_json: "Importer JSON",
         settings: "Paramètres",
@@ -867,6 +980,24 @@ const TRANSLATIONS = {
         personal_info: "Info Personali",
         pass_generator: "Generatore Password",
         pass_checker: "Controllo Sicurezza",
+        security_hub: "Hub di Sicurezza",
+        security_score: "Punteggio di Sicurezza",
+        weak_pass_count: "Password Deboli",
+        no_2fa_count: "2FA Mancante",
+        reused_pass_count: "Password Riutilizzate",
+        security_list_weak: "Lista Password Deboli",
+        security_list_no_2fa: "Account Senza 2FA",
+        security_list_reused: "Lista Password Riutilizzate",
+        score_breakdown: "Dettagli Punteggio",
+        risk_weak: "Debole",
+        risk_medium: "Media",
+        risk_no_2fa: "No 2FA",
+        risk_reused: "Riutilizzata",
+        risk_solution: "Soluzione",
+        advice_weak: "Si consiglia di utilizzare il generatore per creare una password più forte.",
+        advice_medium: "Considera di renderla più lunga o complessa.",
+        advice_no_2fa: "Abilita 2FA sul servizio e salva il segreto qui.",
+        advice_reused: "Questa password è usata altrove. Cambiala con una unica.",
         export_json: "Esporta come JSON",
         import_json: "Importa JSON",
         settings: "Impostazioni",
@@ -1694,6 +1825,311 @@ function renderGeneratorHistory() {
     });
 }
 
+function updateSecurityHub() {
+    if (!savedPasswords) return;
+
+    securityHubLists = {
+        weak: [],
+        no2fa: [],
+        reused: []
+    };
+
+    let weakCount = 0;
+    let no2faCount = 0;
+    let reusedCount = 0;
+    const passMap = {};
+
+    savedPasswords.forEach(item => {
+        // Weak check (score < 3 is considered weak/medium)
+        const strength = calculatePasswordStrength(item.password);
+        if (strength < 3) {
+            weakCount++;
+            securityHubLists.weak.push(item);
+        }
+
+        // 2FA check
+        if (!item.secret) {
+            no2faCount++;
+            securityHubLists.no2fa.push(item);
+        }
+
+        // Reuse check
+        if (item.password) {
+            if (!passMap[item.password]) {
+                passMap[item.password] = [];
+            }
+            passMap[item.password].push(item);
+        }
+    });
+
+    Object.values(passMap).forEach(items => {
+        if (items.length > 1) {
+            // Count all items that are part of a reuse group
+            reusedCount += items.length;
+            securityHubLists.reused.push(...items);
+        }
+    });
+
+    // Calculate Score (Simple Algorithm: Base 100)
+    const totalItems = savedPasswords.length;
+    let score = 100;
+    if (totalItems > 0) {
+        const weakDeduction = (weakCount / totalItems) * 40; // Max 40 deduction
+        const no2faDeduction = (no2faCount / totalItems) * 20; // Max 20 deduction
+        const reusedDeduction = (reusedCount / totalItems) * 40; // Max 40 deduction
+        score = Math.max(0, Math.round(100 - weakDeduction - no2faDeduction - reusedDeduction));
+    }
+
+    const scoreEl = document.getElementById('hub_score');
+    const circle = document.getElementById('hub_score_circle');
+
+    // Animation
+    const duration = 1000;
+    const startTime = performance.now();
+
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        
+        const currentScore = Math.floor(score * ease);
+        
+        if (scoreEl) scoreEl.textContent = currentScore;
+        
+        let color = 'var(--md-sys-color-primary)';
+        if (currentScore < 50) color = 'var(--md-sys-color-error)';
+        else if (currentScore < 80) color = 'var(--color-status-medium)'; // warning color
+        else color = 'var(--color-status-strong)'; // success color
+        
+        if (scoreEl) scoreEl.style.color = color;
+        if (circle) {
+            circle.style.setProperty('--score-percent', `${currentScore}%`);
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    }
+    
+    requestAnimationFrame(animate);
+
+    document.getElementById('hub_weak_count').textContent = weakCount;
+    document.getElementById('hub_no_2fa_count').textContent = no2faCount;
+    document.getElementById('hub_reused_count').textContent = reusedCount;
+
+    // Breakdown details
+    const detailsEl = document.getElementById('hub_score_details');
+    if (detailsEl) {
+        detailsEl.innerHTML = '';
+        if (score === 100) {
+            detailsEl.textContent = t('safe') || "Perfect!";
+        } else {
+            const ul = document.createElement('ul');
+            ul.style.paddingLeft = '20px';
+            ul.style.margin = '0';
+            
+            const addDetail = (labelKey, count, deduction) => {
+                if (count > 0) {
+                    const li = document.createElement('li');
+                    li.textContent = `${t(labelKey)}: -${Math.round(deduction)}`;
+                    ul.appendChild(li);
+                }
+            };
+
+            if (totalItems > 0) {
+                addDetail('weak_pass_count', weakCount, (weakCount / totalItems) * 40);
+                addDetail('no_2fa_count', no2faCount, (no2faCount / totalItems) * 20);
+                addDetail('reused_pass_count', reusedCount, (reusedCount / totalItems) * 40);
+            }
+            detailsEl.appendChild(ul);
+        }
+    }
+}
+
+function updateDetailRisks(item) {
+    const container = document.getElementById('detail_security_risks');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const risks = [];
+
+    // Strength
+    const strength = calculatePasswordStrength(item.password);
+    if (strength < 2) risks.push({ key: 'risk_weak', icon: 'warning', advice: 'advice_weak' });
+    else if (strength < 3) risks.push({ key: 'risk_medium', icon: 'gpp_maybe', advice: 'advice_medium' });
+
+    // 2FA
+    if (!item.secret) risks.push({ key: 'risk_no_2fa', icon: 'no_encryption', advice: 'advice_no_2fa' });
+
+    // Reused
+    if (item.password) {
+        const isReused = savedPasswords.some(p => p.password === item.password && p.id !== item.id);
+        if (isReused) risks.push({ key: 'risk_reused', icon: 'sync_problem', advice: 'advice_reused' });
+    }
+
+    risks.forEach(r => {
+        const chip = document.createElement('div');
+        chip.className = 'security-risk-chip';
+        chip.innerHTML = `<m3e-icon name="${r.icon}" style="font-size: 16px;"></m3e-icon> <span>${t(r.key)}</span>`;
+        chip.addEventListener('click', () => {
+            showAlertDialog(`${t('risk_solution')}:\n${t(r.advice)}`);
+        });
+        container.appendChild(chip);
+    });
+}
+
+function openDetailDialog(item) {
+    currentDetailId = item.id;
+    const dialog = document.getElementById('detail_password_dialog');
+    
+    document.getElementById('detail_pass_title').value = item.title || '';
+    document.getElementById('detail_pass_category').value = item.category || '';
+    document.getElementById('detail_pass_website').value = item.website || '';
+    document.getElementById('detail_pass_username').value = item.username || '';
+    document.getElementById('detail_pass_value').value = item.password || '';
+    document.getElementById('detail_pass_secret').value = item.secret || '';
+    
+    // Reset breach check button
+    const breachBtn = document.getElementById('check_breach_btn');
+    if (breachBtn) {
+        breachBtn.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('check_breach')}`;
+        breachBtn.style.setProperty('--md-sys-color-primary', '');
+    }
+
+    // Store docId for cloud updates
+    dialog.dataset.docId = item.id;
+    
+    const dFavIcon = document.getElementById('detail_pass_favorite_btn').querySelector('m3e-icon');
+    dFavIcon.name = item.favorite ? 'star' : 'star_border';
+    dFavIcon.style.color = item.favorite ? '#fbc02d' : '';
+    
+    const lastMod = item.lastModified ? new Date(item.lastModified).toLocaleString() : '-';
+    document.getElementById('detail_last_modified').textContent = lastMod;
+
+    const history = item.history || [];
+    document.getElementById('detail_revision_count').textContent = history.length;
+
+    const historyList = document.getElementById('detail_history_list');
+    historyList.innerHTML = '';
+    if (history.length === 0) {
+        historyList.textContent = t('hist_empty_detail');
+    } else {
+        history.slice().reverse().forEach(h => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.style.flex = '1';
+            const dateStr = new Date(h.date).toLocaleString();
+            
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'font-bold text-small';
+            dateDiv.textContent = dateStr;
+            infoDiv.appendChild(dateDiv);
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'text-small';
+            titleDiv.style.opacity = '0.8';
+            titleDiv.textContent = `Title: ${h.title || '-'}`;
+            infoDiv.appendChild(titleDiv);
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'text-small';
+            userDiv.style.opacity = '0.8';
+            userDiv.textContent = `User: ${h.username || '-'}`;
+            infoDiv.appendChild(userDiv);
+            
+            const restoreBtn = document.createElement('m3e-button');
+            restoreBtn.setAttribute('variant', 'text');
+            restoreBtn.style.marginLeft = 'auto';
+            
+            restoreBtn.addEventListener('click', function() {
+                showConfirmDialog(t('restore_confirm')).then(res => {
+                    if (res) {
+                        document.getElementById('detail_pass_title').value = h.title || '';
+                        document.getElementById('detail_pass_category').value = h.category || '';
+                        document.getElementById('detail_pass_website').value = h.website || '';
+                        document.getElementById('detail_pass_username').value = h.username || '';
+                        document.getElementById('detail_pass_value').value = h.password || '';
+                        document.getElementById('detail_pass_secret').value = h.secret || '';
+                        
+                        updateDetailStrength(h.password || '');
+                        startTOTPUpdate(h.secret || '');
+                    }
+                });
+            });
+
+            const restoreLabel = document.createElement('span');
+            restoreLabel.textContent = t('restore');
+            restoreBtn.appendChild(restoreLabel);
+
+            div.appendChild(infoDiv);
+            div.appendChild(restoreBtn);
+            historyList.appendChild(div);
+        });
+    }
+
+    updateDetailStrength(item.password || '');
+    startTOTPUpdate(item.secret);
+    updateDetailRisks(item); // Update risks
+    dialog.open = true;
+}
+
+function renderSecurityList(type) {
+    const dialog = document.getElementById('security_list_dialog');
+    const titleEl = document.getElementById('security_list_title');
+    const contentEl = document.getElementById('security_list_content');
+    
+    let list = [];
+    let titleKey = '';
+
+    if (type === 'weak') {
+        list = securityHubLists.weak;
+        titleKey = 'security_list_weak';
+    } else if (type === 'no_2fa') {
+        list = securityHubLists.no2fa;
+        titleKey = 'security_list_no_2fa';
+    } else if (type === 'reused') {
+        list = securityHubLists.reused;
+        titleKey = 'security_list_reused';
+    }
+
+    titleEl.textContent = t(titleKey);
+    contentEl.innerHTML = '';
+
+    if (list.length === 0) {
+        contentEl.textContent = t('history_empty'); // Reuse empty message
+    } else {
+        list.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item cursor-pointer'; // Reuse history item style
+            div.style.padding = '12px 8px';
+            
+            const infoDiv = document.createElement('div');
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'font-bold';
+            titleDiv.textContent = item.title;
+            infoDiv.appendChild(titleDiv);
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'text-small text-secondary';
+            userDiv.textContent = item.username || '(No Username)';
+            infoDiv.appendChild(userDiv);
+
+            div.appendChild(infoDiv);
+
+            div.addEventListener('click', () => {
+                openDetailDialog(item);
+            });
+
+            contentEl.appendChild(div);
+        });
+    }
+
+    dialog.open = true;
+}
+
 // --- Drag and Drop Handlers ---
 
 function handleDragStart(e) {
@@ -1869,99 +2305,7 @@ function addPasswordToUI(item, index, listGroup) {
 
     // Click to open detail
     newItem.addEventListener('click', function() {
-        currentDetailId = item.id;
-        const dialog = document.getElementById('detail_password_dialog');
-        
-        document.getElementById('detail_pass_title').value = item.title || '';
-        document.getElementById('detail_pass_category').value = item.category || '';
-        document.getElementById('detail_pass_website').value = item.website || '';
-        document.getElementById('detail_pass_username').value = item.username || '';
-        document.getElementById('detail_pass_value').value = item.password || '';
-        document.getElementById('detail_pass_secret').value = item.secret || '';
-        
-        // Reset breach check button
-        const breachBtn = document.getElementById('check_breach_btn');
-        if (breachBtn) {
-            breachBtn.innerHTML = `<m3e-icon slot="icon" name="security"></m3e-icon> ${t('check_breach')}`;
-            breachBtn.style.setProperty('--md-sys-color-primary', '');
-        }
-
-        // Store docId for cloud updates
-        dialog.dataset.docId = item.id;
-        
-        const dFavIcon = document.getElementById('detail_pass_favorite_btn').querySelector('m3e-icon');
-        dFavIcon.name = item.favorite ? 'star' : 'star_border';
-        dFavIcon.style.color = item.favorite ? '#fbc02d' : '';
-        
-        const lastMod = item.lastModified ? new Date(item.lastModified).toLocaleString() : '-';
-        document.getElementById('detail_last_modified').textContent = lastMod;
-
-        const history = item.history || [];
-        document.getElementById('detail_revision_count').textContent = history.length;
-
-        const historyList = document.getElementById('detail_history_list');
-        historyList.innerHTML = '';
-        if (history.length === 0) {
-            historyList.textContent = t('hist_empty_detail');
-        } else {
-            history.slice().reverse().forEach(h => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-
-                const infoDiv = document.createElement('div');
-                infoDiv.style.flex = '1';
-                const dateStr = new Date(h.date).toLocaleString();
-                
-                const dateDiv = document.createElement('div');
-                dateDiv.className = 'font-bold text-small';
-                dateDiv.textContent = dateStr;
-                infoDiv.appendChild(dateDiv);
-
-                const titleDiv = document.createElement('div');
-                titleDiv.className = 'text-small';
-                titleDiv.style.opacity = '0.8';
-                titleDiv.textContent = `Title: ${h.title || '-'}`;
-                infoDiv.appendChild(titleDiv);
-
-                const userDiv = document.createElement('div');
-                userDiv.className = 'text-small';
-                userDiv.style.opacity = '0.8';
-                userDiv.textContent = `User: ${h.username || '-'}`;
-                infoDiv.appendChild(userDiv);
-                
-                const restoreBtn = document.createElement('m3e-button');
-                restoreBtn.setAttribute('variant', 'text');
-                restoreBtn.style.marginLeft = 'auto';
-                
-                restoreBtn.addEventListener('click', function() {
-                    showConfirmDialog(t('restore_confirm')).then(res => {
-                        if (res) {
-                            document.getElementById('detail_pass_title').value = h.title || '';
-                            document.getElementById('detail_pass_category').value = h.category || '';
-                            document.getElementById('detail_pass_website').value = h.website || '';
-                            document.getElementById('detail_pass_username').value = h.username || '';
-                            document.getElementById('detail_pass_value').value = h.password || '';
-                            document.getElementById('detail_pass_secret').value = h.secret || '';
-                            
-                            updateDetailStrength(h.password || '');
-                            startTOTPUpdate(h.secret || '');
-                        }
-                    });
-                });
-
-                const restoreLabel = document.createElement('span');
-                restoreLabel.textContent = t('restore');
-                restoreBtn.appendChild(restoreLabel);
-
-                div.appendChild(infoDiv);
-                div.appendChild(restoreBtn);
-                historyList.appendChild(div);
-            });
-        }
-
-        updateDetailStrength(item.password || '');
-        startTOTPUpdate(item.secret);
-        dialog.open = true;
+        openDetailDialog(item);
     });
 
     listGroup.appendChild(newItem);
@@ -2098,6 +2442,15 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStrengthView(e.target.value, 'pass_check_result', 'check_pass_strength_bar', 'pass_crack_time');
         });
     }
+
+    // Security Hub
+    document.getElementById('open_security_hub_btn')?.addEventListener('click', () => {
+        updateSecurityHub();
+    });
+
+    document.getElementById('hub_weak_item')?.addEventListener('click', () => renderSecurityList('weak'));
+    document.getElementById('hub_no_2fa_item')?.addEventListener('click', () => renderSecurityList('no_2fa'));
+    document.getElementById('hub_reused_item')?.addEventListener('click', () => renderSecurityList('reused'));
 
     // Setup Dialog
     document.getElementById('setup_btn')?.addEventListener('click', async () => {
