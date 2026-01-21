@@ -9,6 +9,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0" />
+    
+    <!-- SEO & OGP -->
+    <meta name="description" content="Soul Password Managerは、ゼロ知識証明とPasskey認証を採用した次世代のパスワードマネージャーです。安全かつシンプルに、あなたのデジタルライフを守ります。">
+    <meta property="og:title" content="Soul Password Manager - 次世代のセキュリティ">
+    <meta property="og:description" content="モダンな暗号化技術、生体認証（Passkey）、そしてシームレスなクラウド同期。シンプルかつ強力なパスワード管理を、すべてのデバイスで。">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
     <header>
@@ -28,46 +35,75 @@
     <main>
         <section class="hero">
             <div class="container hero-content">
-                <h1>あなたのデジタルライフを守る<br>魂（Soul）の盾</h1>
-                <p>モダンな暗号化技術、生体認証（Passkey）、そしてシームレスなクラウド同期。<br>
-                シンプルかつ強力なパスワード管理を、すべてのデバイスで。</p>
-                <div class="hero-actions">
-                    <a href="../www/index.html" class="btn btn-large btn-filled">今すぐ始める</a>
-                    <a href="#features" class="btn btn-large btn-outlined">詳しく見る</a>
+                <div class="hero-text animate-on-scroll">
+                    <h1>あなたのデジタルライフを守る<br>魂（Soul）の盾</h1>
+                    <p>モダンな暗号化技術、生体認証（Passkey）、そしてシームレスなクラウド同期。<br>
+                    シンプルかつ強力なパスワード管理を、すべてのデバイスで。</p>
+                    <div class="hero-actions">
+                        <a href="../www/index.html" class="btn btn-large btn-filled">今すぐ始める</a>
+                        <a href="#features" class="btn btn-large btn-outlined">詳しく見る</a>
+                    </div>
+                </div>
+                <div class="hero-visual animate-on-scroll">
+                    <div class="app-mockup">
+                        <div class="app-header">
+                            <div class="app-dot red"></div>
+                            <div class="app-dot yellow"></div>
+                            <div class="app-dot green"></div>
+                        </div>
+                        <div class="app-body">
+                            <div class="mock-search"></div>
+                            <div class="mock-row">
+                                <div class="mock-icon"><span class="material-symbols-outlined">key</span></div>
+                                <div class="mock-lines"><div class="mock-line w-80"></div><div class="mock-line w-40"></div></div>
+                            </div>
+                            <div class="mock-row">
+                                <div class="mock-icon"><span class="material-symbols-outlined">mail</span></div>
+                                <div class="mock-lines"><div class="mock-line w-60"></div><div class="mock-line w-30"></div></div>
+                            </div>
+                            <div class="mock-row">
+                                <div class="mock-icon"><span class="material-symbols-outlined">account_circle</span></div>
+                                <div class="mock-lines"><div class="mock-line w-70"></div><div class="mock-line w-50"></div></div>
+                            </div>
+                        </div>
+                        <div class="floating-shield">
+                            <span class="material-symbols-outlined">verified_user</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section id="features" class="features">
             <div class="container">
-                <h2 class="section-title">主な機能</h2>
+                <h2 class="section-title animate-on-scroll">主な機能</h2>
                 <div class="grid">
-                    <div class="card">
+                    <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">cloud_sync</span>
                         <h3>クラウド同期</h3>
                         <p>Googleアカウントでログインすれば、すべてのデバイスでパスワードがリアルタイムに同期されます。データは暗号化されて保存されます。</p>
                     </div>
-                    <div class="card">
+                    <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">fingerprint</span>
                         <h3>Passkey 対応</h3>
                         <p>Face IDやTouch IDなどの生体認証を使って、マスターパスワードを入力せずに安全にログインできます。</p>
                     </div>
-                    <div class="card">
+                    <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">security</span>
                         <h3>漏洩チェック</h3>
                         <p>Have I Been Pwned APIと連携し、パスワードが過去に漏洩していないか安全にチェックします（k-Anonymity対応）。</p>
                     </div>
-                    <div class="card">
+                    <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">password</span>
                         <h3>強力な生成ツール</h3>
                         <p>解読困難なランダムパスワードを瞬時に生成。強度メーターと推定解読時間も表示します。</p>
                     </div>
-                    <div class="card">
+                    <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">timer</span>
                         <h3>TOTP 認証</h3>
                         <p>2段階認証（2FA）用のワンタイムパスワード生成機能を内蔵。別のアプリを開く必要はありません。</p>
                     </div>
-                    <div class="card">
+                    <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">lock_clock</span>
                         <h3>自動ロック</h3>
                         <p>一定時間操作がない場合、自動的に保管庫をロックして覗き見を防ぎます。</p>
@@ -76,19 +112,135 @@
             </div>
         </section>
 
+        <section class="comparison">
+            <div class="container">
+                <h2 class="section-title animate-on-scroll">他社製品との比較</h2>
+                <div class="comparison-wrapper animate-on-scroll">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th></th> <!-- 左上の空セル -->
+                                <th class="brand-col">Soul Password Manager</th>
+                                <th>Google<br>Password Manager</th>
+                                <th>Proton Pass</th>
+                                <th>KeePass</th>
+                                <th>Apple<br>iCloudキーチェーン</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>セキュリティモデル</th>
+                                <td class="highlight">ゼロ知識証明<br><small>(ローカル暗号化)</small></td>
+                                <td>サーバーサイド暗号化</td>
+                                <td>ゼロ知識証明<br><small>(オープンソース)</small></td>
+                                <td>ローカルファイル<br><small>(自己管理)</small></td>
+                                <td>エンドツーエンド暗号化</td>
+                            </tr>
+                            <tr>
+                                <th>メイン認証</th>
+                                <td class="highlight">Passkeyネイティブ</td>
+                                <td>Googleアカウント</td>
+                                <td>マスターパスワード</td>
+                                <td>マスターパスワード<br><small>+キーファイル</small></td>
+                                <td>デバイス認証<br><small>(Face/Touch ID)</small></td>
+                            </tr>
+                            <tr>
+                                <th>TOTP (2FA) 生成</th>
+                                <td class="highlight"><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined cancel">cancel</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                            </tr>
+                            <tr>
+                                <th>クロスプラットフォーム</th>
+                                <td class="highlight">主要ブラウザ</td>
+                                <td>Google中心</td>
+                                <td>◎ 全主要OS</td>
+                                <td>△ 非公式多数</td>
+                                <td>Apple中心</td>
+                            </tr>
+                            <tr>
+                                <th>オープンソース</th>
+                                <td class="highlight"><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined cancel">cancel</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span><small>クライアント</small></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined cancel">cancel</span></td>
+                            </tr>
+                            <tr>
+                                <th>コスト</th>
+                                <td class="highlight">完全無料</td>
+                                <td>無料</td>
+                                <td>無料 + 有料版</td>
+                                <td>完全無料</td>
+                                <td>無料<br><small>(デバイス購入者)</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="faq">
+            <div class="container">
+                <h2 class="section-title animate-on-scroll">よくある質問</h2>
+                <div class="faq-grid">
+                    <details class="faq-item animate-on-scroll">
+                        <summary>本当に無料で使えますか？</summary>
+                        <p>はい、Soul Password Managerはオープンソースプロジェクトであり、すべての機能を完全に無料でご利用いただけます。広告や隠れた課金もありません。</p>
+                    </details>
+                    <details class="faq-item animate-on-scroll">
+                        <summary>マスターパスワードを忘れた場合、復旧できますか？</summary>
+                        <p>いいえ、できません。セキュリティの観点から（ゼロ知識証明）、私たちはあなたのマスターパスワードを知り得ない仕組みになっています。マスターパスワードを忘れると、保存されたデータは永久に失われます。必ず安全な場所に控えてください。</p>
+                    </details>
+                    <details class="faq-item animate-on-scroll">
+                        <summary>データはどこに保存されますか？</summary>
+                        <p>データは強力に暗号化された状態で、Google Firebaseのクラウドデータベースに保存されます。暗号化キーはあなたのデバイス上にのみ存在するため、サーバー管理者であってもデータの中身を見ることはできません。</p>
+                    </details>
+                    <details class="faq-item animate-on-scroll">
+                        <summary>他のパスワードマネージャーから移行できますか？</summary>
+                        <p>はい、JSON形式でのインポートに対応しています。現在お使いのマネージャーからデータをエクスポートし、アプリ内の設定メニューからインポートしてください。</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
         <section id="security" class="security">
             <div class="container">
-                <h2 class="section-title">堅牢なセキュリティアーキテクチャ</h2>
+                <h2 class="section-title animate-on-scroll">堅牢なセキュリティアーキテクチャ</h2>
+                <div class="security-visual animate-on-scroll">
+                    <div class="sec-step">
+                        <div class="sec-icon"><span class="material-symbols-outlined">person</span></div>
+                        <p>あなた<br><small>(マスターパスワード)</small></p>
+                    </div>
+                    <div class="sec-arrow"><span class="material-symbols-outlined">arrow_forward</span></div>
+                    <div class="sec-step">
+                        <div class="sec-icon"><span class="material-symbols-outlined">key</span></div>
+                        <p>PBKDF2<br><small>鍵生成</small></p>
+                    </div>
+                    <div class="sec-arrow"><span class="material-symbols-outlined">arrow_forward</span></div>
+                    <div class="sec-step">
+                        <div class="sec-icon"><span class="material-symbols-outlined">lock</span></div>
+                        <p>AES-256<br><small>暗号化</small></p>
+                    </div>
+                    <div class="sec-arrow"><span class="material-symbols-outlined">arrow_forward</span></div>
+                    <div class="sec-step">
+                        <div class="sec-icon"><span class="material-symbols-outlined">cloud_upload</span></div>
+                        <p>クラウド<br><small>暗号化データの保存</small></p>
+                    </div>
+                </div>
+
                 <div class="security-details">
-                    <div class="security-item">
+                    <div class="security-item animate-on-scroll">
                         <h4><span class="material-symbols-outlined">encrypted</span> AES-256 暗号化</h4>
                         <p>データは保存される前に、AES-GCM (256ビット) を使用してローカルで暗号化されます。平文のパスワードがデバイスの外に出ることはありません。</p>
                     </div>
-                    <div class="security-item">
+                    <div class="security-item animate-on-scroll">
                         <h4><span class="material-symbols-outlined">key</span> PBKDF2 鍵導出</h4>
                         <p>マスターパスワードは、一意のソルトを使用したPBKDF2（100,000回の反復）によって強化され、強力な暗号化キーが生成されます。</p>
                     </div>
-                    <div class="security-item">
+                    <div class="security-item animate-on-scroll">
                         <h4><span class="material-symbols-outlined">visibility_off</span> ゼロ知識証明</h4>
                         <p>私たちはあなたのマスターパスワードを知りません。サーバーには暗号化されたデータのみが保存され、復号できるのはあなただけです。</p>
                     </div>
@@ -98,8 +250,8 @@
 
         <section class="tech-stack">
             <div class="container">
-                <h2 class="section-title">Built With</h2>
-                <div class="tech-logos">
+                <h2 class="section-title animate-on-scroll">Built With</h2>
+                <div class="tech-logos animate-on-scroll">
                     <div class="tech-badge">Firebase</div>
                     <div class="tech-badge">Web Crypto API</div>
                     <div class="tech-badge">Material Design 3</div>
@@ -111,9 +263,97 @@
 
     <footer>
         <div class="container footer-content">
-            <p>&copy; 2026 Soul Password Manager. All rights reserved.</p>
-            <p class="disclaimer">※このアプリケーションはデモ版です。重要な機密情報の管理には十分ご注意ください。</p>
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="material-symbols-outlined">lock</span>
+                        Soul Password Manager
+                    </div>
+                    <p>あなたのデジタルライフを守る、<br>オープンソースの盾。</p>
+                </div>
+                <div class="footer-links">
+                    <h4>プロダクト</h4>
+                    <a href="#features">機能</a>
+                    <a href="#security">セキュリティ</a>
+                    <a href="#">ロードマップ</a>
+                </div>
+                <div class="footer-links">
+                    <h4>サポート</h4>
+                    <a href="#">よくある質問</a>
+                    <a href="#">プライバシーポリシー</a>
+                    <a href="#">利用規約</a>
+                </div>
+                <div class="footer-social">
+                    <h4>ソーシャル</h4>
+                    <div class="social-icons">
+                        <a href="#" aria-label="GitHub"><span class="material-symbols-outlined">code</span></a>
+                        <a href="#" aria-label="Twitter"><span class="material-symbols-outlined">alternate_email</span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Soul Password Manager. All rights reserved.</p>
+                <p class="disclaimer">※このアプリケーションはデモ版です。重要な機密情報の管理には十分ご注意ください。</p>
+            </div>
         </div>
     </footer>
+
+    <button id="back-to-top" class="back-to-top" aria-label="トップへ戻る">
+        <span class="material-symbols-outlined">arrow_upward</span>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const elements = document.querySelectorAll('.animate-on-scroll');
+            elements.forEach(el => observer.observe(el));
+
+            // Header scroll effect
+            const header = document.querySelector('header');
+            const handleScroll = () => {
+                if (window.scrollY > 10) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            };
+            window.addEventListener('scroll', handleScroll);
+            handleScroll(); // 初期ロード時にもチェック
+
+            // Back to Top Button
+            const backToTopBtn = document.getElementById('back-to-top');
+            
+            const toggleBackToTop = () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            };
+
+            window.addEventListener('scroll', toggleBackToTop);
+            
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 </html>
