@@ -17,6 +17,9 @@ import "@m3e/nav-menu/dist/index.min.js";
 import "@m3e/divider/dist/index.min.js";
 import "@m3e/heading/dist/index.min.js";
 import "@m3e/loading-indicator/dist/index.min.js";
+import "@m3e/checkbox/dist/index.min.js";
+import "@m3e/select/dist/index.min.js";
+import "@m3e/option/dist/index.min.js";
 
 import zxcvbn from 'zxcvbn';
 import * as OTPAuth from 'otpauth';
@@ -1327,6 +1330,52 @@ function calculatePasswordStrength(password) {
     return result.score;
 }
 
+function getStrengthInfo(password) {
+    const strength = calculatePasswordStrength(password);
+    let strengthClass = 'text-weak';
+    let barClass = 'bg-weak';
+    let strengthPercent = 0;
+    let labelKey = 'weak';
+
+    // zxcvbn score: 0-4
+    if (strength === 0) { strengthPercent = 5; labelKey = 'weak'; }
+    else if (strength === 1) { strengthPercent = 25; labelKey = 'weak'; }
+    else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; labelKey = 'medium'; }
+    else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; labelKey = 'medium'; }
+    else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; labelKey = 'strong'; }
+
+    if (!password) strengthPercent = 0;
+
+    return { strength, strengthPercent, strengthClass, barClass, labelKey };
+}
+
+function updateStrengthView(password, resultElId, barElId, crackTimeElId) {
+    const info = getStrengthInfo(password);
+    
+    const resultEl = typeof resultElId === 'string' ? document.getElementById(resultElId) : resultElId;
+    const barEl = typeof barElId === 'string' ? document.getElementById(barElId) : barElId;
+    const crackTimeEl = typeof crackTimeElId === 'string' ? document.getElementById(crackTimeElId) : crackTimeElId;
+
+    if (resultEl) {
+        if (!password) {
+            resultEl.textContent = '';
+            resultEl.className = 'font-bold text-small';
+        } else {
+            resultEl.textContent = t(info.labelKey);
+            resultEl.className = 'font-bold text-small ' + info.strengthClass;
+        }
+    }
+
+    if (barEl) {
+        barEl.style.width = info.strengthPercent + '%';
+        barEl.className = 'strength-meter-fill ' + info.barClass;
+    }
+
+    if (crackTimeEl) {
+        crackTimeEl.textContent = password ? calculateCrackTime(password) : '';
+    }
+}
+
 function calculateCrackTime(password) {
     if (!password) return '';
     const result = zxcvbn(password);
@@ -1569,41 +1618,7 @@ function generatePassword() {
     const autoMakeEl = document.getElementById('auto_make_password');
     if (autoMakeEl) autoMakeEl.textContent = password;
 
-    const strength = calculatePasswordStrength(password);
-    const resultElement = document.getElementById('maker_pass_strength');
-    const barElement = document.getElementById('maker_pass_strength_bar');
-    const crackTimeElement = document.getElementById('maker_pass_crack_time');
-
-    let strengthClass = 'text-weak';
-    let barClass = 'bg-weak';
-    let strengthPercent = 0;
-
-    // zxcvbn score: 0-4
-    if (strength === 0) strengthPercent = 5;
-    else if (strength === 1) strengthPercent = 25;
-    else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
-    else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
-    else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; }
-
-    if (resultElement) {
-        if (strength < 2) {
-            resultElement.textContent = t('weak');
-        } else if (strength < 4) {
-            resultElement.textContent = t('medium');
-        } else {
-            resultElement.textContent = t('strong');
-        }
-        resultElement.className = 'font-bold text-small ' + strengthClass;
-    }
-
-    if (barElement) {
-        barElement.style.width = strengthPercent + '%';
-        barElement.className = 'strength-meter-fill ' + barClass;
-    }
-
-    if (crackTimeElement) {
-        crackTimeElement.textContent = calculateCrackTime(password);
-    }
+    updateStrengthView(password, 'maker_pass_strength', 'maker_pass_strength_bar', 'maker_pass_crack_time');
 
     // Debounce history save to prevent spamming while dragging slider
     if (historyDebounceTimer) clearTimeout(historyDebounceTimer);
@@ -1613,45 +1628,7 @@ function generatePassword() {
 }
 
 function updateDetailStrength(password) {
-    const strength = calculatePasswordStrength(password);
-    const resultElement = document.getElementById('detail_pass_strength');
-    const crackTimeElement = document.getElementById('detail_pass_crack_time');
-    const barElement = document.getElementById('detail_pass_strength_bar');
-
-    let strengthClass = 'text-weak';
-    let barClass = 'bg-weak';
-    let strengthPercent = 0;
-
-    // zxcvbn score: 0-4
-    if (strength === 0) strengthPercent = 5;
-    else if (strength === 1) strengthPercent = 25;
-    else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
-    else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
-    else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; }
-    
-    if (!password) strengthPercent = 0;
-
-    if (resultElement) {
-        if (!password) {
-            resultElement.textContent = '';
-        } else if (strength < 2) {
-            resultElement.textContent = t('weak');
-        } else if (strength < 4) {
-            resultElement.textContent = t('medium');
-        } else {
-            resultElement.textContent = t('strong');
-        }
-        resultElement.className = 'font-bold text-small ' + strengthClass;
-    }
-
-    if (barElement) {
-        barElement.style.width = strengthPercent + '%';
-        barElement.className = 'strength-meter-fill ' + barClass;
-    }
-
-    if (crackTimeElement) {
-        crackTimeElement.textContent = password ? calculateCrackTime(password) : '';
-    }
+    updateStrengthView(password, 'detail_pass_strength', 'detail_pass_strength_bar', 'detail_pass_crack_time');
 }
 
 function addToGeneratorHistory(password) {
@@ -1851,14 +1828,7 @@ function addPasswordToUI(item, index, listGroup) {
     
     icon.slot = 'icon';
 
-    const strength = calculatePasswordStrength(item.password);
-    let strengthClass = 'text-strong';
-    if (strength < 2) {
-        strengthClass = 'text-weak';
-    } else if (strength < 4) {
-        strengthClass = 'text-medium';
-    }
-
+    const strengthClass = getStrengthInfo(item.password).strengthClass;
     if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
         icon.classList.add(strengthClass);
     }
@@ -1952,11 +1922,9 @@ function addPasswordToUI(item, index, listGroup) {
                 userDiv.textContent = `User: ${h.username || '-'}`;
                 infoDiv.appendChild(userDiv);
                 
-                const restoreBtn = document.createElement('button');
-                restoreBtn.textContent = t('restore');
-                restoreBtn.type = 'button';
-                restoreBtn.style.marginLeft = '8px';
-                restoreBtn.className = 'cursor-pointer';
+                const restoreBtn = document.createElement('m3e-button');
+                restoreBtn.setAttribute('variant', 'text');
+                restoreBtn.style.marginLeft = 'auto';
                 
                 restoreBtn.addEventListener('click', function() {
                     showConfirmDialog(t('restore_confirm')).then(res => {
@@ -1973,6 +1941,10 @@ function addPasswordToUI(item, index, listGroup) {
                         }
                     });
                 });
+
+                const restoreLabel = document.createElement('span');
+                restoreLabel.textContent = t('restore');
+                restoreBtn.appendChild(restoreLabel);
 
                 div.appendChild(infoDiv);
                 div.appendChild(restoreBtn);
@@ -2115,67 +2087,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const passCheckInput = document.getElementById('pass_check_form');
     if (passCheckInput) {
         passCheckInput.addEventListener('input', (e) => {
-            const password = e.target.value;
-            const strength = calculatePasswordStrength(password);
-            const resultElement = document.getElementById('pass_check_result');
-            const crackTimeElement = document.getElementById('pass_crack_time');
-            const barElement = document.getElementById('check_pass_strength_bar');
-
-            let strengthClass = 'text-weak';
-            let barClass = 'bg-weak';
-            let strengthPercent = 0;
-
-            // zxcvbn score: 0-4
-            if (strength === 0) strengthPercent = 5;
-            else if (strength === 1) strengthPercent = 25;
-            else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
-            else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
-            else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; }
-            
-            if (!password) strengthPercent = 0;
-
-            if (resultElement) {
-                if (!password) {
-                    resultElement.textContent = '';
-                } else if (strength < 2) {
-                    resultElement.textContent = t('weak');
-                } else if (strength < 4) {
-                    resultElement.textContent = t('medium');
-                } else {
-                    resultElement.textContent = t('strong');
-                }
-                resultElement.className = 'font-bold text-small ' + strengthClass;
-            }
-
-            if (barElement) {
-                barElement.style.width = strengthPercent + '%';
-                barElement.className = 'strength-meter-fill ' + barClass;
-            }
-
-            if (crackTimeElement) {
-                crackTimeElement.textContent = password ? calculateCrackTime(password) : '';
-            }
+            updateStrengthView(e.target.value, 'pass_check_result', 'check_pass_strength_bar', 'pass_crack_time');
         });
-    }
-
-    function updateStrengthBar(password, barId) {
-        const bar = document.getElementById(barId);
-        if (!bar) return;
-        
-        const strength = calculatePasswordStrength(password);
-        let barClass = 'bg-weak';
-        let strengthPercent = 0;
-
-        if (strength === 0) strengthPercent = 5;
-        else if (strength === 1) strengthPercent = 25;
-        else if (strength === 2) { strengthPercent = 50; barClass = 'bg-medium'; }
-        else if (strength === 3) { strengthPercent = 75; barClass = 'bg-medium'; }
-        else if (strength === 4) { strengthPercent = 100; barClass = 'bg-strong'; }
-        
-        if (!password) strengthPercent = 0;
-
-        bar.style.width = strengthPercent + '%';
-        bar.className = 'strength-meter-fill ' + barClass;
     }
 
     // Setup Dialog
@@ -2291,7 +2204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('new_pass_value')?.addEventListener('input', (e) => {
-        updateStrengthBar(e.target.value, 'new_pass_strength_bar');
+        updateStrengthView(e.target.value, null, 'new_pass_strength_bar', null);
     });
 
     // Update Password
@@ -2355,7 +2268,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generate_new_pass_btn')?.addEventListener('click', () => {
         const password = generatePasswordString(16, true, true, true);
         document.getElementById('new_pass_value').value = password;
-        updateStrengthBar(password, 'new_pass_strength_bar');
+        updateStrengthView(password, null, 'new_pass_strength_bar', null);
     });
 
     document.getElementById('check_breach_btn')?.addEventListener('click', async function() {
@@ -2408,7 +2321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear sensitive fields from DOM when dialog closes
         document.getElementById('new_pass_value').value = '';
         document.getElementById('new_pass_secret').value = '';
-        updateStrengthBar('', 'new_pass_strength_bar');
+        updateStrengthView('', null, 'new_pass_strength_bar', null);
     });
 
     document.getElementById('detail_pass_value')?.addEventListener('input', (e) => updateDetailStrength(e.target.value));
@@ -2564,9 +2477,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById(id);
         if (el) {
             el.type = 'password';
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.style.cssText = 'background:transparent; border:none; cursor:pointer; padding:0; margin-left:4px;';
+            const btn = document.createElement('m3e-icon-button');
+            btn.style.marginLeft = '4px';
             const icon = document.createElement('m3e-icon');
             icon.name = 'visibility';
             btn.appendChild(icon);
@@ -2602,7 +2514,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.sort-item').forEach(item => {
             item.addEventListener('click', async (e) => {
-                const val = e.target.dataset.value;
+                const val = e.currentTarget.dataset.value;
                 if (!val) return;
                 
                 if (savedPasswords.length > 0) {
@@ -2631,12 +2543,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabBtns = document.querySelectorAll('.settings-tab-btn');
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Deactivate all
-            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.settings-tab-btn').forEach(b => b.setAttribute('variant', 'text'));
             document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('active'));
             
-            // Activate clicked
-            btn.classList.add('active');
+            btn.setAttribute('variant', 'filled');
             const targetId = btn.getAttribute('data-tab');
             const targetPanel = document.getElementById('settings_tab_' + targetId);
             if (targetPanel) targetPanel.classList.add('active');
@@ -2657,11 +2567,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnContainer = document.createElement('div');
         btnContainer.className = 'flex-row-center-gap';
 
-        const exportBtn = document.createElement('button');
-        exportBtn.textContent = t('export_json');
-        exportBtn.type = 'button';
-        exportBtn.className = 'cursor-pointer';
-        exportBtn.style.padding = '8px 16px';
+        const exportBtn = document.createElement('m3e-button');
+        exportBtn.setAttribute('variant', 'outlined');
+        const exportLabel = document.createElement('span');
+        exportLabel.textContent = t('export_json');
+        exportBtn.appendChild(exportLabel);
         
         exportBtn.addEventListener('click', () => {
             const data = JSON.stringify(savedPasswords, null, 2);
@@ -2676,11 +2586,11 @@ document.addEventListener('DOMContentLoaded', () => {
             URL.revokeObjectURL(url);
         });
 
-        const importBtn = document.createElement('button');
-        importBtn.textContent = t('import_json');
-        importBtn.type = 'button';
-        importBtn.className = 'cursor-pointer';
-        importBtn.style.padding = '8px 16px';
+        const importBtn = document.createElement('m3e-button');
+        importBtn.setAttribute('variant', 'outlined');
+        const importLabel = document.createElement('span');
+        importLabel.textContent = t('import_json');
+        importBtn.appendChild(importLabel);
 
         const fileInput = document.createElement('input');
         fileInput.type = 'file';

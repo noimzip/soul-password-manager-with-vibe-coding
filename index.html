@@ -40,12 +40,12 @@
               <m3e-icon name="sort"></m3e-icon>
             </m3e-icon-button>
             <div id="sort_menu" class="sort-menu hidden">
-              <button class="sort-item" data-value="title_asc" data-i18n="sort_name_asc">Name (A-Z)</button>
-              <button class="sort-item" data-value="title_desc" data-i18n="sort_name_desc">Name (Z-A)</button>
-              <button class="sort-item" data-value="strength_asc" data-i18n="sort_str_asc">Strength (Weakest)</button>
-              <button class="sort-item" data-value="strength_desc" data-i18n="sort_str_desc">Strength (Strongest)</button>
-              <button class="sort-item" data-value="updated_desc" data-i18n="sort_date_desc">Date (Newest)</button>
-              <button class="sort-item" data-value="updated_asc" data-i18n="sort_date_asc">Date (Oldest)</button>
+              <m3e-button class="sort-item" variant="text" data-value="title_asc"><span data-i18n="sort_name_asc">Name (A-Z)</span></m3e-button>
+              <m3e-button class="sort-item" variant="text" data-value="title_desc"><span data-i18n="sort_name_desc">Name (Z-A)</span></m3e-button>
+              <m3e-button class="sort-item" variant="text" data-value="strength_asc"><span data-i18n="sort_str_asc">Strength (Weakest)</span></m3e-button>
+              <m3e-button class="sort-item" variant="text" data-value="strength_desc"><span data-i18n="sort_str_desc">Strength (Strongest)</span></m3e-button>
+              <m3e-button class="sort-item" variant="text" data-value="updated_desc"><span data-i18n="sort_date_desc">Date (Newest)</span></m3e-button>
+              <m3e-button class="sort-item" variant="text" data-value="updated_asc"><span data-i18n="sort_date_asc">Date (Oldest)</span></m3e-button>
             </div>
           </div>
           <m3e-icon-button id="theme_toggle_btn">
@@ -149,15 +149,15 @@
            
            <div class="checkbox-row mt-2">
                <label class="checkbox-item">
-                   <input id="include_uppercase" type="checkbox" checked>
+                   <m3e-checkbox id="include_uppercase" checked></m3e-checkbox>
                    <span data-i18n="uppercase">大文字</span>
                </label>
                <label class="checkbox-item">
-                   <input id="include_numbers" type="checkbox" checked>
+                   <m3e-checkbox id="include_numbers" checked></m3e-checkbox>
                    <span data-i18n="numbers">数字</span>
                </label>
                <label class="checkbox-item">
-                   <input id="include_symbols" type="checkbox">
+                   <m3e-checkbox id="include_symbols"></m3e-checkbox>
                    <span data-i18n="symbols">記号</span>
                </label>
            </div>
@@ -169,7 +169,7 @@
             <div id="maker_history_list" class="history-list">
             </div>
             <div class="text-right mt-2">
-                <m3e-button variant="text" id="clear_maker_history_btn" class="text-small" style="--md-sys-color-primary: var(--md-sys-color-error);">
+                <m3e-button variant="text" id="clear_maker_history_btn" class="text-small color-error">
                     <span data-i18n="clear_history">履歴をクリア</span>
                 </m3e-button>
             </div>
@@ -323,14 +323,14 @@
             <div id="detail_history_list" class="history-list">
             </div>
             <div class="text-right mt-2">
-                <m3e-button variant="text" id="clear_history_btn" class="text-small" style="--md-sys-color-primary: var(--md-sys-color-error);">
+                <m3e-button variant="text" id="clear_history_btn" class="text-small color-error">
                     <span data-i18n="clear_history">履歴をクリア</span>
                 </m3e-button>
             </div>
         </details>
       </div>
       <div slot="actions">
-        <m3e-button variant="text" id="delete_password_btn" style="--md-sys-color-primary: var(--md-sys-color-error);">
+        <m3e-button variant="text" id="delete_password_btn" class="color-error">
           <m3e-icon slot="icon" name="delete"></m3e-icon>
           <span data-i18n="delete">削除</span>
         </m3e-button>
@@ -348,32 +348,34 @@
       <span slot="header" data-i18n="settings">設定</span>
       
       <div class="settings-tabs">
-          <button class="settings-tab-btn active" data-tab="general">
-            <m3e-icon name="settings" class="tab-icon"></m3e-icon>
+          <m3e-button class="settings-tab-btn" variant="filled" data-tab="general">
+            <m3e-icon slot="icon" name="settings"></m3e-icon>
             <span data-i18n="general">全般</span>
-          </button>
-          <button class="settings-tab-btn" data-tab="security">
-            <m3e-icon name="security" class="tab-icon"></m3e-icon>
+          </m3e-button>
+          <m3e-button class="settings-tab-btn" variant="text" data-tab="security">
+            <m3e-icon slot="icon" name="security"></m3e-icon>
             <span data-i18n="security">セキュリティ</span>
-          </button>
-          <button class="settings-tab-btn" data-tab="danger">
-            <m3e-icon name="warning" class="tab-icon"></m3e-icon>
+          </m3e-button>
+          <m3e-button class="settings-tab-btn" variant="text" data-tab="danger">
+            <m3e-icon slot="icon" name="warning"></m3e-icon>
             <span data-i18n="danger_zone">危険</span>
-          </button>
+          </m3e-button>
       </div>
 
       <div id="settings_tab_general" class="settings-tab-panel active">
-          <div class="setting-section">
-              <h4 data-i18n="language" class="mt-0">言語 / Language</h4>
-              <select id="setting_language" class="language-select">
-                  <option value="ja">日本語</option>
-                  <option value="en">English</option>
-                  <option value="zh">中文 (简体)</option>
-                  <option value="ko">한국어</option>
-                  <option value="de">Deutsch</option>
-                  <option value="fr">Français</option>
-                  <option value="it">Italiano</option>
-              </select>
+          <div class="setting-section mb-3">
+            <m3e-form-field>
+              <label slot="label" for="select">Language / 言語</label>
+              <m3e-select id="setting_language" class="w-100">
+                  <m3e-option value="ja">日本語</m3e-option>
+                  <m3e-option value="en">English</m3e-option>
+                  <m3e-option value="zh">中文 (简体)</m3e-option>
+                  <m3e-option value="ko">한국어</m3e-option>
+                  <m3e-option value="de">Deutsch</m3e-option>
+                  <m3e-option value="fr">Français</m3e-option>
+                  <m3e-option value="it">Italiano</m3e-option>
+              </m3e-select>
+            </m3e-form-field>
           </div>
 
           <m3e-divider class="setting-divider"></m3e-divider>
@@ -447,7 +449,7 @@
           <div class="danger-zone-box">
             <h3 class="text-danger mt-0" data-i18n="danger_zone">危険</h3>
             <p data-i18n="delete_all_desc">すべてのパスワードと設定を削除し、アプリを初期化します。</p>
-            <m3e-button variant="filled" id="delete_all_data_btn" style="--md-sys-color-primary: var(--md-sys-color-error); width: 100%;">
+            <m3e-button variant="filled" id="delete_all_data_btn" class="color-error" style="width: 100%;">
               <m3e-icon slot="icon" name="delete_forever"></m3e-icon>
               <span data-i18n="delete_all_data">全データを削除</span>
             </m3e-button>
