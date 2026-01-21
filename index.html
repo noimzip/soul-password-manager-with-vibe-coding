@@ -25,22 +25,39 @@
     <div id="loading_overlay">
       <m3e-loading-indicator></m3e-loading-indicator>
     </div>
-	<header>
+	<header class="sticky-header">
       <m3e-app-bar>
-        <span slot="title" data-i18n="app_title">Soul Password Manager</span>
-        <m3e-icon-button variant="filled" slot="trailing-icon" id="theme_toggle_btn">
-          <m3e-icon name="dark_mode"></m3e-icon>
-        </m3e-icon-button>
-        <m3e-icon-button variant="filled" slot="trailing-icon" id="logout_btn">
-          <m3e-icon name="logout"></m3e-icon>
-        </m3e-icon-button>
+        <div slot="title" class="header-title-wrapper">
+          <m3e-icon name="lock" class="header-logo"></m3e-icon>
+          <span data-i18n="app_title" class="app-title">Soul Password Manager</span>
+        </div>
+        <div slot="trailing-icon" class="header-actions">
+          <div id="search_passwords" class="header-search">
+            <input id="fld" type="search" placeholder="Search" data-i18n-placeholder="search_placeholder">
+          </div>
+          <div class="sort-wrapper">
+            <m3e-icon-button id="sort_btn">
+              <m3e-icon name="sort"></m3e-icon>
+            </m3e-icon-button>
+            <div id="sort_menu" class="sort-menu hidden">
+              <button class="sort-item" data-value="title_asc" data-i18n="sort_name_asc">Name (A-Z)</button>
+              <button class="sort-item" data-value="title_desc" data-i18n="sort_name_desc">Name (Z-A)</button>
+              <button class="sort-item" data-value="strength_asc" data-i18n="sort_str_asc">Strength (Weakest)</button>
+              <button class="sort-item" data-value="strength_desc" data-i18n="sort_str_desc">Strength (Strongest)</button>
+              <button class="sort-item" data-value="updated_desc" data-i18n="sort_date_desc">Date (Newest)</button>
+              <button class="sort-item" data-value="updated_asc" data-i18n="sort_date_asc">Date (Oldest)</button>
+            </div>
+          </div>
+          <m3e-icon-button id="theme_toggle_btn">
+            <m3e-icon name="dark_mode"></m3e-icon>
+          </m3e-icon-button>
+          <m3e-icon-button id="logout_btn">
+            <m3e-icon name="logout"></m3e-icon>
+          </m3e-icon-button>
+        </div>
       </m3e-app-bar>
     </header>
 
-    <m3e-form-field id="search_passwords" variant="outlined" slot="trailing-icon" label="Search">
-      <input id="fld" placeholder="Search here" data-i18n-placeholder="search_placeholder"/>
-    </m3e-form-field>
-    
     <section id="left_sidebar_content">
       <m3e-nav-menu>
         <m3e-nav-menu-item-group id="favorite_list">
@@ -100,39 +117,59 @@
 
     <m3e-dialog id="pass_maker" dismissible>
       <span slot="header" data-i18n="auto_make">パスワードの自動生成</span>
-       <m3e-form-field variant="outlined" label="Length" data-i18n-label="length">
-         <input id="password_length" type="number" value="16" min="4" max="2048">
-       </m3e-form-field>
-       <span data-i18n="uppercase">大文字</span>
-       <m3e-form-field label="Uppercase" data-i18n-label="uppercase">
-         <input id="include_uppercase" type="checkbox" checked>
-       </m3e-form-field>
-       <span data-i18n="numbers">数字</span>
-       <m3e-form-field label="Numbers" data-i18n-label="numbers">
-         <input id="include_numbers" type="checkbox" checked>
-       </m3e-form-field>
-       <span data-i18n="symbols">記号</span>
-       <m3e-form-field label="Symbols" data-i18n-label="symbols">
-         <input id="include_symbols" type="checkbox">
-       </m3e-form-field>
-       <p id="auto_make_password"></p>
-       <p id="maker_pass_strength" class="font-bold text-small mt-2 mb-2" style="min-height: 1.5em;"></p>
-       <p id="maker_pass_crack_time" class="text-small text-secondary mb-3"></p>
-       <m3e-button id="copy_password_btn" variant="tonal">
-         <m3e-icon slot="icon" name="content_copy"></m3e-icon>
-         <span data-i18n="copy">コピー</span>
-       </m3e-button>
-       <m3e-button id="regenerate_password_btn" variant="tonal">
-         <m3e-icon slot="icon" name="refresh"></m3e-icon>
-         <span data-i18n="regenerate">再生成</span>
-       </m3e-button>
-       <div class="mt-3 border-top-variant">
+      
+      <div class="password-display-container mb-3">
+          <div id="auto_make_password" class="password-display"></div>
+          <div class="strength-meter-container">
+             <div id="maker_pass_strength_bar" class="strength-meter-fill"></div>
+          </div>
+          <div class="flex-between mt-1">
+              <span id="maker_pass_strength" class="font-bold text-small"></span>
+              <span id="maker_pass_crack_time" class="text-small text-secondary"></span>
+          </div>
+      </div>
+
+      <div class="generator-actions mb-3">
+           <m3e-button id="copy_password_btn" variant="filled">
+             <m3e-icon slot="icon" name="content_copy"></m3e-icon>
+             <span data-i18n="copy">コピー</span>
+           </m3e-button>
+           <m3e-button id="regenerate_password_btn" variant="tonal">
+             <m3e-icon slot="icon" name="refresh"></m3e-icon>
+             <span data-i18n="regenerate">再生成</span>
+           </m3e-button>
+      </div>
+
+      <m3e-divider></m3e-divider>
+
+      <div class="mt-3">
+           <m3e-form-field variant="outlined" label="Length" data-i18n-label="length" class="w-100">
+             <input id="password_length" type="number" value="16" min="4" max="2048">
+           </m3e-form-field>
+           
+           <div class="checkbox-row mt-2">
+               <label class="checkbox-item">
+                   <input id="include_uppercase" type="checkbox" checked>
+                   <span data-i18n="uppercase">大文字</span>
+               </label>
+               <label class="checkbox-item">
+                   <input id="include_numbers" type="checkbox" checked>
+                   <span data-i18n="numbers">数字</span>
+               </label>
+               <label class="checkbox-item">
+                   <input id="include_symbols" type="checkbox">
+                   <span data-i18n="symbols">記号</span>
+               </label>
+           </div>
+      </div>
+
+      <div class="mt-3 border-top-variant">
         <details>
             <summary class="text-small cursor-pointer" style="color: var(--md-sys-color-primary);" data-i18n="gen_history">生成履歴</summary>
             <div id="maker_history_list" class="history-list">
             </div>
             <div class="text-right mt-2">
-                <m3e-button variant="text" id="clear_maker_history_btn" class="text-small" style="--md-sys-color-primary: #b3261e;">
+                <m3e-button variant="text" id="clear_maker_history_btn" class="text-small" style="--md-sys-color-primary: var(--md-sys-color-error);">
                     <span data-i18n="clear_history">履歴をクリア</span>
                 </m3e-button>
             </div>
@@ -148,11 +185,18 @@
 
     <m3e-dialog id="pass_checker" dismissible>
       <span slot="header" data-i18n="pass_check_title">パスワードの安全性チェック</span>
-      <m3e-form-field variant="outlined">
-        <input id="pass_check_form" placeholder="Enter your password here" data-i18n-placeholder="enter_pass"/>
-      </m3e-form-field>
-      <p id="pass_check_result" class="font-bold" style="min-height: 1.5em;"></p>
-      <p id="pass_crack_time"></p>
+      <div class="mb-3">
+        <m3e-form-field variant="outlined" class="w-100">
+          <input id="pass_check_form" placeholder="Enter your password here" data-i18n-placeholder="enter_pass"/>
+        </m3e-form-field>
+        <div class="strength-meter-container mt-2">
+             <div id="check_pass_strength_bar" class="strength-meter-fill"></div>
+        </div>
+        <div class="flex-between mt-1">
+            <span id="pass_check_result" class="font-bold text-small"></span>
+            <span id="pass_crack_time" class="text-small text-secondary"></span>
+        </div>
+      </div>
 
       <div slot="actions">
         <m3e-button autofocus>
@@ -163,16 +207,23 @@
 
     <m3e-dialog id="add_password_dialog" dismissible>
       <span slot="header" data-i18n="add_pass_title">新しいパスワードを追加</span>
-      <m3e-form-field variant="outlined" label="Service Name" data-i18n-label="service_name">
-        <input id="new_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Category" data-i18n-label="category">
-        <input id="new_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list" data-i18n-placeholder="category">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Website URL" data-i18n-label="website">
-        <input id="new_pass_website" type="url" placeholder="https://example.com" data-i18n-placeholder="website">
-      </m3e-form-field>
-      <div class="flex-row-center-gap">
+      
+      <div class="mb-3">
+        <m3e-form-field variant="outlined" label="Service Name" data-i18n-label="service_name" class="w-100">
+          <input id="new_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name">
+        </m3e-form-field>
+      </div>
+
+      <div class="flex-row-center-gap mb-3">
+        <m3e-form-field variant="outlined" label="Category" data-i18n-label="category" class="flex-1">
+          <input id="new_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list" data-i18n-placeholder="category">
+        </m3e-form-field>
+        <m3e-form-field variant="outlined" label="Website URL" data-i18n-label="website" class="flex-1">
+          <input id="new_pass_website" type="url" placeholder="https://example.com" data-i18n-placeholder="website">
+        </m3e-form-field>
+      </div>
+
+      <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Username" class="flex-1" data-i18n-label="username">
           <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス" data-i18n-placeholder="username">
         </m3e-form-field>
@@ -184,7 +235,10 @@
         </m3e-form-field>
         <m3e-icon-button id="generate_new_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
       </div>
-      <m3e-form-field variant="outlined" label="TOTP Secret (Optional)" data-i18n-label="totp_secret_opt">
+      <div class="strength-meter-container mb-3 mt-1">
+         <div id="new_pass_strength_bar" class="strength-meter-fill"></div>
+      </div>
+      <m3e-form-field variant="outlined" label="TOTP Secret (Optional)" data-i18n-label="totp_secret_opt" class="w-100">
         <input id="new_pass_secret" type="password" placeholder="TOTP 秘密鍵" autocomplete="new-password" data-i18n-placeholder="totp_secret">
       </m3e-form-field>
       <div slot="actions">
@@ -199,28 +253,34 @@
 
     <m3e-dialog id="detail_password_dialog" dismissible>
       <span slot="header" data-i18n="detail_title">パスワード詳細</span>
-      <div class="flex-row-center-gap">
+      
+      <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Service Name" class="flex-1" data-i18n-label="service_name">
           <input id="detail_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name">
         </m3e-form-field>
         <m3e-icon-button id="detail_pass_favorite_btn" title="Toggle Favorite"><m3e-icon name="star_border"></m3e-icon></m3e-icon-button>
       </div>
-      <m3e-form-field variant="outlined" label="Category" data-i18n-label="category">
-        <input id="detail_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list" data-i18n-placeholder="category">
-      </m3e-form-field>
-      <div class="flex-row-center-gap">
-        <m3e-form-field variant="outlined" label="Website URL" class="flex-1" data-i18n-label="website">
-          <input id="detail_pass_website" type="url" placeholder="https://example.com" data-i18n-placeholder="website">
+
+      <div class="flex-row-center-gap mb-3">
+        <m3e-form-field variant="outlined" label="Category" class="flex-1" data-i18n-label="category">
+          <input id="detail_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list" data-i18n-placeholder="category">
         </m3e-form-field>
-        <m3e-icon-button id="open_website_btn" title="Open Website"><m3e-icon name="open_in_new"></m3e-icon></m3e-icon-button>
+        <div class="flex-1 flex-row-center-gap" style="gap: 4px;">
+            <m3e-form-field variant="outlined" label="Website URL" class="flex-1" data-i18n-label="website">
+              <input id="detail_pass_website" type="url" placeholder="https://example.com" data-i18n-placeholder="website">
+            </m3e-form-field>
+            <m3e-icon-button id="open_website_btn" title="Open Website"><m3e-icon name="open_in_new"></m3e-icon></m3e-icon-button>
+        </div>
       </div>
-      <div class="flex-row-center-gap">
+
+      <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Username" class="flex-1" data-i18n-label="username">
           <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス" data-i18n-placeholder="username">
         </m3e-form-field>
         <m3e-icon-button id="copy_detail_username_btn" title="Copy Username"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="fill_default_username_btn" title="Fill Default Username"><m3e-icon name="person_add"></m3e-icon></m3e-icon-button>
       </div>
+
       <div class="flex-row-center-gap">
         <m3e-form-field variant="outlined" label="Password" class="flex-1" data-i18n-label="password">
           <input id="detail_pass_value" type="text" placeholder="パスワード" autocomplete="new-password" data-i18n-placeholder="password">
@@ -228,16 +288,24 @@
         <m3e-icon-button id="copy_detail_pass_btn" title="Copy Password"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="generate_detail_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
       </div>
-      <span data-i18n="totp_secret">TOTP 秘密鍵</span>
-      <p id="detail_pass_strength" class="font-bold text-small mt-2 mb-2" style="min-height: 1.5em;"></p>
-      <p id="detail_pass_crack_time" class="text-small text-secondary mb-3"></p>
-      <m3e-button id="check_breach_btn" variant="tonal" class="mb-3" style="width:100%">
+      
+      <div class="strength-meter-container mb-2 mt-1">
+         <div id="detail_pass_strength_bar" class="strength-meter-fill"></div>
+      </div>
+      <div class="flex-between mb-3">
+          <span id="detail_pass_strength" class="font-bold text-small"></span>
+          <span id="detail_pass_crack_time" class="text-small text-secondary"></span>
+      </div>
+
+      <m3e-button id="check_breach_btn" variant="tonal" class="mb-3 w-100">
         <m3e-icon slot="icon" name="security"></m3e-icon>
         <span data-i18n="check_breach">漏洩チェック (Have I Been Pwned)</span>
       </m3e-button>
-      <m3e-form-field variant="outlined" label="TOTP Secret" data-i18n-label="totp_secret">
+
+      <m3e-form-field variant="outlined" label="TOTP Secret" data-i18n-label="totp_secret" class="w-100">
         <input id="detail_pass_secret" type="password" autocomplete="new-password">
       </m3e-form-field>
+      
       <div id="totp_display_area" class="totp-display">
         <div class="totp-code" id="totp_code" title="Click to copy"></div>
         <div class="totp-progress-track">
@@ -255,14 +323,14 @@
             <div id="detail_history_list" class="history-list">
             </div>
             <div class="text-right mt-2">
-                <m3e-button variant="text" id="clear_history_btn" class="text-small" style="--md-sys-color-primary: #b3261e;">
+                <m3e-button variant="text" id="clear_history_btn" class="text-small" style="--md-sys-color-primary: var(--md-sys-color-error);">
                     <span data-i18n="clear_history">履歴をクリア</span>
                 </m3e-button>
             </div>
         </details>
       </div>
       <div slot="actions">
-        <m3e-button variant="text" id="delete_password_btn" style="--md-sys-color-primary: #b3261e;">
+        <m3e-button variant="text" id="delete_password_btn" style="--md-sys-color-primary: var(--md-sys-color-error);">
           <m3e-icon slot="icon" name="delete"></m3e-icon>
           <span data-i18n="delete">削除</span>
         </m3e-button>
@@ -279,65 +347,112 @@
     <m3e-dialog id="settings_dialog" dismissible>
       <span slot="header" data-i18n="settings">設定</span>
       
-      <h3 data-i18n="general">全般</h3>
-      <h4 data-i18n="language">言語 / Language</h4>
-      <select id="setting_language" class="language-select">
-          <option value="ja">日本語</option>
-          <option value="en">English</option>
-          <option value="zh">中文 (简体)</option>
-          <option value="ko">한국어</option>
-          <option value="de">Deutsch</option>
-          <option value="fr">Français</option>
-          <option value="it">Italiano</option>
-      </select>
-
-      <m3e-form-field variant="outlined" label="Default Username" data-i18n-label="default_username">
-        <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名" data-i18n-placeholder="default_username">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Auto Logout (Minutes)" data-i18n-label="auto_logout">
-        <input id="setting_auto_logout" type="number" min="0" placeholder="0 to disable">
-      </m3e-form-field>
-      <div class="text-right mb-3">
-        <m3e-button variant="filled" id="save_general_settings_btn">
-          <span data-i18n="save">保存</span>
-        </m3e-button>
-      </div>
-      <m3e-divider></m3e-divider>
-
-      <h3 data-i18n="passkey_settings">Passkey (生体認証) 設定</h3>
-      <p class="text-small text-secondary" data-i18n="passkey_desc">
-        デバイスの生体認証を使ってログインできるようにします。<br>
-        ※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。
-      </p>
-      <div class="text-right mb-3">
-        <m3e-button variant="tonal" id="setup_passkey_btn"><span data-i18n="register_passkey">Passkeyを登録</span></m3e-button>
-      </div>
-      <m3e-divider></m3e-divider>
-
-      <h3 data-i18n="change_master_pass">マスターパスワードを変更</h3>
-      <m3e-form-field variant="outlined" label="Current Password" data-i18n-label="current_pass">
-        <input id="setting_current_pass" type="password" placeholder="現在のパスワード" autocomplete="new-password" data-i18n-placeholder="current_pass">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="New Password" data-i18n-label="new_pass">
-        <input id="setting_new_pass" type="password" placeholder="新規パスワード" autocomplete="new-password" data-i18n-placeholder="new_pass">
-      </m3e-form-field>
-      <m3e-form-field variant="outlined" label="Confirm New Password" data-i18n-label="confirm_new_pass">
-        <input id="setting_new_pass_confirm" type="password" placeholder="新規パスワードの確認" autocomplete="new-password" data-i18n-placeholder="confirm_new_pass">
-      </m3e-form-field>
-      <div class="text-right mb-3">
-        <m3e-button variant="filled" id="update_master_pass_btn">
-          <span data-i18n="update">更新</span>
-        </m3e-button>
+      <div class="settings-tabs">
+          <button class="settings-tab-btn active" data-tab="general">
+            <m3e-icon name="settings" class="tab-icon"></m3e-icon>
+            <span data-i18n="general">全般</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="security">
+            <m3e-icon name="security" class="tab-icon"></m3e-icon>
+            <span data-i18n="security">セキュリティ</span>
+          </button>
+          <button class="settings-tab-btn" data-tab="danger">
+            <m3e-icon name="warning" class="tab-icon"></m3e-icon>
+            <span data-i18n="danger_zone">危険</span>
+          </button>
       </div>
 
-      <m3e-divider></m3e-divider>
+      <div id="settings_tab_general" class="settings-tab-panel active">
+          <div class="setting-section">
+              <h4 data-i18n="language" class="mt-0">言語 / Language</h4>
+              <select id="setting_language" class="language-select">
+                  <option value="ja">日本語</option>
+                  <option value="en">English</option>
+                  <option value="zh">中文 (简体)</option>
+                  <option value="ko">한국어</option>
+                  <option value="de">Deutsch</option>
+                  <option value="fr">Français</option>
+                  <option value="it">Italiano</option>
+              </select>
+          </div>
 
-      <h3 class="text-danger" data-i18n="danger_zone">危険</h3>
-      <p data-i18n="delete_all_desc">すべてのパスワードと設定を削除し、アプリを初期化します。</p>
-      <m3e-button variant="filled" id="delete_all_data_btn" style="--md-sys-color-primary: #b3261e; width: 100%;">
-        <m3e-icon slot="icon" name="delete_forever"></m3e-icon>
-        <span data-i18n="delete_all_data">全データを削除</span>
-      </m3e-button>
+          <m3e-divider class="setting-divider"></m3e-divider>
+
+          <div class="setting-section">
+              <h4 data-i18n="default_username" class="mt-0">デフォルトユーザー名</h4>
+              <div class="flex-row-center-gap">
+                  <m3e-form-field variant="outlined" label="Default Username" data-i18n-label="default_username" class="flex-1">
+                    <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名" data-i18n-placeholder="default_username">
+                  </m3e-form-field>
+                  <m3e-button variant="tonal" id="save_username_btn">
+                    <span data-i18n="save">保存</span>
+                  </m3e-button>
+              </div>
+          </div>
+
+          <m3e-divider class="setting-divider"></m3e-divider>
+
+          <div class="setting-section">
+              <h4 data-i18n="auto_logout" class="mt-0">自動ログアウト (分)</h4>
+              <div class="flex-row-center-gap">
+                  <m3e-form-field variant="outlined" label="Auto Logout (Minutes)" data-i18n-label="auto_logout" class="flex-1">
+                    <input id="setting_auto_logout" type="number" min="0" placeholder="0 to disable">
+                  </m3e-form-field>
+                  <m3e-button variant="tonal" id="save_autologout_btn">
+                    <span data-i18n="save">保存</span>
+                  </m3e-button>
+              </div>
+          </div>
+
+          <m3e-divider class="setting-divider"></m3e-divider>
+
+          <div class="setting-section">
+              <h4 data-i18n="about" class="mt-0">About</h4>
+              <div class="flex-between">
+                  <span data-i18n="version">Version</span>
+                  <span id="setting_app_version" class="text-secondary"></span>
+              </div>
+          </div>
+      </div>
+
+      <div id="settings_tab_security" class="settings-tab-panel">
+          <h3 data-i18n="passkey_settings" class="mt-0">Passkey (生体認証) 設定</h3>
+          <p class="text-small text-secondary" data-i18n="passkey_desc">
+            デバイスの生体認証を使ってログインできるようにします。<br>
+            ※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。
+          </p>
+          <div class="text-right mb-3">
+            <m3e-button variant="tonal" id="setup_passkey_btn"><span data-i18n="register_passkey">Passkeyを登録</span></m3e-button>
+          </div>
+          <m3e-divider></m3e-divider>
+
+          <h3 data-i18n="change_master_pass">マスターパスワードを変更</h3>
+          <m3e-form-field variant="outlined" label="Current Password" data-i18n-label="current_pass">
+            <input id="setting_current_pass" type="password" placeholder="現在のパスワード" autocomplete="new-password" data-i18n-placeholder="current_pass">
+          </m3e-form-field>
+          <m3e-form-field variant="outlined" label="New Password" data-i18n-label="new_pass">
+            <input id="setting_new_pass" type="password" placeholder="新規パスワード" autocomplete="new-password" data-i18n-placeholder="new_pass">
+          </m3e-form-field>
+          <m3e-form-field variant="outlined" label="Confirm New Password" data-i18n-label="confirm_new_pass">
+            <input id="setting_new_pass_confirm" type="password" placeholder="新規パスワードの確認" autocomplete="new-password" data-i18n-placeholder="confirm_new_pass">
+          </m3e-form-field>
+          <div class="text-right mb-3">
+            <m3e-button variant="filled" id="update_master_pass_btn">
+              <span data-i18n="update">更新</span>
+            </m3e-button>
+          </div>
+      </div>
+
+      <div id="settings_tab_danger" class="settings-tab-panel">
+          <div class="danger-zone-box">
+            <h3 class="text-danger mt-0" data-i18n="danger_zone">危険</h3>
+            <p data-i18n="delete_all_desc">すべてのパスワードと設定を削除し、アプリを初期化します。</p>
+            <m3e-button variant="filled" id="delete_all_data_btn" style="--md-sys-color-primary: var(--md-sys-color-error); width: 100%;">
+              <m3e-icon slot="icon" name="delete_forever"></m3e-icon>
+              <span data-i18n="delete_all_data">全データを削除</span>
+            </m3e-button>
+          </div>
+      </div>
 
       <div slot="actions">
         <m3e-button autofocus>

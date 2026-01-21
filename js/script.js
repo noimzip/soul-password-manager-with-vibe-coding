@@ -39,6 +39,7 @@ const db = getFirestore(app);
 
 // --- Constants & State ---
 const CONSTANTS = {
+    APP_VERSION: '26.01.10 (Unstable)',
     STORAGE: {
         PASSWORDS: 'soul_passwords',
         MASTER_AUTH: 'soul_master_auth',
@@ -109,6 +110,7 @@ const TRANSLATIONS = {
         delete: "削除",
         update: "更新",
         general: "全般",
+        security: "セキュリティ",
         default_username: "デフォルトユーザー名",
         auto_logout: "自動ログアウト (分)",
         passkey_settings: "Passkey (生体認証) 設定",
@@ -190,6 +192,8 @@ const TRANSLATIONS = {
         sort_date_desc: "更新日 (新しい順)",
         sort_date_asc: "更新日 (古い順)",
         language: "言語 / Language",
+        about: "アプリについて",
+        version: "バージョン",
         yes: "はい",
         no: "いいえ",
         ok: "OK"
@@ -236,6 +240,7 @@ const TRANSLATIONS = {
         delete: "Delete",
         update: "Update",
         general: "General",
+        security: "Security",
         default_username: "Default Username",
         auto_logout: "Auto Logout (Minutes)",
         passkey_settings: "Passkey (Biometric) Settings",
@@ -317,6 +322,8 @@ const TRANSLATIONS = {
         sort_date_desc: "Date (Newest)",
         sort_date_asc: "Date (Oldest)",
         language: "Language / 言語",
+        about: "About",
+        version: "Version",
         yes: "Yes",
         no: "No",
         ok: "OK"
@@ -363,6 +370,7 @@ const TRANSLATIONS = {
         delete: "删除",
         update: "更新",
         general: "常规",
+        security: "安全",
         default_username: "默认用户名",
         auto_logout: "自动注销 (分钟)",
         passkey_settings: "Passkey (生物识别) 设置",
@@ -444,6 +452,8 @@ const TRANSLATIONS = {
         sort_date_desc: "日期 (最新)",
         sort_date_asc: "日期 (最旧)",
         language: "语言 / Language",
+        about: "关于",
+        version: "版本",
         yes: "是",
         no: "否",
         ok: "确定"
@@ -490,6 +500,7 @@ const TRANSLATIONS = {
         delete: "삭제",
         update: "업데이트",
         general: "일반",
+        security: "보안",
         default_username: "기본 사용자명",
         auto_logout: "자동 로그아웃 (분)",
         passkey_settings: "Passkey (생체 인증) 설정",
@@ -571,6 +582,8 @@ const TRANSLATIONS = {
         sort_date_desc: "날짜 (최신순)",
         sort_date_asc: "날짜 (오래된순)",
         language: "언어 / Language",
+        about: "앱 정보",
+        version: "버전",
         yes: "예",
         no: "아니요",
         ok: "확인"
@@ -617,6 +630,7 @@ const TRANSLATIONS = {
         delete: "Löschen",
         update: "Aktualisieren",
         general: "Allgemein",
+        security: "Sicherheit",
         default_username: "Standard-Benutzername",
         auto_logout: "Auto-Logout (Minuten)",
         passkey_settings: "Passkey (Biometrie) Einstellungen",
@@ -698,6 +712,8 @@ const TRANSLATIONS = {
         sort_date_desc: "Datum (Neueste)",
         sort_date_asc: "Datum (Älteste)",
         language: "Sprache / Language",
+        about: "Über",
+        version: "Version",
         yes: "Ja",
         no: "Nein",
         ok: "OK"
@@ -744,6 +760,7 @@ const TRANSLATIONS = {
         delete: "Supprimer",
         update: "Mettre à jour",
         general: "Général",
+        security: "Sécurité",
         default_username: "Nom d'utilisateur par défaut",
         auto_logout: "Déconnexion auto (Minutes)",
         passkey_settings: "Paramètres Passkey (Biométrie)",
@@ -825,6 +842,8 @@ const TRANSLATIONS = {
         sort_date_desc: "Date (Plus récent)",
         sort_date_asc: "Date (Plus ancien)",
         language: "Langue / Language",
+        about: "À propos",
+        version: "Version",
         yes: "Oui",
         no: "Non",
         ok: "OK"
@@ -871,6 +890,7 @@ const TRANSLATIONS = {
         delete: "Elimina",
         update: "Aggiorna",
         general: "Generale",
+        security: "Sicurezza",
         default_username: "Nome Utente Predefinito",
         auto_logout: "Logout Automatico (Minuti)",
         passkey_settings: "Impostazioni Passkey (Biometria)",
@@ -952,6 +972,8 @@ const TRANSLATIONS = {
         sort_date_desc: "Data (Più recente)",
         sort_date_asc: "Data (Più vecchia)",
         language: "Lingua / Language",
+        about: "Informazioni",
+        version: "Versione",
         yes: "Sì",
         no: "No",
         ok: "OK"
@@ -1004,29 +1026,6 @@ function updateLanguage(lang) {
     renderPasswordList(document.getElementById('fld').value);
     renderGeneratorHistory();
     
-    // Update sort dropdown if exists
-    const sortSelect = document.querySelector('.sort-select');
-    if (sortSelect) {
-        // Re-create options
-        const currentVal = sortSelect.value;
-        sortSelect.innerHTML = '';
-        const options = [
-            { value: '', text: t('sort_placeholder') },
-            { value: 'title_asc', text: t('sort_name_asc') },
-            { value: 'title_desc', text: t('sort_name_desc') },
-            { value: 'strength_asc', text: t('sort_str_asc') },
-            { value: 'strength_desc', text: t('sort_str_desc') },
-            { value: 'updated_desc', text: t('sort_date_desc') },
-            { value: 'updated_asc', text: t('sort_date_asc') }
-        ];
-        options.forEach(opt => {
-            const o = document.createElement('option');
-            o.value = opt.value;
-            o.textContent = opt.text;
-            sortSelect.appendChild(o);
-        });
-        sortSelect.value = currentVal;
-    }
 }
 
 // --- Crypto Utilities (Local Mode - High Security) ---
@@ -1572,19 +1571,34 @@ function generatePassword() {
 
     const strength = calculatePasswordStrength(password);
     const resultElement = document.getElementById('maker_pass_strength');
+    const barElement = document.getElementById('maker_pass_strength_bar');
     const crackTimeElement = document.getElementById('maker_pass_crack_time');
+
+    let strengthClass = 'text-weak';
+    let barClass = 'bg-weak';
+    let strengthPercent = 0;
+
+    // zxcvbn score: 0-4
+    if (strength === 0) strengthPercent = 5;
+    else if (strength === 1) strengthPercent = 25;
+    else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
+    else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
+    else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; }
 
     if (resultElement) {
         if (strength < 2) {
             resultElement.textContent = t('weak');
-            resultElement.style.color = '#d32f2f';
         } else if (strength < 4) {
             resultElement.textContent = t('medium');
-            resultElement.style.color = '#f57c00';
         } else {
             resultElement.textContent = t('strong');
-            resultElement.style.color = '#388e3c';
         }
+        resultElement.className = 'font-bold text-small ' + strengthClass;
+    }
+
+    if (barElement) {
+        barElement.style.width = strengthPercent + '%';
+        barElement.className = 'strength-meter-fill ' + barClass;
     }
 
     if (crackTimeElement) {
@@ -1602,26 +1616,41 @@ function updateDetailStrength(password) {
     const strength = calculatePasswordStrength(password);
     const resultElement = document.getElementById('detail_pass_strength');
     const crackTimeElement = document.getElementById('detail_pass_crack_time');
+    const barElement = document.getElementById('detail_pass_strength_bar');
+
+    let strengthClass = 'text-weak';
+    let barClass = 'bg-weak';
+    let strengthPercent = 0;
+
+    // zxcvbn score: 0-4
+    if (strength === 0) strengthPercent = 5;
+    else if (strength === 1) strengthPercent = 25;
+    else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
+    else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
+    else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; }
     
-    if (!password) {
+    if (!password) strengthPercent = 0;
+
+    if (resultElement) {
+        if (!password) {
             resultElement.textContent = '';
-            if (crackTimeElement) crackTimeElement.textContent = '';
-            return;
+        } else if (strength < 2) {
+            resultElement.textContent = t('weak');
+        } else if (strength < 4) {
+            resultElement.textContent = t('medium');
+        } else {
+            resultElement.textContent = t('strong');
+        }
+        resultElement.className = 'font-bold text-small ' + strengthClass;
     }
 
-    if (strength < 2) {
-        resultElement.textContent = t('weak');
-        resultElement.style.color = '#d32f2f';
-    } else if (strength < 4) {
-        resultElement.textContent = t('medium');
-        resultElement.style.color = '#f57c00';
-    } else {
-        resultElement.textContent = t('strong');
-        resultElement.style.color = '#388e3c';
+    if (barElement) {
+        barElement.style.width = strengthPercent + '%';
+        barElement.className = 'strength-meter-fill ' + barClass;
     }
 
     if (crackTimeElement) {
-        crackTimeElement.textContent = calculateCrackTime(password);
+        crackTimeElement.textContent = password ? calculateCrackTime(password) : '';
     }
 }
 
@@ -1823,21 +1852,21 @@ function addPasswordToUI(item, index, listGroup) {
     icon.slot = 'icon';
 
     const strength = calculatePasswordStrength(item.password);
-    let strengthColor = '#388e3c'; // Green
+    let strengthClass = 'text-strong';
     if (strength < 2) {
-        strengthColor = '#d32f2f'; // Red
+        strengthClass = 'text-weak';
     } else if (strength < 4) {
-        strengthColor = '#f57c00'; // Orange
+        strengthClass = 'text-medium';
     }
 
     if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
-        icon.style.color = strengthColor;
+        icon.classList.add(strengthClass);
     }
 
     const label = document.createElement('span');
     label.slot = 'label';
     label.textContent = item.title;
-    label.style.color = strengthColor;
+    label.classList.add(strengthClass);
 
     newItem.appendChild(icon);
     newItem.appendChild(label);
@@ -2090,26 +2119,63 @@ document.addEventListener('DOMContentLoaded', () => {
             const strength = calculatePasswordStrength(password);
             const resultElement = document.getElementById('pass_check_result');
             const crackTimeElement = document.getElementById('pass_crack_time');
+            const barElement = document.getElementById('check_pass_strength_bar');
+
+            let strengthClass = 'text-weak';
+            let barClass = 'bg-weak';
+            let strengthPercent = 0;
+
+            // zxcvbn score: 0-4
+            if (strength === 0) strengthPercent = 5;
+            else if (strength === 1) strengthPercent = 25;
+            else if (strength === 2) { strengthPercent = 50; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
+            else if (strength === 3) { strengthPercent = 75; strengthClass = 'text-medium'; barClass = 'bg-medium'; }
+            else if (strength === 4) { strengthPercent = 100; strengthClass = 'text-strong'; barClass = 'bg-strong'; }
+            
+            if (!password) strengthPercent = 0;
 
             if (resultElement) {
                 if (!password) {
                     resultElement.textContent = '';
                 } else if (strength < 2) {
                     resultElement.textContent = t('weak');
-                    resultElement.style.color = '#d32f2f';
                 } else if (strength < 4) {
                     resultElement.textContent = t('medium');
-                    resultElement.style.color = '#f57c00';
                 } else {
                     resultElement.textContent = t('strong');
-                    resultElement.style.color = '#388e3c';
                 }
+                resultElement.className = 'font-bold text-small ' + strengthClass;
+            }
+
+            if (barElement) {
+                barElement.style.width = strengthPercent + '%';
+                barElement.className = 'strength-meter-fill ' + barClass;
             }
 
             if (crackTimeElement) {
                 crackTimeElement.textContent = password ? calculateCrackTime(password) : '';
             }
         });
+    }
+
+    function updateStrengthBar(password, barId) {
+        const bar = document.getElementById(barId);
+        if (!bar) return;
+        
+        const strength = calculatePasswordStrength(password);
+        let barClass = 'bg-weak';
+        let strengthPercent = 0;
+
+        if (strength === 0) strengthPercent = 5;
+        else if (strength === 1) strengthPercent = 25;
+        else if (strength === 2) { strengthPercent = 50; barClass = 'bg-medium'; }
+        else if (strength === 3) { strengthPercent = 75; barClass = 'bg-medium'; }
+        else if (strength === 4) { strengthPercent = 100; barClass = 'bg-strong'; }
+        
+        if (!password) strengthPercent = 0;
+
+        bar.style.width = strengthPercent + '%';
+        bar.className = 'strength-meter-fill ' + barClass;
     }
 
     // Setup Dialog
@@ -2224,6 +2290,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.getElementById('new_pass_value')?.addEventListener('input', (e) => {
+        updateStrengthBar(e.target.value, 'new_pass_strength_bar');
+    });
+
     // Update Password
     document.getElementById('update_password_btn')?.addEventListener('click', async () => {
         if (currentDetailIndex > -1) {
@@ -2285,6 +2355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generate_new_pass_btn')?.addEventListener('click', () => {
         const password = generatePasswordString(16, true, true, true);
         document.getElementById('new_pass_value').value = password;
+        updateStrengthBar(password, 'new_pass_strength_bar');
     });
 
     document.getElementById('check_breach_btn')?.addEventListener('click', async function() {
@@ -2337,6 +2408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear sensitive fields from DOM when dialog closes
         document.getElementById('new_pass_value').value = '';
         document.getElementById('new_pass_secret').value = '';
+        updateStrengthBar('', 'new_pass_strength_bar');
     });
 
     document.getElementById('detail_pass_value')?.addEventListener('input', (e) => updateDetailStrength(e.target.value));
@@ -2439,18 +2511,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingInput) settingInput.value = savedAutoLogout;
     }
 
-    // Save general settings
-    document.getElementById('save_general_settings_btn')?.addEventListener('click', () => {
-        const defaultUser = document.getElementById('setting_default_username').value;
-        const autoLogout = document.getElementById('setting_auto_logout').value;
-        const lang = document.getElementById('setting_language').value;
-        
-        localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, defaultUser);
-        localStorage.setItem(CONSTANTS.STORAGE.AUTO_LOGOUT, autoLogout);
-        updateLanguage(lang);
+    // Language Setting
+    document.getElementById('setting_language')?.addEventListener('change', (e) => {
+        updateLanguage(e.target.value);
         showSnackbar(t('settings_saved'));
-        document.getElementById('settings_dialog').open = false;
+    });
+
+    // Default Username Setting
+    document.getElementById('save_username_btn')?.addEventListener('click', () => {
+        const defaultUser = document.getElementById('setting_default_username').value;
+        localStorage.setItem(CONSTANTS.STORAGE.DEFAULT_USER, defaultUser);
+        showSnackbar(t('settings_saved'));
+    });
+
+    // Auto Logout Setting
+    document.getElementById('save_autologout_btn')?.addEventListener('click', () => {
+        const autoLogout = document.getElementById('setting_auto_logout').value;
+        localStorage.setItem(CONSTANTS.STORAGE.AUTO_LOGOUT, autoLogout);
         resetAutoLogoutTimer();
+        showSnackbar(t('settings_saved'));
     });
 
     // Fill default username in "Add Password" dialog
@@ -2506,59 +2585,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Sort Feature
-    const searchField = document.getElementById('search_passwords');
-    if (searchField && searchField.parentNode) {
-        const sortContainer = document.createElement('div');
-        sortContainer.className = 'sort-container';
-        
-        const sortSelect = document.createElement('select');
-        sortSelect.className = 'sort-select';
-        
-        const options = [ // Initial options, will be updated by updateLanguage
-            { value: '', text: t('sort_placeholder') },
-            { value: 'title_asc', text: t('sort_name_asc') },
-            { value: 'title_desc', text: t('sort_name_desc') },
-            { value: 'strength_asc', text: t('sort_str_asc') },
-            { value: 'strength_desc', text: t('sort_str_desc') },
-            { value: 'updated_desc', text: t('sort_date_desc') },
-            { value: 'updated_asc', text: t('sort_date_asc') }
-        ];
-        
-        options.forEach(opt => {
-            const o = document.createElement('option');
-            o.value = opt.value;
-            o.textContent = opt.text;
-            sortSelect.appendChild(o);
+    const sortBtn = document.getElementById('sort_btn');
+    const sortMenu = document.getElementById('sort_menu');
+    
+    if (sortBtn && sortMenu) {
+        sortBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortMenu.classList.toggle('hidden');
         });
-        
-        sortSelect.addEventListener('change', async function() {
-            const val = this.value;
-            if (!val) return;
-            
-            if (savedPasswords.length > 0) {
-                savedPasswords.sort((a, b) => {
-                    switch (val) {
-                        case 'title_asc': return (a.title || '').localeCompare(b.title || '');
-                        case 'title_desc': return (b.title || '').localeCompare(a.title || '');
-                        case 'strength_asc': return calculatePasswordStrength(a.password) - calculatePasswordStrength(b.password);
-                        case 'strength_desc': return calculatePasswordStrength(b.password) - calculatePasswordStrength(a.password);
-                        case 'updated_desc': return (b.lastModified || 0) - (a.lastModified || 0);
-                        case 'updated_asc': return (a.lastModified || 0) - (b.lastModified || 0);
-                        default: return 0;
-                    }
-                });
-                
-                // If local, save order. If cloud, just re-render (order not persisted in this simple impl)
-                if (!currentUser) await savePasswordsData();
-                renderPasswordList(document.getElementById('fld').value);
-                showSnackbar(t('list_sorted'));
+
+        document.addEventListener('click', (e) => {
+            if (!sortMenu.contains(e.target) && !sortBtn.contains(e.target)) {
+                sortMenu.classList.add('hidden');
             }
-            this.value = '';
         });
-        
-        sortContainer.appendChild(sortSelect);
-        searchField.parentNode.insertBefore(sortContainer, searchField.nextSibling);
+
+        document.querySelectorAll('.sort-item').forEach(item => {
+            item.addEventListener('click', async (e) => {
+                const val = e.target.dataset.value;
+                if (!val) return;
+                
+                if (savedPasswords.length > 0) {
+                    savedPasswords.sort((a, b) => {
+                        switch (val) {
+                            case 'title_asc': return (a.title || '').localeCompare(b.title || '');
+                            case 'title_desc': return (b.title || '').localeCompare(a.title || '');
+                            case 'strength_asc': return calculatePasswordStrength(a.password) - calculatePasswordStrength(b.password);
+                            case 'strength_desc': return calculatePasswordStrength(b.password) - calculatePasswordStrength(a.password);
+                            case 'updated_desc': return (b.lastModified || 0) - (a.lastModified || 0);
+                            case 'updated_asc': return (a.lastModified || 0) - (b.lastModified || 0);
+                            default: return 0;
+                        }
+                    });
+                    
+                    if (!currentUser) await savePasswordsData();
+                    renderPasswordList(document.getElementById('fld').value);
+                    showSnackbar(t('list_sorted'));
+                }
+                sortMenu.classList.add('hidden');
+            });
+        });
     }
+
+    // Settings Tabs
+    const tabBtns = document.querySelectorAll('.settings-tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Deactivate all
+            document.querySelectorAll('.settings-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.settings-tab-panel').forEach(p => p.classList.remove('active'));
+            
+            // Activate clicked
+            btn.classList.add('active');
+            const targetId = btn.getAttribute('data-tab');
+            const targetPanel = document.getElementById('settings_tab_' + targetId);
+            if (targetPanel) targetPanel.classList.add('active');
+        });
+    });
 
     // Import/Export Logic (Simplified for brevity, similar to original script.js)
     const deleteAllBtn = document.getElementById('delete_all_data_btn');
@@ -2701,4 +2784,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (langSelect) {
         langSelect.value = currentLang;
     }
+
+    // Set App Version
+    const versionEl = document.getElementById('setting_app_version');
+    if (versionEl) versionEl.textContent = CONSTANTS.APP_VERSION;
 });
