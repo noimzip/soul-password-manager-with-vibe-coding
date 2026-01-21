@@ -6,10 +6,12 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: https://www.google.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://api.pwnedpasswords.com; frame-src https://*.firebaseapp.com https://*.google.com; base-uri 'self'; object-src 'none'; frame-ancestors 'none';">
     <title>Soul Password Manager</title>
 
+    <meta name="theme-color" content="#6750a4">
     <!--scripts-->
     <script type="module" src="./js/script.js"></script>
 
     <!--stylesheets-->
+    <link rel="manifest" href="./manifest.json">
     <link rel="stylesheet" href="./css/style.css">
     <link
           rel="stylesheet"
@@ -25,6 +27,13 @@
     <div id="loading_overlay">
       <m3e-loading-indicator></m3e-loading-indicator>
     </div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js');
+        });
+      }
+    </script>
 	<header class="sticky-header">
       <m3e-app-bar>
         <div slot="title" class="header-title-wrapper">
