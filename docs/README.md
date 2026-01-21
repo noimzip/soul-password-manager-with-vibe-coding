@@ -85,26 +85,93 @@ The application relies on the browser's native `window.crypto.subtle` API for cr
 3.  **Management**: Click on an item to view details, copy the password/username to clipboard, or edit the entry.
 4.  **Data Backup**: Use the "Data Management" section in settings to export your encrypted vault as a JSON file.
 
+## Getting Started
+
+### Prerequisites
+*   Node.js (v16 or higher)
+*   npm or yarn
+*   A Firebase project (for cloud sync features)
+
+### Installation
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/yourusername/soul-password-manager.git
+    cd soul-password-manager
+    ```
+
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Configuration**
+    Create a `.env.local` file in the root directory (`www/`) and add your Firebase configuration keys.
+
+    ```env
+    VITE_FIREBASE_APIKEY=your_api_key
+    VITE_FIREBASE_AUTHDOMAIN=your_project.firebaseapp.com
+    VITE_FIREBASE_PROJECTID=your_project_id
+    VITE_FIREBASE_STORAGEBUCKET=your_project.appspot.com
+    VITE_FIREBASE_MESSAGINGSENDERID=your_sender_id
+    VITE_FIREBASE_APPID=your_app_id
+    ```
+
+4.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
+
+## Firebase Security Rules
+
+To secure your data in Firestore, apply the following security rules in your Firebase Console (Firestore Database > Rules).
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /passwords/{document} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+  }
+}
+```
+
+## Browser Support
+
+This application uses modern web standards.
+
+*   **Core Features**: Chrome, Edge, Firefox, Safari (Latest versions).
+*   **Passkey (largeBlob)**:
+    *   Chrome / Edge on macOS (Touch ID) and Windows (Hello).
+    *   *Note*: Support for `largeBlob` extension varies by platform and browser implementation.
+
 ## Directory Structure
 
 ```text
 www/
 ├── css/
 │   └── style.css       # Application styles
+├── docs/
+│   ├── README.md       # English Documentation
+│   └── README_JA.md    # Japanese Documentation
 ├── js/
 │   └── script.js       # Main application logic (Firebase, Crypto, UI)
+├── web/                # Landing Page
+│   ├── index.html
+│   └── style.css
 ├── node_modules/       # Third-party libraries (@m3e components)
 ├── index.html          # Main entry point
 ├── package.json        # Project dependencies and scripts
-├── vite.config.js      # Vite configuration
-└── README.md           # Project documentation
+└── vite.config.js      # Vite configuration
 ```
 
 ## Dependencies
 
 The application relies on the following key libraries:
 
-*   **Firebase SDK**: Authentication, Firestore, and Analytics.
+*   **Firebase SDK**: Authentication and Firestore.
 *   **@m3e/components**: Custom Material Design 3 web components for the UI.
 *   **zxcvbn**: For realistic password strength estimation.
 *   **otpauth**: For TOTP (2FA) code generation.

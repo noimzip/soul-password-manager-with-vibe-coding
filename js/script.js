@@ -69,7 +69,7 @@ const CRYPTO_CONFIG = {
 
 let appKey = null; // Session key for Local Mode
 let savedPasswords = []; // In-memory list of decrypted passwords
-let currentDetailIndex = -1; // Index of currently opened item
+let currentDetailId = null; // ID of currently opened item
 let currentUser = null; // Firebase User
 let dragSrcEl = null; // For Drag and Drop
 let historyDebounceTimer = null; // Timer for debouncing history saves
@@ -1863,13 +1863,13 @@ function addPasswordToUI(item, index, listGroup) {
     favBtn.addEventListener('click', async function(e) {
         e.stopPropagation();
         item.favorite = !item.favorite;
-        await saveOrUpdateItem(item, index);
+        await saveOrUpdateItem(item);
     });
     newItem.appendChild(favBtn);
 
     // Click to open detail
     newItem.addEventListener('click', function() {
-        currentDetailIndex = index;
+        currentDetailId = item.id;
         const dialog = document.getElementById('detail_password_dialog');
         
         document.getElementById('detail_pass_title').value = item.title || '';
@@ -1969,7 +1969,7 @@ function addPasswordToUI(item, index, listGroup) {
 
 // --- Storage Operations (Unified) ---
 
-async function saveOrUpdateItem(item, index) {
+async function saveOrUpdateItem(item) {
     if (currentUser) {
         // Cloud Mode
         try {
@@ -1999,8 +1999,9 @@ async function saveOrUpdateItem(item, index) {
         }
     } else {
         // Local Mode
-        if (index !== undefined && index !== -1) {
-            savedPasswords[index] = item;
+        const existingIndex = item.id ? savedPasswords.findIndex(p => p.id === item.id) : -1;
+        if (existingIndex !== -1) {
+            savedPasswords[existingIndex] = item;
         } else {
             item.id = crypto.randomUUID();
             savedPasswords.push(item);
@@ -2216,10 +2217,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update Password
     document.getElementById('update_password_btn')?.addEventListener('click', async () => {
-        if (currentDetailIndex > -1) {
+        if (currentDetailId) {
             const title = document.getElementById('detail_pass_title').value;
             if (title) {
-                const oldItem = savedPasswords[currentDetailIndex];
+                const oldItem = savedPasswords.find(p => p.id === currentDetailId);
+                if (!oldItem) return;
+
                 const newItem = {
                     ...oldItem,
                     title: title,
@@ -2251,7 +2254,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     newItem.lastModified = Date.now();
                 }
 
-                await saveOrUpdateItem(newItem, currentDetailIndex);
+                await saveOrUpdateItem(newItem);
                 document.getElementById('detail_password_dialog').open = false;
                 showSnackbar(t('pass_updated'));
             }
@@ -2260,10 +2263,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delete Password
     document.getElementById('delete_password_btn')?.addEventListener('click', () => {
-        if (currentDetailIndex > -1) {
+        if (currentDetailId) {
             showConfirmDialog(t('delete_confirm')).then(async res => {
                 if (res) {
-                    await deleteItem(currentDetailIndex);
+                    await deleteItem(currentDetailId);
                     document.getElementById('detail_password_dialog').open = false;
                     showSnackbar(t('pass_deleted'));
                 }
@@ -2352,12 +2355,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('clear_history_btn')?.addEventListener('click', () => {
-        if (currentDetailIndex > -1) {
+        if (currentDetailId) {
             showConfirmDialog(t('clear_hist_confirm')).then(async res => {
                 if (res) {
-                    const item = savedPasswords[currentDetailIndex];
+                    const item = savedPasswords.find(p => p.id === currentDetailId);
+                    if (!item) return;
                     item.history = [];
-                    await saveOrUpdateItem(item, currentDetailIndex);
+                    await saveOrUpdateItem(item);
                     document.getElementById('detail_revision_count').textContent = '0';
                     document.getElementById('detail_history_list').innerHTML = t('hist_empty_detail');
                     showSnackbar(t('hist_cleared'));

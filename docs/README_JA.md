@@ -85,26 +85,93 @@
 3.  **管理**: アイテムをクリックして詳細を表示し、パスワード/ユーザー名をクリップボードにコピーしたり、エントリを編集したりします。
 4.  **データバックアップ**: 設定の「データ管理」セクションを使用して、暗号化された保管庫をJSONファイルとしてエクスポートします。
 
+## 開発を始める
+
+### 前提条件
+*   Node.js (v16以上)
+*   npm または yarn
+*   Firebase プロジェクト (クラウド同期機能用)
+
+### インストール手順
+
+1.  **リポジトリのクローン**
+    ```bash
+    git clone https://github.com/yourusername/soul-password-manager.git
+    cd soul-password-manager
+    ```
+
+2.  **依存関係のインストール**
+    ```bash
+    npm install
+    ```
+
+3.  **設定 (Configuration)**
+    ルートディレクトリ (`www/`) に `.env.local` ファイルを作成し、Firebaseの設定キーを追加してください。
+
+    ```env
+    VITE_FIREBASE_APIKEY=your_api_key
+    VITE_FIREBASE_AUTHDOMAIN=your_project.firebaseapp.com
+    VITE_FIREBASE_PROJECTID=your_project_id
+    VITE_FIREBASE_STORAGEBUCKET=your_project.appspot.com
+    VITE_FIREBASE_MESSAGINGSENDERID=your_sender_id
+    VITE_FIREBASE_APPID=your_app_id
+    ```
+
+4.  **開発サーバーの起動**
+    ```bash
+    npm run dev
+    ```
+
+## Firebase セキュリティルール
+
+Firestoreのデータを保護するために、Firebaseコンソール（Firestore Database > ルール）で以下のセキュリティルールを適用してください。
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /passwords/{document} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+  }
+}
+```
+
+## ブラウザサポート
+
+このアプリケーションは最新のWeb標準を使用しています。
+
+*   **基本機能**: Chrome, Edge, Firefox, Safari (最新版)。
+*   **Passkey (largeBlob)**:
+    *   macOS (Touch ID) および Windows (Hello) 上の Chrome / Edge。
+    *   *注意*: `largeBlob` 拡張機能のサポート状況は、プラットフォームやブラウザの実装に依存します。
+
 ## ディレクトリ構造
 
 ```text
 www/
 ├── css/
 │   └── style.css       # アプリケーションスタイル
+├── docs/
+│   ├── README.md       # 英語ドキュメント
+│   └── README_JA.md    # 日本語ドキュメント
 ├── js/
 │   └── script.js       # メインアプリケーションロジック (Firebase, Crypto, UI)
+├── web/                # ランディングページ
+│   ├── index.html
+│   └── style.css
 ├── node_modules/       # サードパーティライブラリ (@m3e components)
 ├── index.html          # メインエントリポイント
 ├── package.json        # プロジェクトの依存関係とスクリプト
-├── vite.config.js      # Vite設定
-└── README.md           # プロジェクトドキュメント
+└── vite.config.js      # Vite設定
 ```
 
 ## 依存関係
 
 アプリケーションは以下の主要なライブラリに依存しています：
 
-*   **Firebase SDK**: 認証、Firestore、およびAnalytics。
+*   **Firebase SDK**: 認証、Firestore。
 *   **@m3e/components**: UI用のカスタムMaterial Design 3 Webコンポーネント。
 *   **zxcvbn**: 現実的なパスワード強度推定のため。
 *   **otpauth**: TOTP (2FA) コード生成のため。
