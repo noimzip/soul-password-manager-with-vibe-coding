@@ -523,6 +523,10 @@
                   <span id="setting_app_version" class="text-secondary"></span>
               </div>
               <div class="text-right mt-2">
+                  <m3e-button variant="text" id="open_guide_btn">
+                      <m3e-icon slot="icon" name="help"></m3e-icon>
+                      <span data-i18n="open_guide">使い方ガイド</span>
+                  </m3e-button>
                   <m3e-button variant="text" id="open_feedback_btn">
                       <m3e-icon slot="icon" name="feedback"></m3e-icon>
                       <span data-i18n="send_feedback">フィードバックを送信</span>
@@ -640,6 +644,124 @@
         <m3e-button variant="filled" id="submit_feedback_btn">
           <m3e-icon slot="icon" name="send"></m3e-icon>
           <span data-i18n="send">送信</span>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="guide_dialog" dismissible>
+      <span slot="header" data-i18n="guide_title">使い方ガイド</span>
+      <div class="guide-carousel-container">
+        <div class="guide-step active">
+            <div class="guide-icon-wrapper">
+                <m3e-icon name="add_circle" class="guide-step-icon"></m3e-icon>
+            </div>
+            <div class="guide-text">
+                <h3 data-i18n="guide_step1_title" class="mt-0">1. パスワードの保存</h3>
+                <p data-i18n="guide_step1_desc" class="text-secondary">右下の「+」ボタンから「ログイン情報」を選択して、新しいパスワードを追加できます。</p>
+                <div class="guide-tip">
+                    <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
+                    <span data-i18n="guide_tip1">ヒント: タイトルやユーザー名で検索して、すぐに目的のパスワードを見つけられます。</span>
+                </div>
+                <div class="mt-2">
+                    <m3e-button variant="outlined" id="guide_action_add" style="height: 32px;">
+                        <span data-i18n="add_pass_title">新しいパスワードを追加</span>
+                    </m3e-button>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-step">
+            <div class="guide-icon-wrapper">
+                <m3e-icon name="password" class="guide-step-icon"></m3e-icon>
+            </div>
+            <div class="guide-text">
+                <h3 data-i18n="guide_step2_title">2. パスワード生成</h3>
+                <p data-i18n="guide_step2_desc" class="text-secondary">「パスワード生成」ツールを使って、推測されにくい強力なパスワードを自動作成できます。</p>
+                <div class="guide-tip">
+                    <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
+                    <span data-i18n="guide_tip2">ヒント: セキュリティのため、12文字以上の長さを推奨します。</span>
+                </div>
+                <div class="mt-2">
+                    <m3e-button variant="outlined" id="guide_action_gen" style="height: 32px;">
+                        <span data-i18n="pass_generator">パスワード生成</span>
+                    </m3e-button>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-step">
+            <div class="guide-icon-wrapper">
+                <m3e-icon name="health_and_safety" class="guide-step-icon"></m3e-icon>
+            </div>
+            <div class="guide-text">
+                <h3 data-i18n="guide_step3_title">3. セキュリティチェック</h3>
+                <p data-i18n="guide_step3_desc" class="text-secondary">「セキュリティハブ」では、脆弱なパスワードや使い回しを自動的に検出。漏洩チェック機能も利用できます。</p>
+                <div class="guide-tip">
+                    <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
+                    <span data-i18n="guide_tip3">ヒント: スコア80点以上を目指して、定期的に見直しましょう。</span>
+                </div>
+                <div class="mt-2">
+                    <m3e-button variant="outlined" id="guide_action_hub" style="height: 32px;">
+                        <span data-i18n="security_hub">セキュリティハブ</span>
+                    </m3e-button>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-step">
+            <div class="guide-icon-wrapper">
+                <m3e-icon name="settings_backup_restore" class="guide-step-icon"></m3e-icon>
+            </div>
+            <div class="guide-text">
+                <h3 data-i18n="guide_step4_title">4. データの管理</h3>
+                <p data-i18n="guide_step4_desc" class="text-secondary">データは端末内に暗号化して保存されます。機種変更時などは設定画面からJSON形式でエクスポートしてください。</p>
+                <div class="guide-tip">
+                    <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
+                    <span data-i18n="guide_tip4">ヒント: エクスポートしたファイルは、他人に見られない安全な場所に保管してください。</span>
+                </div>
+                <div class="mt-2">
+                    <m3e-button variant="outlined" id="guide_action_data" style="height: 32px;">
+                        <span data-i18n="data_mgmt">データ管理</span>
+                    </m3e-button>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-step">
+            <div class="guide-icon-wrapper">
+                <m3e-icon name="settings" class="guide-step-icon"></m3e-icon>
+            </div>
+            <div class="guide-text">
+                <h3 data-i18n="guide_step5_title">5. 設定とカスタマイズ</h3>
+                <p data-i18n="guide_step5_desc" class="text-secondary">言語設定、ダークモード、自動ログアウト時間などを設定画面から変更できます。</p>
+                <div class="guide-tip">
+                    <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
+                    <span data-i18n="guide_tip5">ヒント: 生体認証（Passkey）を有効にすると、素早く安全にログインできます。</span>
+                </div>
+                <div class="mt-2">
+                    <m3e-button variant="outlined" id="guide_action_settings" style="height: 32px;">
+                        <span data-i18n="settings">設定</span>
+                    </m3e-button>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="guide-indicators">
+          <span class="guide-dot active"></span>
+          <span class="guide-dot"></span>
+          <span class="guide-dot"></span>
+          <span class="guide-dot"></span>
+          <span class="guide-dot"></span>
+      </div>
+      <div slot="actions">
+        <m3e-button variant="text" id="guide_prev_btn" disabled>
+          <span data-i18n="prev">前へ</span>
+        </m3e-button>
+        <m3e-button variant="filled" id="guide_next_btn">
+          <span data-i18n="next">次へ</span>
+        </m3e-button>
+        <m3e-button variant="filled" id="guide_finish_btn" class="hidden">
+          <span data-i18n="close">とじる</span>
         </m3e-button>
       </div>
     </m3e-dialog>

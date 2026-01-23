@@ -659,3 +659,30 @@ m3e-nav-menu-item.selected {
     resize: vertical;
     box-sizing: border-box;
 }
+
+.guide-step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: flex-start;
+}
+
+.guide-icon-wrapper {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.guide-step-icon {
+    font-size: 24px;
+}
+
+.guide-text {
+    flex: 1;
+}

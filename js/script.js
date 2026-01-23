@@ -195,6 +195,23 @@ const TRANSLATIONS = {
         new_login_detected: "新しい端末 ({device}) からのログインを検知しました",
         security_alert: "セキュリティ通知",
         send_feedback: "フィードバックを送信",
+        open_guide: "使い方ガイド",
+        guide_title: "使い方ガイド",
+        guide_step1_title: "1. パスワードの保存",
+        guide_step1_desc: "右下の「+」ボタンから「ログイン情報」を選択して、新しいパスワードを追加できます。カテゴリ分けやお気に入り登録も可能です。",
+        guide_tip1: "ヒント: タイトルやユーザー名で検索して、すぐに目的のパスワードを見つけられます。",
+        guide_step2_title: "2. パスワード生成",
+        guide_step2_desc: "「パスワード生成」ツールを使って、推測されにくい強力なパスワードを自動作成できます。",
+        guide_tip2: "ヒント: セキュリティのため、12文字以上の長さを推奨します。",
+        guide_step3_title: "3. セキュリティチェック",
+        guide_step3_desc: "「セキュリティハブ」では、脆弱なパスワードや使い回しを自動的に検出。漏洩チェック機能も利用できます。",
+        guide_tip3: "ヒント: スコア80点以上を目指して、定期的に見直しましょう。",
+        guide_step4_title: "4. データの管理",
+        guide_step4_desc: "データは端末内に暗号化して保存されます。機種変更時などは設定画面からJSON形式でエクスポートしてください。",
+        guide_tip4: "ヒント: エクスポートしたファイルは、他人に見られない安全な場所に保管してください。",
+        guide_step5_title: "5. 設定とカスタマイズ",
+        guide_step5_desc: "言語設定、ダークモード、自動ログアウト時間などを設定画面から変更できます。",
+        guide_tip5: "ヒント: 生体認証（Passkey）を有効にすると、素早く安全にログインできます。",
         include_logs: "アプリのログとエラー情報を含める",
         feedback_desc: "ご意見やバグ報告をお聞かせください。",
         feedback_message: "メッセージ",
@@ -366,6 +383,23 @@ const TRANSLATIONS = {
         new_login_detected: "New login detected from {device}",
         security_alert: "Security Alert",
         send_feedback: "Send Feedback",
+        open_guide: "User Guide",
+        guide_title: "User Guide",
+        guide_step1_title: "1. Saving Passwords",
+        guide_step1_desc: "Add new passwords via the '+' button. You can also categorize them and mark as favorites.",
+        guide_tip1: "Tip: You can search for passwords by title or username.",
+        guide_step2_title: "2. Password Generator",
+        guide_step2_desc: "Use the 'Password Generator' tool to automatically create strong, hard-to-guess passwords.",
+        guide_tip2: "Tip: We recommend 12 characters or more for better security.",
+        guide_step3_title: "3. Security Check",
+        guide_step3_desc: "The 'Security Hub' detects weak or reused passwords. You can also check for data breaches.",
+        guide_tip3: "Tip: Aim for a score of 80 or higher.",
+        guide_step4_title: "4. Data Management",
+        guide_step4_desc: "Data is encrypted locally. Export as JSON from Settings for backups or device migration.",
+        guide_tip4: "Tip: Keep your exported file in a secure location.",
+        guide_step5_title: "5. Settings & Customization",
+        guide_step5_desc: "Change language, toggle dark mode, and set auto-logout timer from Settings.",
+        guide_tip5: "Tip: Enable biometrics for faster and secure access.",
         include_logs: "Include app logs and error info",
         feedback_desc: "Please let us know your thoughts or report bugs.",
         feedback_message: "Message",
@@ -537,6 +571,23 @@ const TRANSLATIONS = {
         new_login_detected: "检测到来自 {device} 的新登录",
         security_alert: "安全警报",
         send_feedback: "发送反馈",
+        open_guide: "用户指南",
+        guide_title: "用户指南",
+        guide_step1_title: "1. 保存密码",
+        guide_step1_desc: "通过右下角的“+”按钮添加新密码。您还可以对其进行分类并标记为收藏。",
+        guide_tip1: "提示：您可以按标题或用户名搜索密码。",
+        guide_step2_title: "2. 密码生成器",
+        guide_step2_desc: "使用“密码生成器”工具自动创建难以猜测的强密码。",
+        guide_tip2: "提示：为了更好的安全性，建议使用 12 个字符或更多。",
+        guide_step3_title: "3. 安全检查",
+        guide_step3_desc: "“安全中心”会自动检测弱密码或重复使用的密码。您还可以检查数据泄露。",
+        guide_tip3: "提示：目标是达到 80 分或更高。",
+        guide_step4_title: "4. 数据管理",
+        guide_step4_desc: "数据在本地加密存储。建议从设置中导出 JSON 进行备份或迁移。",
+        guide_tip4: "提示：请将导出的文件保存在安全的位置。",
+        guide_step5_title: "5. 设置与自定义",
+        guide_step5_desc: "在设置中更改语言、切换深色模式以及设置自动注销计时器。",
+        guide_tip5: "提示：启用生物识别技术以实现更快、更安全的访问。",
         include_logs: "包含应用日志和错误信息",
         feedback_desc: "请告诉我们要改进的地方或报告错误。",
         feedback_message: "消息",
@@ -708,6 +759,23 @@ const TRANSLATIONS = {
         new_login_detected: "{device}에서 새로운 로그인이 감지되었습니다",
         security_alert: "보안 알림",
         send_feedback: "피드백 보내기",
+        open_guide: "사용자 가이드",
+        guide_title: "사용자 가이드",
+        guide_step1_title: "1. 비밀번호 저장",
+        guide_step1_desc: "오른쪽 하단의 '+' 버튼을 통해 새 비밀번호를 추가하세요. 카테고리를 지정하거나 즐겨찾기에 추가할 수도 있습니다.",
+        guide_tip1: "팁: 제목이나 사용자 이름으로 비밀번호를 검색할 수 있습니다.",
+        guide_step2_title: "2. 비밀번호 생성기",
+        guide_step2_desc: "'비밀번호 생성기' 도구를 사용하여 강력하고 추측하기 어려운 비밀번호를 자동으로 생성하세요.",
+        guide_tip2: "팁: 보안을 위해 12자 이상을 권장합니다.",
+        guide_step3_title: "3. 보안 검사",
+        guide_step3_desc: "'보안 허브'는 취약하거나 재사용된 비밀번호를 감지합니다. 데이터 유출 여부도 확인할 수 있습니다.",
+        guide_tip3: "팁: 80점 이상을 목표로 하세요.",
+        guide_step4_title: "4. 데이터 관리",
+        guide_step4_desc: "데이터는 로컬에 암호화되어 저장됩니다. 백업이나 기기 이동을 위해 설정에서 JSON으로 내보내세요.",
+        guide_tip4: "팁: 내보낸 파일은 안전한 곳에 보관하세요.",
+        guide_step5_title: "5. 설정 및 사용자 지정",
+        guide_step5_desc: "설정에서 언어를 변경하고, 다크 모드를 전환하며, 자동 로그아웃 타이머를 설정하세요.",
+        guide_tip5: "팁: 더 빠르고 안전한 액세스를 위해 생체 인식을 활성화하세요.",
         include_logs: "앱 로그 및 오류 정보 포함",
         feedback_desc: "의견이나 버그 제보를 보내주세요.",
         feedback_message: "메시지",
@@ -879,6 +947,23 @@ const TRANSLATIONS = {
         new_login_detected: "Neue Anmeldung von {device} erkannt",
         security_alert: "Sicherheitswarnung",
         send_feedback: "Feedback senden",
+        open_guide: "Benutzerhandbuch",
+        guide_title: "Benutzerhandbuch",
+        guide_step1_title: "1. Passwörter speichern",
+        guide_step1_desc: "Fügen Sie neue Passwörter über die Schaltfläche '+' hinzu. Sie können sie auch kategorisieren und als Favoriten markieren.",
+        guide_tip1: "Tipp: Sie können nach Titel oder Benutzername suchen.",
+        guide_step2_title: "2. Passwort-Generator",
+        guide_step2_desc: "Verwenden Sie den 'Passwort-Generator', um automatisch starke, schwer zu erratende Passwörter zu erstellen.",
+        guide_tip2: "Tipp: Wir empfehlen 12 Zeichen oder mehr für bessere Sicherheit.",
+        guide_step3_title: "3. Sicherheitscheck",
+        guide_step3_desc: "Der 'Sicherheits-Hub' erkennt schwache oder wiederverwendete Passwörter. Sie können auch auf Datenlecks prüfen.",
+        guide_tip3: "Tipp: Streben Sie eine Punktzahl von 80 oder höher an.",
+        guide_step4_title: "4. Datenverwaltung",
+        guide_step4_desc: "Daten werden lokal verschlüsselt. Exportieren Sie JSON aus den Einstellungen für Backups oder Migration.",
+        guide_tip4: "Tipp: Bewahren Sie Ihre exportierte Datei an einem sicheren Ort auf.",
+        guide_step5_title: "5. Einstellungen & Anpassung",
+        guide_step5_desc: "Ändern Sie die Sprache, schalten Sie den Dunkelmodus um und stellen Sie den Auto-Logout-Timer in den Einstellungen ein.",
+        guide_tip5: "Tipp: Aktivieren Sie Biometrie für schnelleren und sicheren Zugriff.",
         include_logs: "App-Protokolle und Fehlerinfos einschließen",
         feedback_desc: "Bitte teilen Sie uns Ihre Meinung mit oder melden Sie Fehler.",
         feedback_message: "Nachricht",
@@ -1050,6 +1135,23 @@ const TRANSLATIONS = {
         new_login_detected: "Nouvelle connexion détectée depuis {device}",
         security_alert: "Alerte de sécurité",
         send_feedback: "Envoyer des commentaires",
+        open_guide: "Guide de l'utilisateur",
+        guide_title: "Guide de l'utilisateur",
+        guide_step1_title: "1. Enregistrer les mots de passe",
+        guide_step1_desc: "Ajoutez de nouveaux mots de passe via le bouton '+'. Vous pouvez également les classer et les marquer comme favoris.",
+        guide_tip1: "Astuce : Vous pouvez rechercher des mots de passe par titre ou nom d'utilisateur.",
+        guide_step2_title: "2. Générateur de mot de passe",
+        guide_step2_desc: "Utilisez l'outil 'Générateur de mot de passe' pour créer automatiquement des mots de passe forts.",
+        guide_tip2: "Astuce : Nous recommandons 12 caractères ou plus pour une meilleure sécurité.",
+        guide_step3_title: "3. Vérification de sécurité",
+        guide_step3_desc: "Le 'Centre de sécurité' détecte les mots de passe faibles ou réutilisés. Vous pouvez également vérifier les fuites de données.",
+        guide_tip3: "Astuce : Visez un score de 80 ou plus.",
+        guide_step4_title: "4. Gestion des données",
+        guide_step4_desc: "Les données sont chiffrées localement. Exportez en JSON depuis les paramètres pour les sauvegardes.",
+        guide_tip4: "Astuce : Conservez votre fichier exporté dans un endroit sûr.",
+        guide_step5_title: "5. Paramètres et personnalisation",
+        guide_step5_desc: "Changez la langue, activez le mode sombre et réglez la minuterie de déconnexion automatique dans les paramètres.",
+        guide_tip5: "Astuce : Activez la biométrie pour un accès plus rapide et sécurisé.",
         include_logs: "Inclure les journaux et erreurs de l'application",
         feedback_desc: "Faites-nous part de vos commentaires ou signalez des bugs.",
         feedback_message: "Message",
@@ -1221,6 +1323,23 @@ const TRANSLATIONS = {
         new_login_detected: "Nuovo accesso rilevato da {device}",
         security_alert: "Avviso di sicurezza",
         send_feedback: "Invia Feedback",
+        open_guide: "Guida Utente",
+        guide_title: "Guida Utente",
+        guide_step1_title: "1. Salvare Password",
+        guide_step1_desc: "Aggiungi nuove password tramite il pulsante '+'. Puoi anche classificarle e segnarle come preferite.",
+        guide_tip1: "Suggerimento: Puoi cercare le password per titolo o nome utente.",
+        guide_step2_title: "2. Generatore Password",
+        guide_step2_desc: "Usa lo strumento 'Generatore Password' per creare automaticamente password forti e difficili da indovinare.",
+        guide_tip2: "Suggerimento: Consigliamo 12 caratteri o più per una maggiore sicurezza.",
+        guide_step3_title: "3. Controllo Sicurezza",
+        guide_step3_desc: "L'Hub di Sicurezza rileva password deboli o riutilizzate. Puoi anche controllare le violazioni dei dati.",
+        guide_tip3: "Suggerimento: Punta a un punteggio di 80 o superiore.",
+        guide_step4_title: "4. Gestione Dati",
+        guide_step4_desc: "I dati sono crittografati localmente. Esporta come JSON dalle Impostazioni per backup o migrazione.",
+        guide_tip4: "Suggerimento: Conserva il file esportato in un luogo sicuro.",
+        guide_step5_title: "5. Impostazioni e Personalizzazione",
+        guide_step5_desc: "Cambia lingua, attiva la modalità scura e imposta il timer di logout automatico dalle Impostazioni.",
+        guide_tip5: "Suggerimento: Abilita la biometria per un accesso più rapido e sicuro.",
         include_logs: "Includi log app e info errori",
         feedback_desc: "Facci sapere cosa ne pensi o segnala bug.",
         feedback_message: "Messaggio",
@@ -3088,6 +3207,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('setup_dialog').open = false;
             initLocalApp();
+
+            // Show guide for new users
+            setTimeout(() => {
+                document.getElementById('guide_dialog').open = true;
+            }, 500);
         } else {
             showAlertDialog(t('login_fail')); // Reusing login fail or generic error
         }
@@ -3532,6 +3656,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Guide
+    document.getElementById('open_guide_btn')?.addEventListener('click', () => {
+        document.getElementById('guide_dialog').open = true;
+    });
+
+    // Guide Actions
+    const closeGuideAndOpen = (dialogId) => {
+        document.getElementById('guide_dialog').open = false;
+        setTimeout(() => {
+            const dialog = document.getElementById(dialogId);
+            if (dialog) dialog.open = true;
+        }, 200);
+    };
+
+    document.getElementById('guide_action_add')?.addEventListener('click', () => closeGuideAndOpen('add_password_dialog'));
+    document.getElementById('guide_action_gen')?.addEventListener('click', () => closeGuideAndOpen('pass_maker'));
+    document.getElementById('guide_action_hub')?.addEventListener('click', () => {
+        updateSecurityHub();
+        closeGuideAndOpen('security_hub_dialog');
+    });
+    document.getElementById('guide_action_data')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
+    document.getElementById('guide_action_settings')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
 
     // Feedback
     document.getElementById('open_feedback_btn')?.addEventListener('click', () => {
