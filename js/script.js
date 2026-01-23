@@ -40,6 +40,29 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- Log Capture ---
+const appLogs = [];
+const MAX_LOGS = 100;
+
+function captureLog(level, args) {
+    try {
+        const msg = args.map(a => {
+            if (a instanceof Error) return a.toString() + '\n' + a.stack;
+            if (typeof a === 'object') return JSON.stringify(a);
+            return String(a);
+        }).join(' ');
+        appLogs.push(`[${new Date().toISOString()}] [${level}] ${msg}`);
+        if (appLogs.length > MAX_LOGS) appLogs.shift();
+    } catch (e) {
+        // Ignore errors during logging
+    }
+}
+
+const originalLog = console.log; console.log = (...args) => { captureLog('INFO', args); originalLog.apply(console, args); };
+const originalWarn = console.warn; console.warn = (...args) => { captureLog('WARN', args); originalWarn.apply(console, args); };
+const originalError = console.error; console.error = (...args) => { captureLog('ERROR', args); originalError.apply(console, args); };
+window.addEventListener('error', (e) => captureLog('UNCAUGHT', [e.message, e.filename, e.lineno]));
+
 // Enable Offline Persistence
 enableIndexedDbPersistence(db).catch((err) => {
     if (err.code == 'failed-precondition' || err.code == 'unimplemented') {
@@ -171,6 +194,11 @@ const TRANSLATIONS = {
         session_expired: "セッションが有効期限切れか、削除されました。",
         new_login_detected: "新しい端末 ({device}) からのログインを検知しました",
         security_alert: "セキュリティ通知",
+        send_feedback: "フィードバックを送信",
+        include_logs: "アプリのログとエラー情報を含める",
+        feedback_desc: "ご意見やバグ報告をお聞かせください。",
+        feedback_message: "メッセージ",
+        feedback_sent: "フィードバックを送信しました。ありがとうございます！",
         unknown_device: "不明なデバイス",
         current_pass: "現在のパスワード",
         new_pass: "新規パスワード",
@@ -247,6 +275,7 @@ const TRANSLATIONS = {
         sort_date_asc: "更新日 (古い順)",
         language: "言語 / Language",
         about: "アプリについて",
+        send: "送信",
         version: "バージョン",
         yes: "はい",
         no: "いいえ",
@@ -336,6 +365,11 @@ const TRANSLATIONS = {
         session_expired: "Session expired or revoked.",
         new_login_detected: "New login detected from {device}",
         security_alert: "Security Alert",
+        send_feedback: "Send Feedback",
+        include_logs: "Include app logs and error info",
+        feedback_desc: "Please let us know your thoughts or report bugs.",
+        feedback_message: "Message",
+        feedback_sent: "Feedback sent. Thank you!",
         unknown_device: "Unknown Device",
         current_pass: "Current Password",
         new_pass: "New Password",
@@ -412,6 +446,7 @@ const TRANSLATIONS = {
         sort_date_asc: "Date (Oldest)",
         language: "Language / 言語",
         about: "About",
+        send: "Send",
         version: "Version",
         yes: "Yes",
         no: "No",
@@ -501,6 +536,11 @@ const TRANSLATIONS = {
         session_expired: "会话已过期或被撤销。",
         new_login_detected: "检测到来自 {device} 的新登录",
         security_alert: "安全警报",
+        send_feedback: "发送反馈",
+        include_logs: "包含应用日志和错误信息",
+        feedback_desc: "请告诉我们要改进的地方或报告错误。",
+        feedback_message: "消息",
+        feedback_sent: "反馈已发送。谢谢！",
         unknown_device: "未知设备",
         current_pass: "当前密码",
         new_pass: "新密码",
@@ -577,6 +617,7 @@ const TRANSLATIONS = {
         sort_date_asc: "日期 (最旧)",
         language: "语言 / Language",
         about: "关于",
+        send: "发送",
         version: "版本",
         yes: "是",
         no: "否",
@@ -666,6 +707,11 @@ const TRANSLATIONS = {
         session_expired: "세션이 만료되었거나 취소되었습니다.",
         new_login_detected: "{device}에서 새로운 로그인이 감지되었습니다",
         security_alert: "보안 알림",
+        send_feedback: "피드백 보내기",
+        include_logs: "앱 로그 및 오류 정보 포함",
+        feedback_desc: "의견이나 버그 제보를 보내주세요.",
+        feedback_message: "메시지",
+        feedback_sent: "피드백이 전송되었습니다. 감사합니다!",
         unknown_device: "알 수 없는 기기",
         current_pass: "현재 비밀번호",
         new_pass: "새 비밀번호",
@@ -742,6 +788,7 @@ const TRANSLATIONS = {
         sort_date_asc: "날짜 (오래된순)",
         language: "언어 / Language",
         about: "앱 정보",
+        send: "보내기",
         version: "버전",
         yes: "예",
         no: "아니요",
@@ -831,6 +878,11 @@ const TRANSLATIONS = {
         session_expired: "Sitzung abgelaufen oder widerrufen.",
         new_login_detected: "Neue Anmeldung von {device} erkannt",
         security_alert: "Sicherheitswarnung",
+        send_feedback: "Feedback senden",
+        include_logs: "App-Protokolle und Fehlerinfos einschließen",
+        feedback_desc: "Bitte teilen Sie uns Ihre Meinung mit oder melden Sie Fehler.",
+        feedback_message: "Nachricht",
+        feedback_sent: "Feedback gesendet. Danke!",
         unknown_device: "Unbekanntes Gerät",
         current_pass: "Aktuelles Passwort",
         new_pass: "Neues Passwort",
@@ -907,6 +959,7 @@ const TRANSLATIONS = {
         sort_date_asc: "Datum (Älteste)",
         language: "Sprache / Language",
         about: "Über",
+        send: "Senden",
         version: "Version",
         yes: "Ja",
         no: "Nein",
@@ -996,6 +1049,11 @@ const TRANSLATIONS = {
         session_expired: "Session expirée ou révoquée.",
         new_login_detected: "Nouvelle connexion détectée depuis {device}",
         security_alert: "Alerte de sécurité",
+        send_feedback: "Envoyer des commentaires",
+        include_logs: "Inclure les journaux et erreurs de l'application",
+        feedback_desc: "Faites-nous part de vos commentaires ou signalez des bugs.",
+        feedback_message: "Message",
+        feedback_sent: "Commentaires envoyés. Merci !",
         unknown_device: "Appareil inconnu",
         current_pass: "Mot de passe actuel",
         new_pass: "Nouveau mot de passe",
@@ -1072,6 +1130,7 @@ const TRANSLATIONS = {
         sort_date_asc: "Date (Plus ancien)",
         language: "Langue / Language",
         about: "À propos",
+        send: "Envoyer",
         version: "Version",
         yes: "Oui",
         no: "Non",
@@ -1161,6 +1220,11 @@ const TRANSLATIONS = {
         session_expired: "Sessione scaduta o revocata.",
         new_login_detected: "Nuovo accesso rilevato da {device}",
         security_alert: "Avviso di sicurezza",
+        send_feedback: "Invia Feedback",
+        include_logs: "Includi log app e info errori",
+        feedback_desc: "Facci sapere cosa ne pensi o segnala bug.",
+        feedback_message: "Messaggio",
+        feedback_sent: "Feedback inviato. Grazie!",
         unknown_device: "Dispositivo Sconosciuto",
         current_pass: "Password Attuale",
         new_pass: "Nuova Password",
@@ -1237,6 +1301,7 @@ const TRANSLATIONS = {
         sort_date_asc: "Data (Più vecchia)",
         language: "Lingua / Language",
         about: "Informazioni",
+        send: "Invia",
         version: "Versione",
         yes: "Sì",
         no: "No",
@@ -3466,6 +3531,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderDeviceList();
             }
         });
+    });
+
+    // Feedback
+    document.getElementById('open_feedback_btn')?.addEventListener('click', () => {
+        document.getElementById('feedback_message').value = '';
+        const logCheck = document.getElementById('feedback_include_logs');
+        if (logCheck) logCheck.checked = false;
+        document.getElementById('feedback_dialog').open = true;
+    });
+
+    document.getElementById('submit_feedback_btn')?.addEventListener('click', async () => {
+        const msg = document.getElementById('feedback_message').value;
+        const includeLogs = document.getElementById('feedback_include_logs')?.checked;
+        if (!msg) return;
+
+        try {
+            const feedbackData = {
+                message: msg,
+                uid: currentUser ? currentUser.uid : 'anonymous',
+                userAgent: navigator.userAgent,
+                version: CONSTANTS.APP_VERSION,
+                timestamp: Date.now()
+            };
+
+            if (includeLogs) {
+                feedbackData.logs = appLogs.join('\n');
+            }
+
+            await addDoc(collection(db, "feedback"), feedbackData);
+            document.getElementById('feedback_dialog').open = false;
+            showSnackbar(t('feedback_sent'));
+        } catch (e) {
+            console.error("Error sending feedback:", e);
+            showSnackbar(t('error'));
+        }
     });
 
     // Import/Export Logic (Simplified for brevity, similar to original script.js)

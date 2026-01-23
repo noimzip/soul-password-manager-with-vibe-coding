@@ -522,6 +522,12 @@
                   <span data-i18n="version">Version</span>
                   <span id="setting_app_version" class="text-secondary"></span>
               </div>
+              <div class="text-right mt-2">
+                  <m3e-button variant="text" id="open_feedback_btn">
+                      <m3e-icon slot="icon" name="feedback"></m3e-icon>
+                      <span data-i18n="send_feedback">フィードバックを送信</span>
+                  </m3e-button>
+              </div>
           </div>
       </div>
 
@@ -613,6 +619,27 @@
         </m3e-button>
         <m3e-button variant="filled" id="login_btn">
           <span data-i18n="login_btn">ログイン</span>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="feedback_dialog" dismissible>
+      <span slot="header" data-i18n="send_feedback">フィードバックを送信</span>
+      <p class="text-small text-secondary" data-i18n="feedback_desc">ご意見やバグ報告をお聞かせください。</p>
+      <m3e-form-field variant="outlined" label="Message" data-i18n-label="feedback_message" class="w-100">
+        <textarea id="feedback_message" rows="5" class="feedback-textarea" placeholder="Your feedback..."></textarea>
+      </m3e-form-field>
+      <label class="checkbox-item mt-2">
+          <m3e-checkbox id="feedback_include_logs"></m3e-checkbox>
+          <span data-i18n="include_logs">アプリのログとエラー情報を含める</span>
+      </label>
+      <div slot="actions">
+        <m3e-button variant="text">
+          <m3e-dialog-action return-value="cancel" data-i18n="cancel">キャンセル</m3e-dialog-action>
+        </m3e-button>
+        <m3e-button variant="filled" id="submit_feedback_btn">
+          <m3e-icon slot="icon" name="send"></m3e-icon>
+          <span data-i18n="send">送信</span>
         </m3e-button>
       </div>
     </m3e-dialog>
