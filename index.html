@@ -35,7 +35,7 @@
       }
     </script>
 	<header class="sticky-header">
-      <m3e-app-bar>
+      <m3e-app-bar id="normal_app_bar">
         <div slot="title" class="header-title-wrapper">
           <m3e-icon name="lock" class="header-logo"></m3e-icon>
           <span data-i18n="app_title" class="app-title">Soul Password Manager</span>
@@ -44,6 +44,9 @@
           <div id="search_passwords" class="header-search">
             <input id="fld" type="search" placeholder="Search" data-i18n-placeholder="search_placeholder">
           </div>
+          <m3e-icon-button id="start_selection_btn">
+            <m3e-icon name="checklist"></m3e-icon>
+          </m3e-icon-button>
           <div class="sort-wrapper">
             <m3e-icon-button id="sort_btn">
               <m3e-icon name="sort"></m3e-icon>
@@ -65,6 +68,16 @@
           </m3e-icon-button>
         </div>
       </m3e-app-bar>
+      <m3e-app-bar id="selection_app_bar" class="hidden" style="background-color: var(--md-sys-color-surface-container);">
+        <div slot="navigation-icon">
+            <m3e-icon-button id="cancel_selection_btn"><m3e-icon name="close"></m3e-icon></m3e-icon-button>
+        </div>
+        <div slot="title" id="selection_count" style="font-size: 18px;">0 Selected</div>
+        <div slot="trailing-icon">
+            <m3e-icon-button id="select_all_btn"><m3e-icon name="select_all"></m3e-icon></m3e-icon-button>
+            <m3e-icon-button id="delete_selected_btn" class="color-error"><m3e-icon name="delete"></m3e-icon></m3e-icon-button>
+        </div>
+      </m3e-app-bar>
     </header>
 
     <section id="left_sidebar_content">
@@ -76,6 +89,11 @@
           <m3e-heading slot="label" variant="label" size="large" data-i18n="passwords">パスワード</m3e-heading>
           <!-- Items will be injected here -->
         </m3e-nav-menu-item-group>
+        <m3e-divider></m3e-divider>
+        <m3e-nav-menu-item id="open_trash_btn">
+            <m3e-icon slot="icon" name="delete"></m3e-icon>
+            <span slot="label" data-i18n="trash">ゴミ箱</span>
+        </m3e-nav-menu-item>
       </m3e-nav-menu>
     </section>
 
@@ -242,6 +260,22 @@
       <div slot="actions">
         <m3e-button autofocus>
           <m3e-dialog-action return-value="ok" data-i18n="close">とじる</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="trash_dialog" dismissible>
+      <span slot="header" data-i18n="trash">ゴミ箱</span>
+      <div class="text-right mb-2">
+          <m3e-button variant="text" id="empty_trash_btn" class="color-error">
+              <m3e-icon slot="icon" name="delete_forever"></m3e-icon>
+              <span data-i18n="empty_trash">ゴミ箱を空にする</span>
+          </m3e-button>
+      </div>
+      <div id="trash_list" class="history-list" style="max-height: 400px;"></div>
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="close" data-i18n="close">とじる</m3e-dialog-action>
         </m3e-button>
       </div>
     </m3e-dialog>
