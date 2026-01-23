@@ -80,6 +80,8 @@ let securityHubLists = {
     no2fa: [],
     reused: []
 };
+let isSelectionMode = false;
+let selectedIds = new Set();
 
 // --- Translations ---
 const TRANSLATIONS = {
@@ -110,6 +112,14 @@ const TRANSLATIONS = {
         advice_medium: "もう少し長くするか、複雑にすることをお勧めします。",
         advice_no_2fa: "サービスの2段階認証設定を有効にし、シークレットキーをここに保存してください。",
         advice_reused: "他のサービスと同じパスワードが使われています。ユニークなパスワードに変更してください。",
+        trash: "ゴミ箱",
+        trash_empty: "ゴミ箱は空です",
+        empty_trash: "ゴミ箱を空にする",
+        selected_count: "{count} 件選択中",
+        select_all: "すべて選択",
+        delete_selected_confirm: "選択した {count} 件のパスワードを削除してもよろしいですか？",
+        restore: "復元",
+        delete_permanently: "完全に削除",
         export_json: "JSONファイルでエクスポート",
         import_json: "JSONファイルをインポート",
         settings: "設定",
@@ -215,7 +225,6 @@ const TRANSLATIONS = {
         file_error: "ファイルの読み込みに失敗しました。",
         history_empty: "履歴はありません",
         hist_empty_detail: "変更履歴はありません。",
-        restore: "復元",
         restore_confirm: "この履歴の内容を入力フォームに反映しますか？",
         sort_placeholder: "並び替え...",
         sort_name_asc: "名前 (A-Z)",
@@ -258,6 +267,14 @@ const TRANSLATIONS = {
         advice_medium: "Consider making it longer or more complex.",
         advice_no_2fa: "Enable 2FA on the service and save the secret key here.",
         advice_reused: "This password is used elsewhere. Change it to a unique one.",
+        trash: "Trash",
+        trash_empty: "Trash is empty",
+        empty_trash: "Empty Trash",
+        selected_count: "{count} Selected",
+        select_all: "Select All",
+        delete_selected_confirm: "Delete {count} items?",
+        restore: "Restore",
+        delete_permanently: "Delete Permanently",
         export_json: "Export as JSON",
         import_json: "Import JSON",
         settings: "Settings",
@@ -363,7 +380,6 @@ const TRANSLATIONS = {
         file_error: "Failed to read file.",
         history_empty: "No history",
         hist_empty_detail: "No modification history.",
-        restore: "Restore",
         restore_confirm: "Restore this version to the form?",
         sort_placeholder: "Sort by...",
         sort_name_asc: "Name (A-Z)",
@@ -406,6 +422,14 @@ const TRANSLATIONS = {
         advice_medium: "考虑增加长度或复杂度。",
         advice_no_2fa: "在服务上启用 2FA 并在此处保存密钥。",
         advice_reused: "此密码在其他地方使用。请更改为唯一的密码。",
+        trash: "回收站",
+        trash_empty: "回收站为空",
+        empty_trash: "清空回收站",
+        selected_count: "已选择 {count} 项",
+        select_all: "全选",
+        delete_selected_confirm: "确定要删除选中的 {count} 个项目吗？",
+        restore: "恢复",
+        delete_permanently: "永久删除",
         export_json: "导出 JSON",
         import_json: "导入 JSON",
         settings: "设置",
@@ -511,7 +535,6 @@ const TRANSLATIONS = {
         file_error: "读取文件失败。",
         history_empty: "无历史记录",
         hist_empty_detail: "无修改历史。",
-        restore: "恢复",
         restore_confirm: "将此版本恢复到表单？",
         sort_placeholder: "排序方式...",
         sort_name_asc: "名称 (A-Z)",
@@ -554,6 +577,14 @@ const TRANSLATIONS = {
         advice_medium: "길이를 늘리거나 복잡하게 만드는 것을 고려하세요.",
         advice_no_2fa: "서비스에서 2FA를 활성화하고 여기에 비밀키를 저장하세요.",
         advice_reused: "이 비밀번호는 다른 곳에서도 사용됩니다. 고유한 비밀번호로 변경하세요.",
+        trash: "휴지통",
+        trash_empty: "휴지통이 비었습니다",
+        empty_trash: "휴지통 비우기",
+        selected_count: "{count}개 선택됨",
+        select_all: "모두 선택",
+        delete_selected_confirm: "선택한 {count}개의 항목을 삭제하시겠습니까?",
+        restore: "복원",
+        delete_permanently: "영구 삭제",
         export_json: "JSON 내보내기",
         import_json: "JSON 가져오기",
         settings: "설정",
@@ -659,7 +690,6 @@ const TRANSLATIONS = {
         file_error: "파일 읽기 실패.",
         history_empty: "기록 없음",
         hist_empty_detail: "수정 기록이 없습니다.",
-        restore: "복원",
         restore_confirm: "이 버전을 폼에 복원하시겠습니까?",
         sort_placeholder: "정렬...",
         sort_name_asc: "이름 (A-Z)",
@@ -702,6 +732,14 @@ const TRANSLATIONS = {
         advice_medium: "Erwägen Sie, es länger oder komplexer zu machen.",
         advice_no_2fa: "Aktivieren Sie 2FA beim Dienst und speichern Sie das Geheimnis hier.",
         advice_reused: "Dieses Passwort wird woanders verwendet. Ändern Sie es in ein einzigartiges.",
+        trash: "Papierkorb",
+        trash_empty: "Papierkorb ist leer",
+        empty_trash: "Papierkorb leeren",
+        selected_count: "{count} ausgewählt",
+        select_all: "Alles auswählen",
+        delete_selected_confirm: "{count} Elemente löschen?",
+        restore: "Wiederherstellen",
+        delete_permanently: "Endgültig löschen",
         export_json: "Als JSON exportieren",
         import_json: "JSON importieren",
         settings: "Einstellungen",
@@ -807,7 +845,6 @@ const TRANSLATIONS = {
         file_error: "Datei konnte nicht gelesen werden.",
         history_empty: "Kein Verlauf",
         hist_empty_detail: "Kein Änderungsverlauf.",
-        restore: "Wiederherstellen",
         restore_confirm: "Diese Version im Formular wiederherstellen?",
         sort_placeholder: "Sortieren nach...",
         sort_name_asc: "Name (A-Z)",
@@ -850,6 +887,14 @@ const TRANSLATIONS = {
         advice_medium: "Envisagez de le rendre plus long ou plus complexe.",
         advice_no_2fa: "Activez la 2FA sur le service et enregistrez le secret ici.",
         advice_reused: "Ce mot de passe est utilisé ailleurs. Changez-le pour un unique.",
+        trash: "Corbeille",
+        trash_empty: "La corbeille est vide",
+        empty_trash: "Vider la corbeille",
+        selected_count: "{count} sélectionné(s)",
+        select_all: "Tout sélectionner",
+        delete_selected_confirm: "Supprimer {count} éléments ?",
+        restore: "Restaurer",
+        delete_permanently: "Supprimer définitivement",
         export_json: "Exporter en JSON",
         import_json: "Importer JSON",
         settings: "Paramètres",
@@ -955,7 +1000,6 @@ const TRANSLATIONS = {
         file_error: "Échec de la lecture du fichier.",
         history_empty: "Aucun historique",
         hist_empty_detail: "Aucun historique de modification.",
-        restore: "Restaurer",
         restore_confirm: "Restaurer cette version dans le formulaire ?",
         sort_placeholder: "Trier par...",
         sort_name_asc: "Nom (A-Z)",
@@ -998,6 +1042,14 @@ const TRANSLATIONS = {
         advice_medium: "Considera di renderla più lunga o complessa.",
         advice_no_2fa: "Abilita 2FA sul servizio e salva il segreto qui.",
         advice_reused: "Questa password è usata altrove. Cambiala con una unica.",
+        trash: "Cestino",
+        trash_empty: "Il cestino è vuoto",
+        empty_trash: "Svuota Cestino",
+        selected_count: "{count} Selezionati",
+        select_all: "Seleziona Tutto",
+        delete_selected_confirm: "Eliminare {count} elementi?",
+        restore: "Ripristina",
+        delete_permanently: "Elimina Definitivamente",
         export_json: "Esporta come JSON",
         import_json: "Importa JSON",
         settings: "Impostazioni",
@@ -1103,7 +1155,6 @@ const TRANSLATIONS = {
         file_error: "Impossibile leggere il file.",
         history_empty: "Nessuna cronologia",
         hist_empty_detail: "Nessuna cronologia modifiche.",
-        restore: "Ripristina",
         restore_confirm: "Ripristinare questa versione nel modulo?",
         sort_placeholder: "Ordina per...",
         sort_name_asc: "Nome (A-Z)",
@@ -1840,6 +1891,7 @@ function updateSecurityHub() {
     const passMap = {};
 
     savedPasswords.forEach(item => {
+        if (item.deleted) return; // Skip deleted items
         // Weak check (score < 3 is considered weak/medium)
         const strength = calculatePasswordStrength(item.password);
         if (strength < 3) {
@@ -1963,7 +2015,7 @@ function updateDetailRisks(item) {
 
     // Reused
     if (item.password) {
-        const isReused = savedPasswords.some(p => p.password === item.password && p.id !== item.id);
+        const isReused = savedPasswords.some(p => !p.deleted && p.password === item.password && p.id !== item.id);
         if (isReused) risks.push({ key: 'risk_reused', icon: 'sync_problem', advice: 'advice_reused' });
     }
 
@@ -2130,6 +2182,86 @@ function renderSecurityList(type) {
     dialog.open = true;
 }
 
+function toggleSelectionMode(active) {
+    isSelectionMode = active;
+    selectedIds.clear();
+    
+    const normalBar = document.getElementById('normal_app_bar');
+    const selectBar = document.getElementById('selection_app_bar');
+    const fab = document.getElementById('make_fab');
+    
+    if (active) {
+        normalBar.classList.add('hidden');
+        selectBar.classList.remove('hidden');
+        fab.classList.add('hidden');
+        updateSelectionCount();
+    } else {
+        normalBar.classList.remove('hidden');
+        selectBar.classList.add('hidden');
+        fab.classList.remove('hidden');
+    }
+    
+    renderPasswordList(document.getElementById('fld').value);
+}
+
+function toggleItemSelection(id) {
+    if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+    } else {
+        selectedIds.add(id);
+    }
+    updateSelectionCount();
+    // Re-render to update UI state (checkboxes/background)
+    renderPasswordList(document.getElementById('fld').value);
+}
+
+function selectAllItems() {
+    const filterText = document.getElementById('fld').value.toLowerCase();
+    const visibleItems = savedPasswords.filter(item => {
+        if (item.deleted) return false;
+        if (filterText && !item.title.toLowerCase().includes(filterText) && 
+            !(item.website || '').toLowerCase().includes(filterText)) {
+            return false;
+        }
+        return true;
+    });
+
+    if (visibleItems.length === 0) return;
+
+    const allSelected = visibleItems.every(item => selectedIds.has(item.id));
+
+    if (allSelected) {
+        visibleItems.forEach(item => selectedIds.delete(item.id));
+    } else {
+        visibleItems.forEach(item => selectedIds.add(item.id));
+    }
+
+    updateSelectionCount();
+    renderPasswordList(document.getElementById('fld').value);
+}
+
+function updateSelectionCount() {
+    document.getElementById('selection_count').textContent = t('selected_count', {count: selectedIds.size});
+    
+    const selectAllBtn = document.getElementById('select_all_btn');
+    if (selectAllBtn) {
+        const icon = selectAllBtn.querySelector('m3e-icon');
+        const filterText = document.getElementById('fld').value.toLowerCase();
+        const visibleItems = savedPasswords.filter(item => {
+            if (item.deleted) return false;
+            if (filterText && !item.title.toLowerCase().includes(filterText) && 
+                !(item.website || '').toLowerCase().includes(filterText)) {
+                return false;
+            }
+            return true;
+        });
+        
+        const allSelected = visibleItems.length > 0 && visibleItems.every(item => selectedIds.has(item.id));
+        icon.name = allSelected ? 'deselect' : 'select_all';
+        selectAllBtn.title = t('select_all');
+    }
+}
+
 // --- Drag and Drop Handlers ---
 
 function handleDragStart(e) {
@@ -2192,6 +2324,7 @@ function renderPasswordList(filterText) {
     const categoryNames = new Set();
 
     savedPasswords.forEach((item, index) => {
+        if (item.deleted) return; // Skip deleted items
         if (filterText && !item.title.toLowerCase().includes(filterText.toLowerCase()) && 
             !(item.website || '').toLowerCase().includes(filterText.toLowerCase())) {
             return;
@@ -2242,71 +2375,93 @@ function addPasswordToUI(item, index, listGroup) {
     const newItem = document.createElement('m3e-nav-menu-item');
     newItem.style.position = 'relative';
     
-    // Drag and Drop logic (simplified for module)
-    newItem.draggable = true;
-    newItem.dataset.index = index;
-    newItem.addEventListener('dragstart', handleDragStart);
-    newItem.addEventListener('dragover', handleDragOver);
-    newItem.addEventListener('dragleave', handleDragLeave);
-    newItem.addEventListener('drop', handleDrop);
-    newItem.addEventListener('dragend', handleDragEnd);
-    
-    let icon;
-    if (item.website) {
-        try {
-            const domain = new URL(item.website).hostname;
-            icon = document.createElement('img');
-            icon.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64';
-            icon.style.width = '24px';
-            icon.style.height = '24px';
-            icon.style.objectFit = 'contain';
-        } catch (e) {
-            icon = document.createElement('m3e-icon');
-            icon.name = 'public';
-        }
+    if (isSelectionMode) {
+        // Selection Mode UI
+        const isSelected = selectedIds.has(item.id);
+        if (isSelected) newItem.classList.add('selected');
+        
+        const icon = document.createElement('m3e-icon');
+        icon.name = isSelected ? 'check_box' : 'check_box_outline_blank';
+        icon.slot = 'icon';
+        if (isSelected) icon.style.color = 'var(--md-sys-color-primary)';
+        newItem.appendChild(icon);
+
+        const label = document.createElement('span');
+        label.slot = 'label';
+        label.textContent = item.title;
+        newItem.appendChild(label);
+
+        newItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleItemSelection(item.id);
+        });
     } else {
-        icon = document.createElement('m3e-icon');
-        icon.name = 'key';
+        // Normal Mode UI
+        newItem.draggable = true;
+        newItem.dataset.index = index;
+        newItem.addEventListener('dragstart', handleDragStart);
+        newItem.addEventListener('dragover', handleDragOver);
+        newItem.addEventListener('dragleave', handleDragLeave);
+        newItem.addEventListener('drop', handleDrop);
+        newItem.addEventListener('dragend', handleDragEnd);
+        
+        let icon;
+        if (item.website) {
+            try {
+                const domain = new URL(item.website).hostname;
+                icon = document.createElement('img');
+                icon.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=64';
+                icon.style.width = '24px';
+                icon.style.height = '24px';
+                icon.style.objectFit = 'contain';
+            } catch (e) {
+                icon = document.createElement('m3e-icon');
+                icon.name = 'public';
+            }
+        } else {
+            icon = document.createElement('m3e-icon');
+            icon.name = 'key';
+        }
+        
+        icon.slot = 'icon';
+
+        const strengthClass = getStrengthInfo(item.password).strengthClass;
+        if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
+            icon.classList.add(strengthClass);
+        }
+
+        const label = document.createElement('span');
+        label.slot = 'label';
+        label.textContent = item.title;
+        label.classList.add(strengthClass);
+
+        newItem.appendChild(icon);
+        newItem.appendChild(label);
+
+        // Favorite Button
+        const favBtn = document.createElement('m3e-icon-button');
+        favBtn.style.position = 'absolute';
+        favBtn.style.right = '8px';
+        favBtn.style.top = '50%';
+        favBtn.style.transform = 'translateY(-50%)';
+        favBtn.style.zIndex = '2';
+        const favIcon = document.createElement('m3e-icon');
+        favIcon.name = item.favorite ? 'star' : 'star_border';
+        if (item.favorite) favIcon.style.color = '#fbc02d';
+        favBtn.appendChild(favIcon);
+
+        favBtn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            item.favorite = !item.favorite;
+            await saveOrUpdateItem(item);
+        });
+        newItem.appendChild(favBtn);
+
+        // Click to open detail
+        newItem.addEventListener('click', function() {
+            openDetailDialog(item);
+        });
     }
-    
-    icon.slot = 'icon';
-
-    const strengthClass = getStrengthInfo(item.password).strengthClass;
-    if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
-        icon.classList.add(strengthClass);
-    }
-
-    const label = document.createElement('span');
-    label.slot = 'label';
-    label.textContent = item.title;
-    label.classList.add(strengthClass);
-
-    newItem.appendChild(icon);
-    newItem.appendChild(label);
-
-    // Favorite Button
-    const favBtn = document.createElement('m3e-icon-button');
-    favBtn.style.position = 'absolute';
-    favBtn.style.right = '8px';
-    favBtn.style.top = '50%';
-    favBtn.style.transform = 'translateY(-50%)';
-    favBtn.style.zIndex = '2';
-    const favIcon = document.createElement('m3e-icon');
-    favIcon.name = item.favorite ? 'star' : 'star_border';
-    if (item.favorite) favIcon.style.color = '#fbc02d';
-    favBtn.appendChild(favIcon);
-
-    favBtn.addEventListener('click', async function(e) {
-        e.stopPropagation();
-        item.favorite = !item.favorite;
-        await saveOrUpdateItem(item);
-    });
-    newItem.appendChild(favBtn);
-
-    // Click to open detail
-    newItem.addEventListener('click', function() {
-        openDetailDialog(item);
-    });
 
     listGroup.appendChild(newItem);
 }
@@ -2328,7 +2483,9 @@ async function saveOrUpdateItem(item) {
                 secret: item.secret,
                 favorite: item.favorite,
                 lastModified: item.lastModified,
-                history: item.history || []
+                history: item.history || [],
+                deleted: item.deleted || false,
+                deletedAt: item.deletedAt || null
             };
 
             if (item.id) {
@@ -2355,23 +2512,113 @@ async function saveOrUpdateItem(item) {
     }
 }
 
-async function deleteItem(index) {
+// Soft delete (Move to Trash)
+async function deleteItem(id) {
+    const item = savedPasswords.find(p => p.id === id);
+    if (!item) return;
+
+    const updatedItem = { ...item, deleted: true, deletedAt: Date.now() };
+    await saveOrUpdateItem(updatedItem);
+}
+
+// Restore from Trash
+async function restoreItem(id) {
+    const item = savedPasswords.find(p => p.id === id);
+    if (!item) return;
+
+    const updatedItem = { ...item, deleted: false, deletedAt: null };
+    await saveOrUpdateItem(updatedItem);
+    renderTrashList(); // Refresh trash UI
+}
+
+async function deleteSelectedItems() {
+    const count = selectedIds.size;
+    if (count === 0) return;
+
+    const confirm = await showConfirmDialog(t('delete_selected_confirm', {count: count}));
+    if (confirm) {
+        if (currentUser) {
+            // Cloud: parallel delete
+            const promises = Array.from(selectedIds).map(id => deleteItem(id));
+            await Promise.all(promises);
+        } else {
+            // Local: batch update
+            const now = Date.now();
+            savedPasswords.forEach(p => {
+                if (selectedIds.has(p.id)) {
+                    p.deleted = true;
+                    p.deletedAt = now;
+                }
+            });
+            await savePasswordsData();
+            renderPasswordList(document.getElementById('fld').value);
+        }
+        toggleSelectionMode(false);
+        showSnackbar(t('pass_deleted'));
+    }
+}
+
+// Hard delete (Permanent)
+async function permanentDeleteItem(id) {
+    const index = savedPasswords.findIndex(p => p.id === id);
+    if (index === -1) return;
+
     if (currentUser) {
-        const item = savedPasswords[index];
-        if (item && item.id) {
-            try {
-                await deleteDoc(doc(db, "passwords", item.id));
-                // onSnapshot updates UI
-            } catch (e) {
-                console.error("Error deleting from cloud:", e);
-                showSnackbar(t('delete_fail'));
-            }
+        try {
+            await deleteDoc(doc(db, "passwords", id));
+        } catch (e) {
+            console.error("Error deleting from cloud:", e);
+            showSnackbar(t('delete_fail'));
         }
     } else {
         savedPasswords.splice(index, 1);
         await savePasswordsData();
-        renderPasswordList(document.getElementById('fld').value);
     }
+    renderTrashList(); // Refresh trash UI
+}
+
+async function emptyTrash() {
+    const deletedItems = savedPasswords.filter(p => p.deleted);
+    for (const item of deletedItems) {
+        await permanentDeleteItem(item.id);
+    }
+    renderTrashList();
+}
+
+function renderTrashList() {
+    const list = document.getElementById('trash_list');
+    list.innerHTML = '';
+    const deletedItems = savedPasswords.filter(p => p.deleted).sort((a, b) => b.deletedAt - a.deletedAt);
+    
+    if (deletedItems.length === 0) {
+        list.textContent = t('trash_empty');
+        return;
+    }
+
+    deletedItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        
+        div.innerHTML = `
+            <div style="flex:1">
+                <div class="font-bold">${item.title}</div>
+                <div class="text-small text-secondary">${new Date(item.deletedAt).toLocaleString()}</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <m3e-icon-button class="restore-btn" title="${t('restore')}"><m3e-icon name="restore_from_trash"></m3e-icon></m3e-icon-button>
+                <m3e-icon-button class="delete-forever-btn" title="${t('delete_permanently')}"><m3e-icon name="delete_forever" style="color:var(--md-sys-color-error)"></m3e-icon></m3e-icon-button>
+            </div>
+        `;
+
+        div.querySelector('.restore-btn').addEventListener('click', () => restoreItem(item.id));
+        div.querySelector('.delete-forever-btn').addEventListener('click', () => {
+            showConfirmDialog(t('delete_confirm')).then(res => {
+                if (res) permanentDeleteItem(item.id);
+            });
+        });
+
+        list.appendChild(div);
+    });
 }
 
 // --- Initialization & Auth ---
@@ -2451,6 +2698,29 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('hub_weak_item')?.addEventListener('click', () => renderSecurityList('weak'));
     document.getElementById('hub_no_2fa_item')?.addEventListener('click', () => renderSecurityList('no_2fa'));
     document.getElementById('hub_reused_item')?.addEventListener('click', () => renderSecurityList('reused'));
+
+    // Trash
+    document.getElementById('open_trash_btn')?.addEventListener('click', () => {
+        renderTrashList();
+        document.getElementById('trash_dialog').open = true;
+    });
+
+    document.getElementById('empty_trash_btn')?.addEventListener('click', () => {
+        showConfirmDialog(t('delete_confirm')).then(res => { if(res) emptyTrash(); });
+    });
+
+    // Selection Mode
+    document.getElementById('start_selection_btn')?.addEventListener('click', () => {
+        toggleSelectionMode(true);
+    });
+
+    document.getElementById('cancel_selection_btn')?.addEventListener('click', () => {
+        toggleSelectionMode(false);
+    });
+
+    document.getElementById('select_all_btn')?.addEventListener('click', selectAllItems);
+
+    document.getElementById('delete_selected_btn')?.addEventListener('click', deleteSelectedItems);
 
     // Setup Dialog
     document.getElementById('setup_btn')?.addEventListener('click', async () => {
