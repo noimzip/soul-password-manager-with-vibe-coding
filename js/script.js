@@ -1,7 +1,7 @@
 // Import Firebase SDKs
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence } from "firebase/firestore";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence, setDoc, getDocs } from "firebase/firestore";
 
 // Import UI Components
 import "@m3e/icon/dist/index.min.js";
@@ -82,6 +82,8 @@ let securityHubLists = {
 };
 let isSelectionMode = false;
 let selectedIds = new Set();
+let deviceCheckUnsubscribe = null;
+let newDeviceListenerUnsubscribe = null;
 
 // --- Translations ---
 const TRANSLATIONS = {
@@ -160,6 +162,16 @@ const TRANSLATIONS = {
         passkey_desc: "デバイスの生体認証を使ってログインできるようにします。<br>※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。",
         register_passkey: "Passkeyを登録",
         change_master_pass: "マスターパスワードを変更",
+        login_devices: "ログイン中のデバイス",
+        current_device: "現在のデバイス",
+        last_access: "最終アクセス: ",
+        force_logout: "強制ログアウト",
+        force_logout_confirm: "このデバイスを強制的にログアウトさせますか？",
+        device_revoked: "デバイスをログアウトさせました",
+        session_expired: "セッションが有効期限切れか、削除されました。",
+        new_login_detected: "新しい端末 ({device}) からのログインを検知しました",
+        security_alert: "セキュリティ通知",
+        unknown_device: "不明なデバイス",
         current_pass: "現在のパスワード",
         new_pass: "新規パスワード",
         confirm_new_pass: "新規パスワードの確認",
@@ -315,6 +327,16 @@ const TRANSLATIONS = {
         passkey_desc: "Enable login using device biometrics.<br>*Requires browser/device support for Passkey 'largeBlob' extension.",
         register_passkey: "Register Passkey",
         change_master_pass: "Change Master Password",
+        login_devices: "Logged-in Devices",
+        current_device: "Current Device",
+        last_access: "Last Access: ",
+        force_logout: "Force Logout",
+        force_logout_confirm: "Force logout this device?",
+        device_revoked: "Device logged out",
+        session_expired: "Session expired or revoked.",
+        new_login_detected: "New login detected from {device}",
+        security_alert: "Security Alert",
+        unknown_device: "Unknown Device",
         current_pass: "Current Password",
         new_pass: "New Password",
         confirm_new_pass: "Confirm New Password",
@@ -470,6 +492,16 @@ const TRANSLATIONS = {
         passkey_desc: "启用设备生物识别登录。<br>*需要浏览器/设备支持 Passkey 'largeBlob' 扩展。",
         register_passkey: "注册 Passkey",
         change_master_pass: "修改主密码",
+        login_devices: "登录设备",
+        current_device: "当前设备",
+        last_access: "最后访问: ",
+        force_logout: "强制注销",
+        force_logout_confirm: "强制注销此设备？",
+        device_revoked: "设备已注销",
+        session_expired: "会话已过期或被撤销。",
+        new_login_detected: "检测到来自 {device} 的新登录",
+        security_alert: "安全警报",
+        unknown_device: "未知设备",
         current_pass: "当前密码",
         new_pass: "新密码",
         confirm_new_pass: "确认新密码",
@@ -625,6 +657,16 @@ const TRANSLATIONS = {
         passkey_desc: "기기 생체 인증을 사용하여 로그인합니다.<br>*브라우저/기기가 Passkey 'largeBlob' 확장을 지원해야 합니다.",
         register_passkey: "Passkey 등록",
         change_master_pass: "마스터 비밀번호 변경",
+        login_devices: "로그인된 기기",
+        current_device: "현재 기기",
+        last_access: "최근 접속: ",
+        force_logout: "강제 로그아웃",
+        force_logout_confirm: "이 기기를 강제로 로그아웃하시겠습니까?",
+        device_revoked: "기기가 로그아웃되었습니다",
+        session_expired: "세션이 만료되었거나 취소되었습니다.",
+        new_login_detected: "{device}에서 새로운 로그인이 감지되었습니다",
+        security_alert: "보안 알림",
+        unknown_device: "알 수 없는 기기",
         current_pass: "현재 비밀번호",
         new_pass: "새 비밀번호",
         confirm_new_pass: "새 비밀번호 확인",
@@ -780,6 +822,16 @@ const TRANSLATIONS = {
         passkey_desc: "Anmeldung mit Geräte-Biometrie aktivieren.<br>*Erfordert Browser/Geräte-Unterstützung für Passkey 'largeBlob'-Erweiterung.",
         register_passkey: "Passkey registrieren",
         change_master_pass: "Master-Passwort ändern",
+        login_devices: "Angemeldete Geräte",
+        current_device: "Aktuelles Gerät",
+        last_access: "Letzter Zugriff: ",
+        force_logout: "Zwangabmeldung",
+        force_logout_confirm: "Dieses Gerät zwangsweise abmelden?",
+        device_revoked: "Gerät abgemeldet",
+        session_expired: "Sitzung abgelaufen oder widerrufen.",
+        new_login_detected: "Neue Anmeldung von {device} erkannt",
+        security_alert: "Sicherheitswarnung",
+        unknown_device: "Unbekanntes Gerät",
         current_pass: "Aktuelles Passwort",
         new_pass: "Neues Passwort",
         confirm_new_pass: "Neues Passwort bestätigen",
@@ -935,6 +987,16 @@ const TRANSLATIONS = {
         passkey_desc: "Activer la connexion via la biométrie de l'appareil.<br>*Nécessite un navigateur/appareil supportant l'extension Passkey 'largeBlob'.",
         register_passkey: "Enregistrer une Passkey",
         change_master_pass: "Changer le mot de passe maître",
+        login_devices: "Appareils connectés",
+        current_device: "Appareil actuel",
+        last_access: "Dernier accès : ",
+        force_logout: "Déconnexion forcée",
+        force_logout_confirm: "Forcer la déconnexion de cet appareil ?",
+        device_revoked: "Appareil déconnecté",
+        session_expired: "Session expirée ou révoquée.",
+        new_login_detected: "Nouvelle connexion détectée depuis {device}",
+        security_alert: "Alerte de sécurité",
+        unknown_device: "Appareil inconnu",
         current_pass: "Mot de passe actuel",
         new_pass: "Nouveau mot de passe",
         confirm_new_pass: "Confirmer le nouveau mot de passe",
@@ -1090,6 +1152,16 @@ const TRANSLATIONS = {
         passkey_desc: "Abilita l'accesso usando la biometria del dispositivo.<br>*Richiede supporto browser/dispositivo per estensione Passkey 'largeBlob'.",
         register_passkey: "Registra Passkey",
         change_master_pass: "Cambia Password Master",
+        login_devices: "Dispositivi Connessi",
+        current_device: "Dispositivo Attuale",
+        last_access: "Ultimo Accesso: ",
+        force_logout: "Logout Forzato",
+        force_logout_confirm: "Forzare il logout di questo dispositivo?",
+        device_revoked: "Dispositivo disconnesso",
+        session_expired: "Sessione scaduta o revocata.",
+        new_login_detected: "Nuovo accesso rilevato da {device}",
+        security_alert: "Avviso di sicurezza",
+        unknown_device: "Dispositivo Sconosciuto",
         current_pass: "Password Attuale",
         new_pass: "Nuova Password",
         confirm_new_pass: "Conferma Nuova Password",
@@ -2127,6 +2199,84 @@ function openDetailDialog(item) {
     dialog.open = true;
 }
 
+function getDeviceIcon(ua) {
+    if (!ua) return 'devices';
+    ua = ua.toLowerCase();
+    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return 'smartphone';
+    if (ua.includes('ipad') || ua.includes('tablet')) return 'tablet';
+    return 'computer';
+}
+
+async function renderDeviceList() {
+    const list = document.getElementById('device_list');
+    if (!list) return;
+    
+    if (!currentUser) {
+        list.textContent = t('history_empty');
+        return;
+    }
+    
+    list.innerHTML = '<div style="padding:10px; text-align:center;"><m3e-loading-indicator></m3e-loading-indicator></div>';
+    
+    try {
+        const q = query(collection(db, "devices"), where("uid", "==", currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        
+        list.innerHTML = '';
+        const currentDeviceId = getDeviceId();
+        
+        const devices = [];
+        querySnapshot.forEach((doc) => {
+            devices.push(doc.data());
+        });
+        
+        // Sort by lastLogin desc
+        devices.sort((a, b) => b.lastLogin - a.lastLogin);
+        
+        if (devices.length === 0) {
+            list.textContent = t('history_empty');
+            return;
+        }
+
+        devices.forEach(device => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            
+            const isCurrent = device.deviceId === currentDeviceId;
+            const iconName = getDeviceIcon(device.userAgent);
+            
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px; width:100%;">
+                    <m3e-icon name="${iconName}" style="font-size:24px; color:var(--md-sys-color-secondary);"></m3e-icon>
+                    <div style="flex:1;">
+                        <div class="font-bold" style="display:flex; align-items:center; gap:8px;">
+                            ${device.deviceName || t('unknown_device')}
+                            ${isCurrent ? `<span class="bg-strong" style="color:white; padding:2px 6px; border-radius:4px; font-size:10px;">${t('current_device')}</span>` : ''}
+                        </div>
+                        <div class="text-small text-secondary" style="word-break: break-all; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${device.userAgent}</div>
+                        <div class="text-small text-secondary">${t('last_access')}${new Date(device.lastLogin).toLocaleString()}</div>
+                    </div>
+                    ${!isCurrent ? `<m3e-icon-button class="revoke-btn" title="${t('force_logout')}"><m3e-icon name="logout" class="color-error"></m3e-icon></m3e-icon-button>` : ''}
+                </div>
+            `;
+            
+            if (!isCurrent) {
+                div.querySelector('.revoke-btn').addEventListener('click', () => {
+                    showConfirmDialog(t('force_logout_confirm')).then(res => {
+                        if (res) revokeDevice(device.deviceId);
+                    });
+                });
+            }
+            
+            list.appendChild(div);
+        });
+        
+    } catch (e) {
+        console.error("Error fetching devices:", e);
+        list.textContent = t('error');
+    }
+}
+
 function renderSecurityList(type) {
     const dialog = document.getElementById('security_list_dialog');
     const titleEl = document.getElementById('security_list_title');
@@ -2623,6 +2773,73 @@ function renderTrashList() {
 
 // --- Initialization & Auth ---
 
+function getDeviceId() {
+    let deviceId = localStorage.getItem('soul_device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID();
+        localStorage.setItem('soul_device_id', deviceId);
+    }
+    return deviceId;
+}
+
+function getDeviceName() {
+    const ua = navigator.userAgent;
+    let browser = "Unknown";
+    if (ua.indexOf("Firefox") > -1) browser = "Firefox";
+    else if (ua.indexOf("SamsungBrowser") > -1) browser = "Samsung Internet";
+    else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) browser = "Opera";
+    else if (ua.indexOf("Trident") > -1) browser = "Internet Explorer";
+    else if (ua.indexOf("Edge") > -1) browser = "Edge";
+    else if (ua.indexOf("Chrome") > -1) browser = "Chrome";
+    else if (ua.indexOf("Safari") > -1) browser = "Safari";
+
+    let os = "Unknown";
+    if (ua.indexOf("Win") > -1) os = "Windows";
+    else if (ua.indexOf("Mac") > -1) os = "MacOS";
+    else if (ua.indexOf("Linux") > -1) os = "Linux";
+    else if (ua.indexOf("Android") > -1) os = "Android";
+    else if (ua.indexOf("like Mac") > -1) os = "iOS";
+
+    return `${browser} on ${os}`;
+}
+
+async function registerLoginDevice(user) {
+    if (!user) return;
+    const deviceId = getDeviceId();
+    const deviceName = getDeviceName();
+    
+    const deviceData = {
+        deviceId: deviceId,
+        deviceName: deviceName,
+        userAgent: navigator.userAgent,
+        lastLogin: Date.now(),
+        uid: user.uid,
+        email: user.email || ''
+    };
+
+    try {
+        // Store in 'devices' collection with a composite key to allow querying by user
+        const deviceRef = doc(db, "devices", `${user.uid}_${deviceId}`);
+        await setDoc(deviceRef, deviceData, { merge: true });
+
+        // Listen for revocation (deletion of this document)
+        if (deviceCheckUnsubscribe) deviceCheckUnsubscribe();
+        deviceCheckUnsubscribe = onSnapshot(deviceRef, (docSnapshot) => {
+            if (!docSnapshot.exists()) {
+                console.log("Device session revoked.");
+                signOut(auth).then(() => {
+                    // Use alert or simple dialog since we are reloading
+                    alert(t('session_expired'));
+                    location.reload();
+                });
+            }
+        });
+
+    } catch (e) {
+        console.error("Error registering device:", e);
+    }
+}
+
 function initFirestoreSync(user) {
     console.log("Sync initialized for user:", user.uid);
     const q = query(collection(db, "passwords"), where("uid", "==", user.uid));
@@ -2640,6 +2857,52 @@ function initFirestoreSync(user) {
         }
         savedPasswords = newPasswords;
         renderPasswordList(document.getElementById('fld').value);
+    });
+}
+
+async function revokeDevice(deviceId) {
+    if (!currentUser) return;
+    try {
+        await deleteDoc(doc(db, "devices", `${currentUser.uid}_${deviceId}`));
+        renderDeviceList();
+        showSnackbar(t('device_revoked'));
+    } catch (e) {
+        console.error("Error revoking device:", e);
+        showSnackbar(t('error'));
+    }
+}
+
+function listenForNewDevices(user) {
+    if (newDeviceListenerUnsubscribe) newDeviceListenerUnsubscribe();
+
+    const q = query(collection(db, "devices"), where("uid", "==", user.uid));
+    
+    // Start monitoring from now. We ignore past logins.
+    const monitorStartTime = Date.now();
+
+    newDeviceListenerUnsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            // 'added' means a new device record, 'modified' means an existing device logged in again
+            if (change.type === 'added' || change.type === 'modified') {
+                const data = change.doc.data();
+                const currentDeviceId = getDeviceId();
+                
+                // Notify if it's NOT this device AND the login happened just now
+                if (data.deviceId !== currentDeviceId && data.lastLogin > monitorStartTime) {
+                    const deviceName = data.deviceName || t('unknown_device');
+                    const msg = t('new_login_detected', { device: deviceName });
+                    
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification(t('security_alert'), {
+                            body: msg,
+                            icon: './icons/icon-192.png'
+                        });
+                    } else {
+                        showSnackbar(msg);
+                    }
+                }
+            }
+        });
     });
 }
 
@@ -2667,8 +2930,22 @@ onAuthStateChanged(auth, (user) => {
         const loginDialog = document.getElementById('login_dialog');
         if (loginDialog) loginDialog.open = false;
         initFirestoreSync(user);
+        registerLoginDevice(user);
+        
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+        listenForNewDevices(user);
     } else {
         currentUser = null;
+        if (deviceCheckUnsubscribe) {
+            deviceCheckUnsubscribe();
+            deviceCheckUnsubscribe = null;
+        }
+        if (newDeviceListenerUnsubscribe) {
+            newDeviceListenerUnsubscribe();
+            newDeviceListenerUnsubscribe = null;
+        }
         // Check for local master auth
         const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
         if (!masterAuth) {
@@ -3184,6 +3461,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetId = btn.getAttribute('data-tab');
             const targetPanel = document.getElementById('settings_tab_' + targetId);
             if (targetPanel) targetPanel.classList.add('active');
+
+            if (targetId === 'security') {
+                renderDeviceList();
+            }
         });
     });
 
