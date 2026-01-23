@@ -80,7 +80,9 @@ const CONSTANTS = {
         DEFAULT_USER: 'soul_default_username',
         THEME: 'soul_theme',
         GENERATOR_HISTORY: 'soul_generator_history',
-        LANGUAGE: 'soul_language'
+        LANGUAGE: 'soul_language',
+        SIDEBAR_WIDTH: 'soul_sidebar_width',
+        THEME_COLOR: 'soul_theme_color'
     }
 };
 
@@ -107,6 +109,8 @@ let isSelectionMode = false;
 let selectedIds = new Set();
 let deviceCheckUnsubscribe = null;
 let newDeviceListenerUnsubscribe = null;
+let isTwoPaneMode = false;
+let contextMenuItem = null;
 
 // --- Translations ---
 const TRANSLATIONS = {
@@ -161,6 +165,7 @@ const TRANSLATIONS = {
         pass_check_title: "パスワードの安全性チェック",
         enter_pass: "パスワードを入力してください",
         add_pass_title: "新しいパスワードを追加",
+        placeholder_guide: "リストから項目を選択して詳細を表示するか、<br>新しいパスワードを追加してください。",
         service_name: "サービス名",
         category: "カテゴリ (任意)",
         website: "Webサイト URL",
@@ -239,6 +244,17 @@ const TRANSLATIONS = {
         warning_rec: "おすすめパスワードマネージャー:Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "おすすめしないパスワードマネージャー:このパスワードマネージャー, 紙で管理するやつ",
         search_placeholder: "検索...",
+        select_mode: "選択モード",
+        sort: "並び替え",
+        toggle_theme: "テーマ切り替え",
+        logout: "ログアウト",
+        empty_state_title: "パスワードがありません",
+        empty_state_desc: "右下の + ボタンから追加してください。",
+        fav_added: "お気に入りに追加しました",
+        fav_removed: "お気に入りから削除しました",
+        copy_password: "パスワードをコピー",
+        copy_username: "ユーザー名をコピー",
+        edit: "編集",
         
         // JS Strings
         weak: "弱いパスワード",
@@ -254,6 +270,7 @@ const TRANSLATIONS = {
         code_copied: "2FAコードをコピーしました",
         save_fail: "保存に失敗しました",
         delete_fail: "削除に失敗しました",
+        discard_changes_confirm: "変更を破棄しますか？",
         login_fail: "ユーザー名またはパスワードが間違っています。",
         google_login_fail: "Googleログインに失敗しました: ",
         logout_confirm: "ログアウトしますか？",
@@ -292,6 +309,8 @@ const TRANSLATIONS = {
         sort_date_asc: "更新日 (古い順)",
         language: "言語 / Language",
         about: "アプリについて",
+        theme_color: "テーマカラー",
+        reset: "リセット",
         send: "送信",
         version: "バージョン",
         yes: "はい",
@@ -349,6 +368,7 @@ const TRANSLATIONS = {
         pass_check_title: "Password Health Check",
         enter_pass: "Enter your password here",
         add_pass_title: "Add New Password",
+        placeholder_guide: "Select an item from the list to view details,<br>or add a new password.",
         service_name: "Service Name",
         category: "Category (Optional)",
         website: "Website URL",
@@ -427,6 +447,17 @@ const TRANSLATIONS = {
         warning_rec: "Recommended: Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "Not Recommended: This app, Paper",
         search_placeholder: "Search...",
+        select_mode: "Selection Mode",
+        sort: "Sort",
+        toggle_theme: "Toggle Theme",
+        logout: "Logout",
+        empty_state_title: "No passwords yet",
+        empty_state_desc: "Tap the + button to add one.",
+        fav_added: "Added to favorites",
+        fav_removed: "Removed from favorites",
+        copy_password: "Copy Password",
+        copy_username: "Copy Username",
+        edit: "Edit",
 
         // JS Strings
         weak: "Weak Password",
@@ -442,6 +473,7 @@ const TRANSLATIONS = {
         code_copied: "2FA code copied",
         save_fail: "Save failed",
         delete_fail: "Delete failed",
+        discard_changes_confirm: "Discard changes?",
         login_fail: "Invalid username or password.",
         google_login_fail: "Google login failed: ",
         logout_confirm: "Are you sure you want to logout?",
@@ -480,6 +512,8 @@ const TRANSLATIONS = {
         sort_date_asc: "Date (Oldest)",
         language: "Language / 言語",
         about: "About",
+        theme_color: "Theme Color",
+        reset: "Reset",
         send: "Send",
         version: "Version",
         yes: "Yes",
@@ -537,6 +571,7 @@ const TRANSLATIONS = {
         pass_check_title: "密码安全检查",
         enter_pass: "请输入密码",
         add_pass_title: "添加新密码",
+        placeholder_guide: "从列表中选择一项以查看详细信息，<br>或添加新密码。",
         service_name: "服务名称",
         category: "分类 (可选)",
         website: "网站 URL",
@@ -615,6 +650,17 @@ const TRANSLATIONS = {
         warning_rec: "推荐: Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "不推荐: 此应用, 纸张",
         search_placeholder: "搜索...",
+        select_mode: "选择模式",
+        sort: "排序",
+        toggle_theme: "切换主题",
+        logout: "注销",
+        empty_state_title: "暂无密码",
+        empty_state_desc: "点击 + 按钮添加一个。",
+        fav_added: "已添加到收藏夹",
+        fav_removed: "已从收藏夹移除",
+        copy_password: "复制密码",
+        copy_username: "复制用户名",
+        edit: "编辑",
         
         // JS Strings
         weak: "弱密码",
@@ -630,6 +676,7 @@ const TRANSLATIONS = {
         code_copied: "2FA 代码已复制",
         save_fail: "保存失败",
         delete_fail: "删除失败",
+        discard_changes_confirm: "放弃更改？",
         login_fail: "用户名或密码无效。",
         google_login_fail: "Google 登录失败: ",
         logout_confirm: "确定要注销吗？",
@@ -668,6 +715,8 @@ const TRANSLATIONS = {
         sort_date_asc: "日期 (最旧)",
         language: "语言 / Language",
         about: "关于",
+        theme_color: "主题颜色",
+        reset: "重置",
         send: "发送",
         version: "版本",
         yes: "是",
@@ -725,6 +774,7 @@ const TRANSLATIONS = {
         pass_check_title: "비밀번호 안전성 검사",
         enter_pass: "비밀번호를 입력하세요",
         add_pass_title: "새 비밀번호 추가",
+        placeholder_guide: "목록에서 항목을 선택하여 세부 정보를 보거나,<br>새 비밀번호를 추가하세요.",
         service_name: "서비스 이름",
         category: "카테고리 (선택)",
         website: "웹사이트 URL",
@@ -803,6 +853,17 @@ const TRANSLATIONS = {
         warning_rec: "추천: Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "비추천: 이 앱, 종이",
         search_placeholder: "검색...",
+        select_mode: "선택 모드",
+        sort: "정렬",
+        toggle_theme: "테마 전환",
+        logout: "로그아웃",
+        empty_state_title: "비밀번호 없음",
+        empty_state_desc: "오른쪽 하단의 + 버튼을 눌러 추가하세요.",
+        fav_added: "즐겨찾기에 추가됨",
+        fav_removed: "즐겨찾기에서 제거됨",
+        copy_password: "비밀번호 복사",
+        copy_username: "사용자명 복사",
+        edit: "편집",
         
         // JS Strings
         weak: "약한 비밀번호",
@@ -818,6 +879,7 @@ const TRANSLATIONS = {
         code_copied: "2FA 코드 복사됨",
         save_fail: "저장 실패",
         delete_fail: "삭제 실패",
+        discard_changes_confirm: "변경 사항을 취소하시겠습니까?",
         login_fail: "사용자명 또는 비밀번호가 올바르지 않습니다.",
         google_login_fail: "Google 로그인 실패: ",
         logout_confirm: "로그아웃하시겠습니까?",
@@ -856,6 +918,8 @@ const TRANSLATIONS = {
         sort_date_asc: "날짜 (오래된순)",
         language: "언어 / Language",
         about: "앱 정보",
+        theme_color: "테마 색상",
+        reset: "초기화",
         send: "보내기",
         version: "버전",
         yes: "예",
@@ -913,6 +977,7 @@ const TRANSLATIONS = {
         pass_check_title: "Passwort-Sicherheitscheck",
         enter_pass: "Passwort hier eingeben",
         add_pass_title: "Neues Passwort hinzufügen",
+        placeholder_guide: "Wählen Sie ein Element aus der Liste aus, um Details anzuzeigen,<br>oder fügen Sie ein neues Passwort hinzu.",
         service_name: "Dienstname",
         category: "Kategorie (Optional)",
         website: "Website-URL",
@@ -991,6 +1056,17 @@ const TRANSLATIONS = {
         warning_rec: "Empfohlen: Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "Nicht empfohlen: Diese App, Papier",
         search_placeholder: "Suchen...",
+        select_mode: "Auswahlmodus",
+        sort: "Sortieren",
+        toggle_theme: "Thema umschalten",
+        logout: "Abmelden",
+        empty_state_title: "Noch keine Passwörter",
+        empty_state_desc: "Tippen Sie auf +, um eines hinzuzufügen.",
+        fav_added: "Zu Favoriten hinzugefügt",
+        fav_removed: "Aus Favoriten entfernt",
+        copy_password: "Passwort kopieren",
+        copy_username: "Benutzernamen kopieren",
+        edit: "Bearbeiten",
         
         // JS Strings
         weak: "Schwaches Passwort",
@@ -1006,6 +1082,7 @@ const TRANSLATIONS = {
         code_copied: "2FA-Code kopiert",
         save_fail: "Speichern fehlgeschlagen",
         delete_fail: "Löschen fehlgeschlagen",
+        discard_changes_confirm: "Änderungen verwerfen?",
         login_fail: "Ungültiger Benutzername oder Passwort.",
         google_login_fail: "Google-Login fehlgeschlagen: ",
         logout_confirm: "Möchten Sie sich wirklich abmelden?",
@@ -1044,6 +1121,8 @@ const TRANSLATIONS = {
         sort_date_asc: "Datum (Älteste)",
         language: "Sprache / Language",
         about: "Über",
+        theme_color: "Themenfarbe",
+        reset: "Zurücksetzen",
         send: "Senden",
         version: "Version",
         yes: "Ja",
@@ -1101,6 +1180,7 @@ const TRANSLATIONS = {
         pass_check_title: "Vérification de sécurité du mot de passe",
         enter_pass: "Entrez votre mot de passe ici",
         add_pass_title: "Ajouter un nouveau mot de passe",
+        placeholder_guide: "Sélectionnez un élément dans la liste pour voir les détails,<br>ou ajoutez un nouveau mot de passe.",
         service_name: "Nom du service",
         category: "Catégorie (Optionnel)",
         website: "URL du site web",
@@ -1179,6 +1259,17 @@ const TRANSLATIONS = {
         warning_rec: "Recommandé : Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "Non recommandé : Cette application, Papier",
         search_placeholder: "Rechercher...",
+        select_mode: "Mode sélection",
+        sort: "Trier",
+        toggle_theme: "Changer de thème",
+        logout: "Déconnexion",
+        empty_state_title: "Pas encore de mots de passe",
+        empty_state_desc: "Appuyez sur le bouton + pour en ajouter un.",
+        fav_added: "Ajouté aux favoris",
+        fav_removed: "Retiré des favoris",
+        copy_password: "Copier le mot de passe",
+        copy_username: "Copier le nom d'utilisateur",
+        edit: "Modifier",
         
         // JS Strings
         weak: "Mot de passe faible",
@@ -1194,6 +1285,7 @@ const TRANSLATIONS = {
         code_copied: "Code 2FA copié",
         save_fail: "Échec de l'enregistrement",
         delete_fail: "Échec de la suppression",
+        discard_changes_confirm: "Ignorer les modifications ?",
         login_fail: "Nom d'utilisateur ou mot de passe invalide.",
         google_login_fail: "Échec de la connexion Google : ",
         logout_confirm: "Êtes-vous sûr de vouloir vous déconnecter ?",
@@ -1232,6 +1324,8 @@ const TRANSLATIONS = {
         sort_date_asc: "Date (Plus ancien)",
         language: "Langue / Language",
         about: "À propos",
+        theme_color: "Couleur du thème",
+        reset: "Réinitialiser",
         send: "Envoyer",
         version: "Version",
         yes: "Oui",
@@ -1289,6 +1383,7 @@ const TRANSLATIONS = {
         pass_check_title: "Controllo Sicurezza Password",
         enter_pass: "Inserisci qui la tua password",
         add_pass_title: "Aggiungi Nuova Password",
+        placeholder_guide: "Seleziona un elemento dall'elenco per visualizzare i dettagli,<br>o aggiungi una nuova password.",
         service_name: "Nome Servizio",
         category: "Categoria (Opzionale)",
         website: "URL Sito Web",
@@ -1367,6 +1462,17 @@ const TRANSLATIONS = {
         warning_rec: "Consigliati: Bitwarden, Proton Pass, KeePass",
         warning_not_rec: "Non consigliati: Questa app, Carta",
         search_placeholder: "Cerca...",
+        select_mode: "Modalità Selezione",
+        sort: "Ordina",
+        toggle_theme: "Cambia Tema",
+        logout: "Esci",
+        empty_state_title: "Nessuna password",
+        empty_state_desc: "Tocca il pulsante + per aggiungerne una.",
+        fav_added: "Aggiunto ai preferiti",
+        fav_removed: "Rimosso dai preferiti",
+        copy_password: "Copia Password",
+        copy_username: "Copia Nome Utente",
+        edit: "Modifica",
         
         // JS Strings
         weak: "Password Debole",
@@ -1382,6 +1488,7 @@ const TRANSLATIONS = {
         code_copied: "Codice 2FA copiato",
         save_fail: "Salvataggio fallito",
         delete_fail: "Eliminazione fallita",
+        discard_changes_confirm: "Ignorare le modifiche?",
         login_fail: "Nome utente o password non validi.",
         google_login_fail: "Login Google fallito: ",
         logout_confirm: "Sei sicuro di voler uscire?",
@@ -1420,6 +1527,8 @@ const TRANSLATIONS = {
         sort_date_asc: "Data (Più vecchia)",
         language: "Lingua / Language",
         about: "Informazioni",
+        theme_color: "Colore Tema",
+        reset: "Reimposta",
         send: "Invia",
         version: "Versione",
         yes: "Sì",
@@ -1467,6 +1576,14 @@ function updateLanguage(lang) {
         const key = el.getAttribute('data-i18n-label');
         if (TRANSLATIONS[lang][key]) {
             el.setAttribute('label', TRANSLATIONS[lang][key]);
+        }
+    });
+
+    // Update titles (tooltips)
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (TRANSLATIONS[lang][key]) {
+            el.title = TRANSLATIONS[lang][key];
         }
     });
 
@@ -2286,6 +2403,136 @@ function updateDetailRisks(item) {
     });
 }
 
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+function applyThemeColor(color) {
+    const root = document.documentElement;
+    const rgb = hexToRgb(color);
+    if (!rgb) return;
+
+    // Update primary color variables
+    root.style.setProperty('--md-sys-color-primary', color);
+    
+    // Generate container/on-colors (simplified logic for demo)
+    // In a real Material 3 implementation, we would use a tonal palette generator.
+    // Here we just adjust opacity/lightness for containers.
+    
+    // Primary Container (Lighter version of primary)
+    const containerColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
+    // On Primary Container (Darker version of primary)
+    // For simplicity, we keep using the primary color or a dark variant for text on container
+    
+    // We need to be careful about dark mode.
+    // The CSS variables are redefined in .dark-theme.
+    // To support custom colors in both modes properly without a full palette generator,
+    // we will just override the main primary color which is the most visible one.
+    // More complex theming would require updating all related tokens.
+    
+    // For this implementation, we will update:
+    // --md-sys-color-primary
+    // --md-sys-color-primary-container (approx)
+    
+    // Note: This simple override might not have perfect contrast in all cases.
+    
+    // Update UI input
+    const input = document.getElementById('setting_theme_color');
+    const label = document.getElementById('theme_color_value');
+    if (input) input.value = color;
+    if (label) label.textContent = color;
+
+    // Save
+    localStorage.setItem(CONSTANTS.STORAGE.THEME_COLOR, color);
+    
+    // Update meta theme-color
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', color);
+}
+
+function updateLayout() {
+    const width = window.innerWidth;
+    const newMode = width >= 900;
+    
+    if (newMode !== isTwoPaneMode) {
+        isTwoPaneMode = newMode;
+        const detailBody = document.getElementById('detail_form_body');
+        const detailActions = document.getElementById('detail_form_actions');
+        const rightPaneContainer = document.getElementById('right_pane_detail_container');
+        const dialog = document.getElementById('detail_password_dialog');
+        
+        if (isTwoPaneMode) {
+            // Move to Right Pane
+            if (dialog.open) dialog.open = false; // Close dialog if open
+            rightPaneContainer.appendChild(detailBody);
+            rightPaneContainer.appendChild(detailActions);
+            detailActions.removeAttribute('slot');
+            
+            // If we have a selected item, ensure pane is visible
+            if (currentDetailId) {
+                document.getElementById('right_pane_placeholder').classList.add('hidden');
+                rightPaneContainer.classList.remove('hidden');
+            }
+        } else {
+            // Move back to Dialog
+            dialog.appendChild(detailBody);
+            dialog.appendChild(detailActions);
+            detailActions.setAttribute('slot', 'actions');
+            document.getElementById('right_pane_content').classList.add('hidden');
+        }
+    }
+}
+
+function closeDetailView() {
+    currentDetailId = null;
+    stopTOTPUpdate();
+    
+    // Clear sensitive fields
+    document.getElementById('detail_pass_value').value = '';
+    document.getElementById('detail_pass_secret').value = '';
+
+    if (isTwoPaneMode) {
+        document.getElementById('right_pane_detail_container').classList.add('hidden');
+        document.getElementById('right_pane_placeholder').classList.remove('hidden');
+        document.querySelectorAll('m3e-nav-menu-item.selected').forEach(el => el.classList.remove('selected'));
+    } else {
+        document.getElementById('detail_password_dialog').open = false;
+    }
+}
+
+function hasDetailChanges() {
+    if (!currentDetailId) return false;
+    const item = savedPasswords.find(p => p.id === currentDetailId);
+    if (!item) return false;
+
+    const currentTitle = document.getElementById('detail_pass_title').value;
+    const currentCategory = document.getElementById('detail_pass_category').value;
+    const currentWebsite = document.getElementById('detail_pass_website').value;
+    const currentUsername = document.getElementById('detail_pass_username').value;
+    const currentValue = document.getElementById('detail_pass_value').value;
+    const currentSecret = document.getElementById('detail_pass_secret').value;
+    const isFavorite = document.getElementById('detail_pass_favorite_btn').querySelector('m3e-icon').name === 'star';
+
+    return (
+        currentTitle !== (item.title || '') ||
+        currentCategory !== (item.category || '') ||
+        currentWebsite !== (item.website || '') ||
+        currentUsername !== (item.username || '') ||
+        currentValue !== (item.password || '') ||
+        currentSecret !== (item.secret || '') ||
+        isFavorite !== (item.favorite || false)
+    );
+}
+
+function checkDetailChanges() {
+    const updateBtn = document.getElementById('update_password_btn');
+    if (updateBtn) updateBtn.disabled = !hasDetailChanges();
+}
+
 function openDetailDialog(item) {
     currentDetailId = item.id;
     const dialog = document.getElementById('detail_password_dialog');
@@ -2363,6 +2610,7 @@ function openDetailDialog(item) {
                         
                         updateDetailStrength(h.password || '');
                         startTOTPUpdate(h.secret || '');
+                        checkDetailChanges();
                     }
                 });
             });
@@ -2380,7 +2628,24 @@ function openDetailDialog(item) {
     updateDetailStrength(item.password || '');
     startTOTPUpdate(item.secret);
     updateDetailRisks(item); // Update risks
-    dialog.open = true;
+    checkDetailChanges(); // Initialize button state
+    
+    if (isTwoPaneMode) {
+        document.getElementById('right_pane_placeholder').classList.add('hidden');
+        document.getElementById('right_pane_detail_container').classList.remove('hidden');
+        
+        // Highlight selection
+        document.querySelectorAll('m3e-nav-menu-item').forEach(el => {
+            if (el.dataset.id === item.id) el.classList.add('selected');
+            else el.classList.remove('selected');
+        });
+        
+        // Hide close button in pane mode as it's redundant or change behavior
+        document.getElementById('close_detail_btn').style.display = 'none';
+    } else {
+        document.getElementById('close_detail_btn').style.display = '';
+        dialog.open = true;
+    }
 }
 
 function getDeviceIcon(ua) {
@@ -2506,7 +2771,15 @@ function renderSecurityList(type) {
             div.appendChild(infoDiv);
 
             div.addEventListener('click', () => {
-                openDetailDialog(item);
+                if (hasDetailChanges()) {
+                    showConfirmDialog(t('discard_changes_confirm')).then(res => {
+                        if (res) {
+                            openDetailDialog(item);
+                        }
+                    });
+                } else {
+                    openDetailDialog(item);
+                }
             });
 
             contentEl.appendChild(div);
@@ -2514,6 +2787,32 @@ function renderSecurityList(type) {
     }
 
     dialog.open = true;
+}
+
+function showContextMenu(x, y, item) {
+    contextMenuItem = item;
+    const menu = document.getElementById('context_menu');
+    if (!menu) return;
+
+    // Position
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.classList.remove('hidden');
+
+    // Adjust if off screen (simple check)
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+        menu.style.left = `${window.innerWidth - rect.width - 8}px`;
+    }
+    if (rect.bottom > window.innerHeight) {
+        menu.style.top = `${y - rect.height}px`;
+    }
+}
+
+function hideContextMenu() {
+    const menu = document.getElementById('context_menu');
+    if (menu) menu.classList.add('hidden');
+    contextMenuItem = null;
 }
 
 function toggleSelectionMode(active) {
@@ -2646,6 +2945,17 @@ function renderPasswordList(filterText) {
     const navMenu = document.querySelector('m3e-nav-menu');
     const favList = document.getElementById('favorite_list');
     const passwordList = document.getElementById('password_list');
+    const emptyState = document.getElementById('empty_state_container');
+
+    // Check if currently opened item still exists
+    if (currentDetailId) {
+        const exists = savedPasswords.some(p => p.id === currentDetailId && !p.deleted);
+        if (!exists) {
+            closeDetailView();
+        } else {
+            checkDetailChanges();
+        }
+    }
 
     // Clear lists
     favList.querySelectorAll('m3e-nav-menu-item').forEach(item => item.remove());
@@ -2656,6 +2966,7 @@ function renderPasswordList(filterText) {
 
     const categories = {};
     const categoryNames = new Set();
+    let visibleCount = 0;
 
     savedPasswords.forEach((item, index) => {
         if (item.deleted) return; // Skip deleted items
@@ -2664,6 +2975,7 @@ function renderPasswordList(filterText) {
             return;
         }
 
+        visibleCount++;
         if (item.favorite) {
             addPasswordToUI(item, index, favList);
         } else {
@@ -2676,9 +2988,21 @@ function renderPasswordList(filterText) {
         if (item.category) categoryNames.add(item.category);
     });
 
+    // Handle Empty State
+    if (visibleCount === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (favList) favList.classList.add('hidden');
+    } else {
+        if (emptyState) emptyState.classList.add('hidden');
+        // Only show favorite list if it has items
+        if (favList.children.length > 1) favList.classList.remove('hidden'); // > 1 because of heading
+        else favList.classList.add('hidden');
+    }
+
     // Create groups
     Object.keys(categories).sort().forEach(catName => {
         const group = document.createElement('m3e-nav-menu-item-group');
+        group.style.marginBottom = '8px';
         const heading = document.createElement('m3e-heading');
         heading.slot = 'label';
         heading.variant = 'label';
@@ -2708,6 +3032,8 @@ function renderPasswordList(filterText) {
 function addPasswordToUI(item, index, listGroup) {
     const newItem = document.createElement('m3e-nav-menu-item');
     newItem.style.position = 'relative';
+    newItem.classList.add('swipe-item');
+    newItem.dataset.id = item.id; // For selection highlighting
     
     if (isSelectionMode) {
         // Selection Mode UI
@@ -2720,9 +3046,21 @@ function addPasswordToUI(item, index, listGroup) {
         if (isSelected) icon.style.color = 'var(--md-sys-color-primary)';
         newItem.appendChild(icon);
 
-        const label = document.createElement('span');
+        const label = document.createElement('div');
         label.slot = 'label';
-        label.textContent = item.title;
+        label.className = 'nav-item-label-container';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = item.title;
+        titleSpan.className = 'nav-item-title';
+        label.appendChild(titleSpan);
+
+        if (item.category) {
+            const catSpan = document.createElement('span');
+            catSpan.className = 'category-badge';
+            catSpan.textContent = item.category;
+            label.appendChild(catSpan);
+        }
         newItem.appendChild(label);
 
         newItem.addEventListener('click', (e) => {
@@ -2739,6 +3077,10 @@ function addPasswordToUI(item, index, listGroup) {
         newItem.addEventListener('drop', handleDrop);
         newItem.addEventListener('dragend', handleDragEnd);
         
+        if (isTwoPaneMode && currentDetailId === item.id) {
+            newItem.classList.add('selected');
+        }
+
         let icon;
         if (item.website) {
             try {
@@ -2764,10 +3106,21 @@ function addPasswordToUI(item, index, listGroup) {
             icon.classList.add(strengthClass);
         }
 
-        const label = document.createElement('span');
+        const label = document.createElement('div');
         label.slot = 'label';
-        label.textContent = item.title;
-        label.classList.add(strengthClass);
+        label.className = 'nav-item-label-container';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = item.title;
+        titleSpan.className = 'nav-item-title ' + strengthClass;
+        label.appendChild(titleSpan);
+
+        if (item.category) {
+            const catSpan = document.createElement('span');
+            catSpan.className = 'category-badge';
+            catSpan.textContent = item.category;
+            label.appendChild(catSpan);
+        }
 
         newItem.appendChild(icon);
         newItem.appendChild(label);
@@ -2792,8 +3145,100 @@ function addPasswordToUI(item, index, listGroup) {
         newItem.appendChild(favBtn);
 
         // Click to open detail
-        newItem.addEventListener('click', function() {
-            openDetailDialog(item);
+        newItem.addEventListener('click', function(e) {
+            if (longPressTriggered) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
+            if (hasDetailChanges()) {
+                showConfirmDialog(t('discard_changes_confirm')).then(res => {
+                    if (res) {
+                        openDetailDialog(item);
+                    }
+                });
+            } else {
+                openDetailDialog(item);
+            }
+        });
+
+        // Swipe Logic
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let currentX = 0;
+        let longPressTimer;
+        let longPressTriggered = false;
+        const SWIPE_THRESHOLD = 80;
+
+        newItem.addEventListener('touchstart', (e) => {
+            if (isSelectionMode) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            currentX = 0;
+            longPressTriggered = false;
+            newItem.style.transition = 'none';
+            
+            longPressTimer = setTimeout(() => {
+                longPressTriggered = true;
+                if (navigator.vibrate) navigator.vibrate(50);
+                showContextMenu(touchStartX, touchStartY, item);
+            }, 500);
+        }, {passive: true});
+
+        newItem.addEventListener('touchmove', (e) => {
+            if (isSelectionMode) return;
+            if (longPressTimer) clearTimeout(longPressTimer);
+            if (!touchStartX) return;
+            
+            const touch = e.touches[0];
+            const diffX = touch.clientX - touchStartX;
+            const diffY = touch.clientY - touchStartY;
+
+            // Check if movement is mostly horizontal
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+                if (e.cancelable) e.preventDefault();
+                
+                currentX = diffX;
+                // Limit drag distance visually
+                const dragX = diffX > 0 ? Math.min(diffX, 150) : Math.max(diffX, -150);
+                newItem.style.transform = `translateX(${dragX}px)`;
+                
+                // Visual cues
+                if (diffX > 0) {
+                    // Right: Favorite (Yellowish)
+                    newItem.style.backgroundColor = 'var(--md-sys-color-secondary-container)';
+                } else {
+                    // Left: Delete (Reddish)
+                    newItem.style.backgroundColor = 'var(--md-sys-color-error-container)';
+                }
+            }
+        }, {passive: false});
+
+        newItem.addEventListener('touchend', async () => {
+            if (isSelectionMode) return;
+            if (longPressTimer) clearTimeout(longPressTimer);
+            newItem.style.transition = 'transform 0.3s ease, background-color 0.3s ease';
+            newItem.style.transform = '';
+            newItem.style.backgroundColor = '';
+            
+            if (currentX > SWIPE_THRESHOLD) {
+                // Favorite
+                item.favorite = !item.favorite;
+                await saveOrUpdateItem(item);
+                showSnackbar(item.favorite ? t('fav_added') : t('fav_removed'));
+            } else if (currentX < -SWIPE_THRESHOLD) {
+                // Delete
+                showConfirmDialog(t('delete_confirm')).then(res => {
+                    if (res) deleteItem(item.id);
+                });
+            }
+        });
+
+        // Desktop Right Click
+        newItem.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY, item);
         });
     }
 
@@ -3344,7 +3789,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 await saveOrUpdateItem(newItem);
-                document.getElementById('detail_password_dialog').open = false;
+                
+                if (!isTwoPaneMode) {
+                    document.getElementById('detail_password_dialog').open = false;
+                }
                 showSnackbar(t('pass_updated'));
             }
         }
@@ -3356,10 +3804,22 @@ document.addEventListener('DOMContentLoaded', () => {
             showConfirmDialog(t('delete_confirm')).then(async res => {
                 if (res) {
                     await deleteItem(currentDetailId);
-                    document.getElementById('detail_password_dialog').open = false;
+                    closeDetailView();
                     showSnackbar(t('pass_deleted'));
                 }
             });
+        }
+    });
+
+    document.getElementById('close_detail_btn')?.addEventListener('click', () => {
+        if (hasDetailChanges()) {
+            showConfirmDialog(t('discard_changes_confirm')).then(res => {
+                if (res) {
+                    closeDetailView();
+                }
+            });
+        } else {
+            closeDetailView();
         }
     });
 
@@ -3392,6 +3852,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = generatePasswordString(16, true, true, true);
         document.getElementById('detail_pass_value').value = password;
         updateDetailStrength(password);
+        checkDetailChanges();
     });
 
     document.getElementById('regenerate_password_btn')?.addEventListener('click', generatePassword);
@@ -3411,9 +3872,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Detail Dialog Events
     document.getElementById('detail_password_dialog')?.addEventListener('closed', () => {
         stopTOTPUpdate();
-        // Clear sensitive fields from DOM when dialog closes
-        document.getElementById('detail_pass_value').value = '';
-        document.getElementById('detail_pass_secret').value = '';
+        if (!isTwoPaneMode) {
+            document.getElementById('detail_pass_value').value = '';
+            document.getElementById('detail_pass_secret').value = '';
+        }
     });
 
     document.getElementById('add_password_dialog')?.addEventListener('closed', () => {
@@ -3423,7 +3885,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStrengthView('', null, 'new_pass_strength_bar', null);
     });
 
-    document.getElementById('detail_pass_value')?.addEventListener('input', (e) => updateDetailStrength(e.target.value));
+    document.getElementById('detail_pass_value')?.addEventListener('input', (e) => {
+        updateDetailStrength(e.target.value);
+        checkDetailChanges();
+    });
+
+    ['detail_pass_title', 'detail_pass_category', 'detail_pass_website', 'detail_pass_username', 'detail_pass_secret'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', checkDetailChanges);
+    });
+
     document.getElementById('open_website_btn')?.addEventListener('click', () => {
         let url = document.getElementById('detail_pass_website').value;
         if (url) {
@@ -3485,6 +3955,7 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.name = 'star';
             icon.style.color = '#fbc02d';
         }
+        checkDetailChanges();
     });
 
     // Initial Generator Run
@@ -3545,6 +4016,15 @@ document.addEventListener('DOMContentLoaded', () => {
         showSnackbar(t('settings_saved'));
     });
 
+    // Theme Color Setting
+    document.getElementById('setting_theme_color')?.addEventListener('input', (e) => {
+        applyThemeColor(e.target.value);
+    });
+
+    document.getElementById('reset_theme_color_btn')?.addEventListener('click', () => {
+        applyThemeColor('#0061a4'); // Default Blue
+    });
+
     // Fill default username in "Add Password" dialog
     document.getElementById('fill_new_pass_default_username_btn')?.addEventListener('click', () => {
         const val = localStorage.getItem(CONSTANTS.STORAGE.DEFAULT_USER);
@@ -3562,6 +4042,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (val) {
             document.getElementById('detail_pass_username').value = val;
             showSnackbar(t('default_user_filled'));
+            checkDetailChanges();
         } else {
             showSnackbar(t('no_default_user'));
         }
@@ -3679,6 +4160,83 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('guide_action_data')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
     document.getElementById('guide_action_settings')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
+
+    // Placeholder Action
+    document.getElementById('placeholder_create_btn')?.addEventListener('click', () => {
+        document.getElementById('add_password_dialog').open = true;
+    });
+
+    // Context Menu Actions
+    document.getElementById('ctx_copy_pass')?.addEventListener('click', () => {
+        if (contextMenuItem) {
+            copyToClipboard(contextMenuItem.password, t('pass_copied'));
+        }
+        hideContextMenu();
+    });
+
+    document.getElementById('ctx_copy_user')?.addEventListener('click', () => {
+        if (contextMenuItem) {
+            copyToClipboard(contextMenuItem.username, t('user_copied'));
+        }
+        hideContextMenu();
+    });
+
+    document.getElementById('ctx_edit')?.addEventListener('click', () => {
+        if (contextMenuItem) {
+            openDetailDialog(contextMenuItem);
+        }
+        hideContextMenu();
+    });
+
+    document.getElementById('ctx_delete')?.addEventListener('click', () => {
+        if (contextMenuItem) {
+            const id = contextMenuItem.id;
+            showConfirmDialog(t('delete_confirm')).then(res => {
+                if (res) deleteItem(id);
+            });
+        }
+        hideContextMenu();
+    });
+
+    // Hide context menu on click outside
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('context_menu');
+        if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target)) {
+            hideContextMenu();
+        }
+    });
+    document.addEventListener('scroll', hideContextMenu, {capture: true, passive: true});
+
+    // Sidebar Resizer
+    const resizer = document.getElementById('sidebar_resizer');
+    const sidebar = document.getElementById('left_sidebar_content');
+    if (resizer && sidebar) {
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            let newWidth = e.clientX;
+            if (newWidth < 200) newWidth = 200; // Min width
+            if (newWidth > 600) newWidth = 600; // Max width
+            sidebar.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = '';
+                localStorage.setItem(CONSTANTS.STORAGE.SIDEBAR_WIDTH, sidebar.style.width);
+            }
+        });
+    }
 
     // Feedback
     document.getElementById('open_feedback_btn')?.addEventListener('click', () => {
@@ -3860,4 +4418,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set App Version
     const versionEl = document.getElementById('setting_app_version');
     if (versionEl) versionEl.textContent = CONSTANTS.APP_VERSION;
+
+    // Load Sidebar Width
+    const savedWidth = localStorage.getItem(CONSTANTS.STORAGE.SIDEBAR_WIDTH);
+    if (savedWidth && sidebar) {
+        sidebar.style.width = savedWidth;
+    }
+
+    // Load Theme Color
+    const savedColor = localStorage.getItem(CONSTANTS.STORAGE.THEME_COLOR);
+    if (savedColor) {
+        applyThemeColor(savedColor);
+    }
+
+    // Layout handling
+    window.addEventListener('resize', updateLayout);
+    updateLayout(); // Initial check
 });

@@ -44,11 +44,11 @@
           <div id="search_passwords" class="header-search">
             <input id="fld" type="search" placeholder="Search" data-i18n-placeholder="search_placeholder">
           </div>
-          <m3e-icon-button id="start_selection_btn">
+          <m3e-icon-button id="start_selection_btn" data-i18n-title="select_mode">
             <m3e-icon name="checklist"></m3e-icon>
           </m3e-icon-button>
           <div class="sort-wrapper">
-            <m3e-icon-button id="sort_btn">
+            <m3e-icon-button id="sort_btn" data-i18n-title="sort">
               <m3e-icon name="sort"></m3e-icon>
             </m3e-icon-button>
             <div id="sort_menu" class="sort-menu hidden">
@@ -60,10 +60,10 @@
               <m3e-button class="sort-item" variant="text" data-value="updated_asc"><span data-i18n="sort_date_asc">Date (Oldest)</span></m3e-button>
             </div>
           </div>
-          <m3e-icon-button id="theme_toggle_btn">
+          <m3e-icon-button id="theme_toggle_btn" data-i18n-title="toggle_theme">
             <m3e-icon name="dark_mode"></m3e-icon>
           </m3e-icon-button>
-          <m3e-icon-button id="logout_btn">
+          <m3e-icon-button id="logout_btn" data-i18n-title="logout">
             <m3e-icon name="logout"></m3e-icon>
           </m3e-icon-button>
         </div>
@@ -80,22 +80,42 @@
       </m3e-app-bar>
     </header>
 
-    <section id="left_sidebar_content">
-      <m3e-nav-menu>
-        <m3e-nav-menu-item-group id="favorite_list">
-          <m3e-heading slot="label" variant="label" size="large" data-i18n="favorites">お気に入り</m3e-heading>
-        </m3e-nav-menu-item-group>
-        <m3e-nav-menu-item-group id="password_list">
-          <m3e-heading slot="label" variant="label" size="large" data-i18n="passwords">パスワード</m3e-heading>
-          <!-- Items will be injected here -->
-        </m3e-nav-menu-item-group>
-        <m3e-divider></m3e-divider>
-        <m3e-nav-menu-item id="open_trash_btn">
-            <m3e-icon slot="icon" name="delete"></m3e-icon>
-            <span slot="label" data-i18n="trash">ゴミ箱</span>
-        </m3e-nav-menu-item>
-      </m3e-nav-menu>
-    </section>
+    <div id="app_main_layout">
+        <section id="left_sidebar_content">
+          <m3e-nav-menu>
+            <m3e-nav-menu-item-group id="favorite_list">
+              <m3e-heading slot="label" variant="label" size="large" data-i18n="favorites">お気に入り</m3e-heading>
+            </m3e-nav-menu-item-group>
+            <m3e-nav-menu-item-group id="password_list">
+              <m3e-heading slot="label" variant="label" size="large" data-i18n="passwords">パスワード</m3e-heading>
+              <!-- Items will be injected here -->
+            </m3e-nav-menu-item-group>
+            <m3e-divider></m3e-divider>
+            <m3e-nav-menu-item id="open_trash_btn">
+                <m3e-icon slot="icon" name="delete"></m3e-icon>
+                <span slot="label" data-i18n="trash">ゴミ箱</span>
+            </m3e-nav-menu-item>
+          </m3e-nav-menu>
+          <div id="empty_state_container" class="hidden">
+              <m3e-icon name="lock_open" style="font-size: 64px; color: var(--md-sys-color-surface-variant); margin-bottom: 16px;"></m3e-icon>
+              <h3 data-i18n="empty_state_title" style="margin: 0 0 8px 0; color: var(--md-sys-color-on-surface);">パスワードがありません</h3>
+              <p data-i18n="empty_state_desc" class="text-secondary" style="margin: 0;">右下の + ボタンから追加してください。</p>
+          </div>
+        </section>
+        <div id="sidebar_resizer"></div>
+        <section id="right_pane_content" class="hidden">
+            <div id="right_pane_placeholder" class="flex-center-col text-secondary" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px;">
+                <m3e-icon name="lock" style="font-size: 80px; margin-bottom: 24px; color: var(--md-sys-color-surface-variant);"></m3e-icon>
+                <h2 style="margin: 0 0 8px 0; color: var(--md-sys-color-on-surface);" data-i18n="app_title">Soul Password Manager</h2>
+                <p data-i18n="placeholder_guide" style="max-width: 400px; margin-bottom: 32px; line-height: 1.6;">リストから項目を選択して詳細を表示するか、<br>新しいパスワードを追加してください。</p>
+                <m3e-button variant="filled" id="placeholder_create_btn">
+                    <m3e-icon slot="icon" name="add"></m3e-icon>
+                    <span data-i18n="add_pass_title">新しいパスワードを追加</span>
+                </m3e-button>
+            </div>
+            <div id="right_pane_detail_container" class="hidden"></div>
+        </section>
+    </div>
 
     <m3e-fab id="make_fab" variant="primary" size="large">
       <m3e-fab-menu-trigger for="fab_menu">
@@ -321,7 +341,7 @@
         </m3e-form-field>
       </div>
 
-      <div class="flex-row-center-gap mb-3">
+      <div class="flex-row-center-gap mb-3 responsive-stack">
         <m3e-form-field variant="outlined" label="Category" data-i18n-label="category" class="flex-1">
           <input id="new_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list" data-i18n-placeholder="category">
         </m3e-form-field>
@@ -361,6 +381,8 @@
     <m3e-dialog id="detail_password_dialog" dismissible>
       <span slot="header" data-i18n="detail_title">パスワード詳細</span>
       
+      <div id="detail_form_body">
+      <h2 class="pane-header hidden" data-i18n="detail_title">パスワード詳細</h2>
       <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Service Name" class="flex-1" data-i18n-label="service_name">
           <input id="detail_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name">
@@ -368,7 +390,7 @@
         <m3e-icon-button id="detail_pass_favorite_btn" title="Toggle Favorite"><m3e-icon name="star_border"></m3e-icon></m3e-icon-button>
       </div>
 
-      <div class="flex-row-center-gap mb-3">
+      <div class="flex-row-center-gap mb-3 responsive-stack">
         <m3e-form-field variant="outlined" label="Category" class="flex-1" data-i18n-label="category">
           <input id="detail_pass_category" type="text" placeholder="カテゴリ (任意)" list="category_list" data-i18n-placeholder="category">
         </m3e-form-field>
@@ -437,7 +459,9 @@
             </div>
         </details>
       </div>
-      <div slot="actions">
+      </div>
+
+      <div id="detail_form_actions" slot="actions">
         <m3e-button variant="text" id="delete_password_btn" class="color-error">
           <m3e-icon slot="icon" name="delete"></m3e-icon>
           <span data-i18n="delete">削除</span>
@@ -446,8 +470,8 @@
           <m3e-icon slot="icon" name="save"></m3e-icon>
           <span data-i18n="update">更新</span>
         </m3e-button>
-        <m3e-button autofocus>
-          <m3e-dialog-action return-value="close" data-i18n="close">とじる</m3e-dialog-action>
+        <m3e-button autofocus id="close_detail_btn">
+          <span data-i18n="close">とじる</span>
         </m3e-button>
       </div>
     </m3e-dialog>
@@ -510,6 +534,21 @@
                   </m3e-form-field>
                   <m3e-button variant="tonal" id="save_autologout_btn">
                     <span data-i18n="save">保存</span>
+                  </m3e-button>
+              </div>
+          </div>
+
+          <m3e-divider class="setting-divider"></m3e-divider>
+
+          <div class="setting-section">
+              <h4 data-i18n="theme_color" class="mt-0">テーマカラー</h4>
+              <div class="flex-row-center-gap">
+                  <div class="flex-1 flex-row-center-gap">
+                      <input type="color" id="setting_theme_color" value="#0061a4" style="height: 40px; width: 60px; border: none; padding: 0; background: none; cursor: pointer;">
+                      <span id="theme_color_value" class="text-small text-secondary">#0061a4</span>
+                  </div>
+                  <m3e-button variant="text" id="reset_theme_color_btn">
+                    <span data-i18n="reset">リセット</span>
                   </m3e-button>
               </div>
           </div>
@@ -765,5 +804,24 @@
         </m3e-button>
       </div>
     </m3e-dialog>
+
+    <div id="context_menu" class="context-menu hidden">
+        <div class="context-menu-item" id="ctx_copy_pass">
+            <m3e-icon name="content_copy"></m3e-icon>
+            <span data-i18n="copy_password">Copy Password</span>
+        </div>
+        <div class="context-menu-item" id="ctx_copy_user">
+            <m3e-icon name="person"></m3e-icon>
+            <span data-i18n="copy_username">Copy Username</span>
+        </div>
+        <div class="context-menu-item" id="ctx_edit">
+            <m3e-icon name="edit"></m3e-icon>
+            <span data-i18n="edit">Edit</span>
+        </div>
+        <div class="context-menu-item text-danger" id="ctx_delete">
+            <m3e-icon name="delete"></m3e-icon>
+            <span data-i18n="delete">Delete</span>
+        </div>
+    </div>
   </body>
 </html>
