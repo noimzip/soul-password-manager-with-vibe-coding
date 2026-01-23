@@ -545,8 +545,107 @@ m3e-nav-menu-item.over {
     margin-top: 8px;
 }
 
+/* Tablet/Desktop 2-Pane Layout */
+@media (min-width: 900px) {
+    #app_main_layout {
+        display: flex;
+        height: calc(100vh - 64px); /* Subtract header height */
+        overflow: hidden;
+        width: 100%;
+    }
+
+    #left_sidebar_content {
+        width: 350px;
+        flex-shrink: 0;
+        overflow-y: auto;
+        padding: 16px;
+    }
+
+    #right_pane_content {
+        flex: 1;
+        display: block !important; /* Override hidden */
+        overflow-y: auto;
+        padding: 24px 48px;
+        background-color: var(--md-sys-color-surface);
+    }
+
+    .pane-header {
+        display: block !important;
+        margin-top: 0;
+        margin-bottom: 24px;
+        font-size: 24px;
+    }
+
+    #detail_form_actions {
+        display: flex;
+        justify-content: flex-start;
+        gap: 8px;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    #sidebar_resizer {
+        width: 1px;
+        background-color: var(--md-sys-color-outline-variant);
+        cursor: col-resize;
+        position: relative;
+        flex-shrink: 0;
+        transition: background-color 0.2s;
+        z-index: 10;
+    }
+
+    #sidebar_resizer::after {
+        content: '';
+        position: absolute;
+        left: -4px;
+        right: -4px;
+        top: 0;
+        bottom: 0;
+        cursor: col-resize;
+    }
+
+    #sidebar_resizer:hover, #sidebar_resizer.resizing {
+        background-color: var(--md-sys-color-primary);
+    }
+}
+
+@media (min-width: 601px) {
+    #left_sidebar_content {
+        /* Only apply padding if not in 2-pane mode override, but CSS cascade handles it */
+        /* We can leave this or adjust. The 900px query overrides it for larger screens. */
+    }
+}
+
 @media (max-width: 600px) {
     .app-title {
+        display: none;
+    }
+
+    .responsive-stack {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .responsive-stack > .flex-1 {
+        width: 100%;
+    }
+
+    /* Adjust header search expansion on small screens */
+    .header-search input:focus {
+        width: 140px;
+    }
+    
+    /* Adjust security grid gap */
+    .security-stats-grid {
+        gap: 8px;
+    }
+    
+    .stat-card {
+        padding: 12px 4px;
+    }
+
+    #sidebar_resizer {
         display: none;
     }
 }
@@ -685,4 +784,84 @@ m3e-nav-menu-item.selected {
 
 .guide-text {
     flex: 1;
+}
+
+.nav-item-label-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+}
+
+.nav-item-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.category-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    background-color: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+    margin-left: 8px;
+    flex-shrink: 0;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#empty_state_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.swipe-item {
+    touch-action: pan-y;
+    transition: transform 0.2s ease-out, background-color 0.2s;
+    will-change: transform;
+}
+
+.context-menu {
+    position: fixed;
+    background-color: var(--md-sys-color-surface-container-high);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    padding: 8px 0;
+    z-index: 10000;
+    min-width: 200px;
+}
+
+.context-menu-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface);
+}
+
+.context-menu-item:hover {
+    background-color: var(--md-sys-color-surface-variant);
+}
+
+.context-menu-item m3e-icon {
+    font-size: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.context-menu-item.text-danger {
+    color: var(--md-sys-color-error);
+}
+
+.context-menu-item.text-danger m3e-icon {
+    color: var(--md-sys-color-error);
 }
