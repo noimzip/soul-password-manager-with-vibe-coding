@@ -1,7 +1,7 @@
 // Import Firebase SDKs
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence, setDoc, getDocs } from "firebase/firestore";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, reauthenticateWithPopup } from "firebase/auth";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence, setDoc, getDocs, getDoc } from "firebase/firestore";
 
 // Import UI Components
 import "@m3e/icon/dist/index.min.js";
@@ -82,7 +82,11 @@ const CONSTANTS = {
         GENERATOR_HISTORY: 'soul_generator_history',
         LANGUAGE: 'soul_language',
         SIDEBAR_WIDTH: 'soul_sidebar_width',
-        THEME_COLOR: 'soul_theme_color'
+        THEME_COLOR: 'soul_theme_color',
+        REQUIRE_SECOND_AUTH: 'soul_require_second_auth',
+        CLOUD_KEY: 'soul_cloud_key',
+        REQUIRE_AUTH_ON_DELETE: 'soul_require_auth_on_delete',
+        REQUIRE_AUTH_ON_SHOW_COPY: 'soul_require_auth_on_show_copy'
     }
 };
 
@@ -93,6 +97,7 @@ const CRYPTO_CONFIG = {
 };
 
 let appKey = null; // Session key for Local Mode
+let cloudKey = null; // Session key for Cloud Mode
 let savedPasswords = []; // In-memory list of decrypted passwords
 let currentDetailId = null; // ID of currently opened item
 let currentUser = null; // Firebase User
@@ -110,6 +115,7 @@ let selectedIds = new Set();
 let deviceCheckUnsubscribe = null;
 let newDeviceListenerUnsubscribe = null;
 let isTwoPaneMode = false;
+let firestoreSyncUnsubscribe = null;
 let contextMenuItem = null;
 
 // --- Translations ---
@@ -190,6 +196,7 @@ const TRANSLATIONS = {
         passkey_desc: "デバイスの生体認証を使ってログインできるようにします。<br>※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。",
         register_passkey: "Passkeyを登録",
         change_master_pass: "マスターパスワードを変更",
+        change_master_pass_confirm: "マスターパスワードを変更してもよろしいですか？",
         login_devices: "ログイン中のデバイス",
         current_device: "現在のデバイス",
         last_access: "最終アクセス: ",
@@ -311,6 +318,10 @@ const TRANSLATIONS = {
         about: "アプリについて",
         theme_color: "テーマカラー",
         reset: "リセット",
+        retry: "再試行",
+        require_second_auth: "Googleログイン後に追加認証を要求",
+        require_auth_on_delete: "削除時に認証を要求",
+        require_auth_on_show_copy: "表示・コピー時に認証を要求",
         send: "送信",
         version: "バージョン",
         yes: "はい",
@@ -393,6 +404,7 @@ const TRANSLATIONS = {
         passkey_desc: "Enable login using device biometrics.<br>*Requires browser/device support for Passkey 'largeBlob' extension.",
         register_passkey: "Register Passkey",
         change_master_pass: "Change Master Password",
+        change_master_pass_confirm: "Are you sure you want to change your master password?",
         login_devices: "Logged-in Devices",
         current_device: "Current Device",
         last_access: "Last Access: ",
@@ -514,6 +526,10 @@ const TRANSLATIONS = {
         about: "About",
         theme_color: "Theme Color",
         reset: "Reset",
+        retry: "Retry",
+        require_second_auth: "Require extra auth after Google Login",
+        require_auth_on_delete: "Require auth on delete",
+        require_auth_on_show_copy: "Require auth on show/copy",
         send: "Send",
         version: "Version",
         yes: "Yes",
@@ -596,6 +612,7 @@ const TRANSLATIONS = {
         passkey_desc: "启用设备生物识别登录。<br>*需要浏览器/设备支持 Passkey 'largeBlob' 扩展。",
         register_passkey: "注册 Passkey",
         change_master_pass: "修改主密码",
+        change_master_pass_confirm: "确定要更改主密码吗？",
         login_devices: "登录设备",
         current_device: "当前设备",
         last_access: "最后访问: ",
@@ -717,6 +734,10 @@ const TRANSLATIONS = {
         about: "关于",
         theme_color: "主题颜色",
         reset: "重置",
+        retry: "重试",
+        require_second_auth: "Google登录后需要额外认证",
+        require_auth_on_delete: "删除时需要认证",
+        require_auth_on_show_copy: "显示/复制时需要认证",
         send: "发送",
         version: "版本",
         yes: "是",
@@ -799,6 +820,7 @@ const TRANSLATIONS = {
         passkey_desc: "기기 생체 인증을 사용하여 로그인합니다.<br>*브라우저/기기가 Passkey 'largeBlob' 확장을 지원해야 합니다.",
         register_passkey: "Passkey 등록",
         change_master_pass: "마스터 비밀번호 변경",
+        change_master_pass_confirm: "마스터 비밀번호를 변경하시겠습니까?",
         login_devices: "로그인된 기기",
         current_device: "현재 기기",
         last_access: "최근 접속: ",
@@ -920,6 +942,10 @@ const TRANSLATIONS = {
         about: "앱 정보",
         theme_color: "테마 색상",
         reset: "초기화",
+        retry: "재시도",
+        require_second_auth: "Google 로그인 후 추가 인증 필요",
+        require_auth_on_delete: "삭제 시 인증 필요",
+        require_auth_on_show_copy: "표시/복사 시 인증 필요",
         send: "보내기",
         version: "버전",
         yes: "예",
@@ -1002,6 +1028,7 @@ const TRANSLATIONS = {
         passkey_desc: "Anmeldung mit Geräte-Biometrie aktivieren.<br>*Erfordert Browser/Geräte-Unterstützung für Passkey 'largeBlob'-Erweiterung.",
         register_passkey: "Passkey registrieren",
         change_master_pass: "Master-Passwort ändern",
+        change_master_pass_confirm: "Möchten Sie Ihr Master-Passwort wirklich ändern?",
         login_devices: "Angemeldete Geräte",
         current_device: "Aktuelles Gerät",
         last_access: "Letzter Zugriff: ",
@@ -1123,6 +1150,10 @@ const TRANSLATIONS = {
         about: "Über",
         theme_color: "Themenfarbe",
         reset: "Zurücksetzen",
+        retry: "Wiederholen",
+        require_second_auth: "Zusätzliche Authentifizierung nach Google-Login",
+        require_auth_on_delete: "Authentifizierung beim Löschen erforderlich",
+        require_auth_on_show_copy: "Authentifizierung beim Anzeigen/Kopieren erforderlich",
         send: "Senden",
         version: "Version",
         yes: "Ja",
@@ -1205,6 +1236,7 @@ const TRANSLATIONS = {
         passkey_desc: "Activer la connexion via la biométrie de l'appareil.<br>*Nécessite un navigateur/appareil supportant l'extension Passkey 'largeBlob'.",
         register_passkey: "Enregistrer une Passkey",
         change_master_pass: "Changer le mot de passe maître",
+        change_master_pass_confirm: "Êtes-vous sûr de vouloir changer votre mot de passe maître ?",
         login_devices: "Appareils connectés",
         current_device: "Appareil actuel",
         last_access: "Dernier accès : ",
@@ -1326,6 +1358,10 @@ const TRANSLATIONS = {
         about: "À propos",
         theme_color: "Couleur du thème",
         reset: "Réinitialiser",
+        retry: "Réessayer",
+        require_second_auth: "Exiger une auth. supplémentaire après Google",
+        require_auth_on_delete: "Exiger une auth. lors de la suppression",
+        require_auth_on_show_copy: "Exiger une auth. pour afficher/copier",
         send: "Envoyer",
         version: "Version",
         yes: "Oui",
@@ -1408,6 +1444,7 @@ const TRANSLATIONS = {
         passkey_desc: "Abilita l'accesso usando la biometria del dispositivo.<br>*Richiede supporto browser/dispositivo per estensione Passkey 'largeBlob'.",
         register_passkey: "Registra Passkey",
         change_master_pass: "Cambia Password Master",
+        change_master_pass_confirm: "Sei sicuro di voler cambiare la tua password master?",
         login_devices: "Dispositivi Connessi",
         current_device: "Dispositivo Attuale",
         last_access: "Ultimo Accesso: ",
@@ -1529,6 +1566,10 @@ const TRANSLATIONS = {
         about: "Informazioni",
         theme_color: "Colore Tema",
         reset: "Reimposta",
+        retry: "Riprova",
+        require_second_auth: "Richiedi auth extra dopo login Google",
+        require_auth_on_delete: "Richiedi auth per eliminazione",
+        require_auth_on_show_copy: "Richiedi auth per mostra/copia",
         send: "Invia",
         version: "Versione",
         yes: "Sì",
@@ -1700,22 +1741,78 @@ async function decryptLocal(encryptedJson, key) {
     }
 }
 
-// --- Crypto Utilities (Cloud Mode - Demo/Fixed Key) ---
-// Uses a fixed salt/key to allow multi-device sync without complex key exchange in this demo.
-async function getCloudCryptoKey() {
-    let keyMaterial = "SoulPasswordManagerDemoKey";
-    if (currentUser && currentUser.uid) {
-        keyMaterial += currentUser.uid;
-    }
-    const rawKey = new TextEncoder().encode(keyMaterial); 
-    const keyHash = await window.crypto.subtle.digest('SHA-256', rawKey);
-    return window.crypto.subtle.importKey(
-      "raw",
-      keyHash,
-      { name: "AES-GCM" },
-      false,
-      ["encrypt", "decrypt"]
+// --- Crypto Utilities (Cloud Mode - Secure Derived Key) ---
+async function deriveCloudKey(password, uid) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
     );
+    
+    // Use UID as salt to ensure unique keys per user while allowing sync across devices
+    const saltBuffer = enc.encode(uid);
+    
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: saltBuffer,
+            iterations: 100000,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function getCloudCryptoKey() {
+    if (cloudKey) return cloudKey;
+    throw new Error("Encryption key not available. Please re-login with master password.");
+}
+
+async function calculateCloudVerifier(password, uid) {
+    const enc = new TextEncoder();
+    // Use UID + suffix as salt to ensure it's distinct from the encryption key derivation
+    const salt = enc.encode(uid + "_verifier");
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits"]
+    );
+    const derivedBits = await window.crypto.subtle.deriveBits(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000, // Match cloud key iteration cost
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        256
+    );
+    return arrayBufferToBase64(derivedBits);
+}
+
+async function saveCloudKey(key) {
+    try {
+        const exported = await window.crypto.subtle.exportKey("jwk", key);
+        localStorage.setItem(CONSTANTS.STORAGE.CLOUD_KEY, JSON.stringify(exported));
+    } catch (e) { console.error("Failed to save key", e); }
+}
+
+async function loadCloudKey() {
+    try {
+        const json = localStorage.getItem(CONSTANTS.STORAGE.CLOUD_KEY);
+        if (!json) return null;
+        return await window.crypto.subtle.importKey(
+            "jwk",
+            JSON.parse(json),
+            { name: "AES-GCM" },
+            true,
+            ["encrypt", "decrypt"]
+        );
+    } catch (e) { console.error("Failed to load key", e); return null; }
+}
+
+function clearCloudKey() {
+    localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
 }
 
 async function encryptCloud(plaintext) {
@@ -1881,6 +1978,109 @@ function showSnackbar(message) {
         el.style.opacity = '0';
         setTimeout(function() { if(el.parentNode) el.parentNode.removeChild(el); }, 300);
     }, 3000);
+}
+
+async function promptForMasterPassword(returnPassword = false) {
+    return new Promise((resolve) => {
+        const dialog = document.createElement('m3e-dialog');
+        
+        const header = document.createElement('span');
+        header.slot = 'header';
+        header.textContent = t('confirm_pass');
+        dialog.appendChild(header);
+
+        const content = document.createElement('div');
+        content.style.padding = '10px 0';
+        
+        const field = document.createElement('m3e-form-field');
+        field.setAttribute('variant', 'outlined');
+        field.setAttribute('label', t('master_pass'));
+        field.style.width = '100%';
+        
+        const input = document.createElement('input');
+        input.type = 'password';
+        input.placeholder = t('master_pass');
+        
+        field.appendChild(input);
+        content.appendChild(field);
+        dialog.appendChild(content);
+
+        const actions = document.createElement('div');
+        actions.slot = 'actions';
+        
+        const cancelBtn = document.createElement('m3e-button');
+        cancelBtn.setAttribute('variant', 'text');
+        cancelBtn.innerHTML = `<span>${t('cancel')}</span>`;
+        cancelBtn.addEventListener('click', () => {
+            dialog.open = false;
+            resolve(false);
+            setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+        });
+        
+        const confirmBtn = document.createElement('m3e-button');
+        confirmBtn.setAttribute('variant', 'filled');
+        confirmBtn.innerHTML = `<span>${t('ok')}</span>`;
+        
+        const verify = async () => {
+            const password = input.value;
+
+            // 1. Cloud Verification (Priority if logged in)
+            if (currentUser) {
+                try {
+                    const userConfigRef = doc(db, "user_config", currentUser.uid);
+                    const snap = await getDoc(userConfigRef);
+                    if (snap.exists() && snap.data().verifier) {
+                        const cloudVerifier = snap.data().verifier;
+                        const check = await calculateCloudVerifier(password, currentUser.uid);
+                        if (check !== cloudVerifier) {
+                            showSnackbar(t('login_fail'));
+                            input.value = '';
+                            input.focus();
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Cloud verification skipped (offline or error):", e);
+                }
+            }
+
+            // 2. Local Verification (Fallback or Local Mode)
+            const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+            
+            if (!masterAuth) {
+                resolve(true);
+                dialog.open = false;
+                setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+                return;
+            }
+
+            const hash = await hashPassword(password, masterAuth.salt);
+            if (hash === masterAuth.hash) {
+                dialog.open = false;
+                resolve(returnPassword ? password : true);
+                setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+            } else {
+                showSnackbar(t('login_fail'));
+                input.value = '';
+                input.focus();
+            }
+        };
+
+        confirmBtn.addEventListener('click', verify);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') verify();
+        });
+
+        actions.appendChild(cancelBtn);
+        actions.appendChild(confirmBtn);
+        dialog.appendChild(actions);
+
+        document.body.appendChild(dialog);
+        requestAnimationFrame(() => {
+            dialog.open = true;
+            setTimeout(() => input.focus(), 100);
+        });
+    });
 }
 
 // --- Password Strength & TOTP ---
@@ -2049,7 +2249,12 @@ async function registerPasskey() {
             rp: { name: "Soul Password Manager", id: window.location.hostname },
             user: { id: userId, name: masterAuth.username, displayName: masterAuth.username },
             pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
-            authenticatorSelection: { authenticatorAttachment: "platform", requireResidentKey: true, userVerification: "required" },
+            authenticatorSelection: { 
+                authenticatorAttachment: "platform", 
+                residentKey: "required",
+                requireResidentKey: true, 
+                userVerification: "required" 
+            },
             timeout: 60000,
             attestation: "none",
             extensions: { largeBlob: { support: "required" } }
@@ -2067,8 +2272,13 @@ async function registerPasskey() {
             extensions: { largeBlob: { write: passwordBuffer } }
         };
 
-        await navigator.credentials.get({ publicKey: assertionOptions });
-        showSnackbar("Passkeyを登録しました。");
+        const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
+        const extResults = assertion.getClientExtensionResults();
+        if (extResults.largeBlob && extResults.largeBlob.written) {
+            showSnackbar("Passkeyを登録しました。");
+        } else {
+            throw new Error("データの保存に失敗しました (largeBlob not written)");
+        }
 
     } catch (e) {
         console.error(e);
@@ -2711,8 +2921,20 @@ async function renderDeviceList() {
             
             if (!isCurrent) {
                 div.querySelector('.revoke-btn').addEventListener('click', () => {
-                    showConfirmDialog(t('force_logout_confirm')).then(res => {
-                        if (res) revokeDevice(device.deviceId);
+                    showConfirmDialog(t('force_logout_confirm')).then(async (res) => {
+                        if (res) {
+                            const mpCheck = await promptForMasterPassword();
+                            if (!mpCheck) return;
+
+                            try {
+                                const provider = new GoogleAuthProvider();
+                                await reauthenticateWithPopup(currentUser, provider);
+                                revokeDevice(device.deviceId);
+                            } catch (e) {
+                                console.error("Re-auth failed", e);
+                                showSnackbar(t('error'));
+                            }
+                        }
                     });
                 });
             }
@@ -2722,7 +2944,45 @@ async function renderDeviceList() {
         
     } catch (e) {
         console.error("Error fetching devices:", e);
-        list.textContent = t('error');
+        
+        list.innerHTML = '';
+        const div = document.createElement('div');
+        div.style.padding = '16px';
+        div.style.textAlign = 'center';
+        div.style.color = 'var(--md-sys-color-error)';
+        
+        const text = document.createElement('div');
+        text.textContent = t('error');
+        if (e.code === 'permission-denied') {
+             text.textContent += ' (Permission Denied)';
+        }
+        text.style.marginBottom = '12px';
+
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.justifyContent = 'center';
+        btnContainer.style.gap = '8px';
+
+        const retryBtn = document.createElement('m3e-button');
+        retryBtn.setAttribute('variant', 'outlined');
+        retryBtn.innerHTML = `<m3e-icon slot="icon" name="refresh"></m3e-icon><span>${t('retry')}</span>`;
+        retryBtn.addEventListener('click', () => renderDeviceList());
+
+        const feedbackBtn = document.createElement('m3e-button');
+        feedbackBtn.setAttribute('variant', 'text');
+        feedbackBtn.innerHTML = `<m3e-icon slot="icon" name="feedback"></m3e-icon><span>${t('send_feedback')}</span>`;
+        feedbackBtn.addEventListener('click', () => {
+            document.getElementById('feedback_message').value = `Error: ${e.message} (${e.code})`;
+            if (document.getElementById('feedback_include_logs')) document.getElementById('feedback_include_logs').checked = true;
+            document.getElementById('feedback_dialog').open = true;
+        });
+
+        btnContainer.appendChild(retryBtn);
+        btnContainer.appendChild(feedbackBtn);
+
+        div.appendChild(text);
+        div.appendChild(btnContainer);
+        list.appendChild(div);
     }
 }
 
@@ -3229,8 +3489,11 @@ function addPasswordToUI(item, index, listGroup) {
                 showSnackbar(item.favorite ? t('fav_added') : t('fav_removed'));
             } else if (currentX < -SWIPE_THRESHOLD) {
                 // Delete
-                showConfirmDialog(t('delete_confirm')).then(res => {
-                    if (res) deleteItem(item.id);
+                showConfirmDialog(t('delete_confirm')).then(async res => {
+                    if (res) {
+                        const verified = await verifyDestructiveAction();
+                        if (verified) deleteItem(item.id);
+                    }
                 });
             }
         });
@@ -3251,18 +3514,27 @@ async function saveOrUpdateItem(item) {
     if (currentUser) {
         // Cloud Mode
         try {
-            const encryptedPassword = await encryptCloud(item.password);
+            // Encrypt all sensitive fields
+            const encryptedTitle = await encryptCloud(item.title || '');
+            const encryptedCategory = await encryptCloud(item.category || '');
+            const encryptedWebsite = await encryptCloud(item.website || '');
+            const encryptedUsername = await encryptCloud(item.username || '');
+            const encryptedPassword = await encryptCloud(item.password || '');
+            const encryptedSecret = await encryptCloud(item.secret || '');
+            const encryptedFavorite = await encryptCloud(String(item.favorite || false));
+            const encryptedHistory = await encryptCloud(JSON.stringify(item.history || []));
+
             const dataToSave = {
                 uid: currentUser.uid,
-                title: item.title,
-                category: item.category,
-                website: item.website,
-                username: item.username,
+                title: encryptedTitle,
+                category: encryptedCategory,
+                website: encryptedWebsite,
+                username: encryptedUsername,
                 password: encryptedPassword,
-                secret: item.secret,
-                favorite: item.favorite,
+                secret: encryptedSecret,
+                favorite: encryptedFavorite,
+                history: encryptedHistory,
                 lastModified: item.lastModified,
-                history: item.history || [],
                 deleted: item.deleted || false,
                 deletedAt: item.deletedAt || null
             };
@@ -3291,6 +3563,46 @@ async function saveOrUpdateItem(item) {
     }
 }
 
+async function verifyDestructiveAction() {
+    const isRequired = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_AUTH_ON_DELETE) === 'true';
+    if (!isRequired) return true;
+
+    const mpCheck = await promptForMasterPassword();
+    if (!mpCheck) return false;
+
+    if (currentUser) {
+         try {
+             const provider = new GoogleAuthProvider();
+             await reauthenticateWithPopup(currentUser, provider);
+         } catch (e) {
+             console.error("Re-auth failed", e);
+             showSnackbar(t('error'));
+             return false;
+         }
+    }
+    return true;
+}
+
+async function verifySensitiveAction() {
+    const isRequired = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_AUTH_ON_SHOW_COPY) === 'true';
+    if (!isRequired) return true;
+
+    const mpCheck = await promptForMasterPassword();
+    if (!mpCheck) return false;
+
+    if (currentUser) {
+         try {
+             const provider = new GoogleAuthProvider();
+             await reauthenticateWithPopup(currentUser, provider);
+         } catch (e) {
+             console.error("Re-auth failed", e);
+             showSnackbar(t('error'));
+             return false;
+         }
+    }
+    return true;
+}
+
 // Soft delete (Move to Trash)
 async function deleteItem(id) {
     const item = savedPasswords.find(p => p.id === id);
@@ -3316,6 +3628,9 @@ async function deleteSelectedItems() {
 
     const confirm = await showConfirmDialog(t('delete_selected_confirm', {count: count}));
     if (confirm) {
+        const verified = await verifyDestructiveAction();
+        if (!verified) return;
+
         if (currentUser) {
             // Cloud: parallel delete
             const promises = Array.from(selectedIds).map(id => deleteItem(id));
@@ -3357,6 +3672,9 @@ async function permanentDeleteItem(id) {
 }
 
 async function emptyTrash() {
+    const verified = await verifyDestructiveAction();
+    if (!verified) return;
+
     const deletedItems = savedPasswords.filter(p => p.deleted);
     for (const item of deletedItems) {
         await permanentDeleteItem(item.id);
@@ -3391,8 +3709,11 @@ function renderTrashList() {
 
         div.querySelector('.restore-btn').addEventListener('click', () => restoreItem(item.id));
         div.querySelector('.delete-forever-btn').addEventListener('click', () => {
-            showConfirmDialog(t('delete_confirm')).then(res => {
-                if (res) permanentDeleteItem(item.id);
+            showConfirmDialog(t('delete_confirm')).then(async res => {
+                if (res) {
+                    const verified = await verifyDestructiveAction();
+                    if (verified) permanentDeleteItem(item.id);
+                }
             });
         });
 
@@ -3462,6 +3783,8 @@ async function registerLoginDevice(user) {
                     location.reload();
                 });
             }
+        }, (error) => {
+            console.error("Device check error:", error);
         });
 
     } catch (e) {
@@ -3473,19 +3796,59 @@ function initFirestoreSync(user) {
     console.log("Sync initialized for user:", user.uid);
     const q = query(collection(db, "passwords"), where("uid", "==", user.uid));
     
-    onSnapshot(q, async (querySnapshot) => {
+    if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
+    firestoreSyncUnsubscribe = onSnapshot(q, async (querySnapshot) => {
         const newPasswords = [];
         for (const doc of querySnapshot.docs) {
             const data = doc.data();
-            const decryptedPassword = await decryptCloud(data.password);
+            
+            // Helper to safely decrypt or return original if not a string (for backward compatibility)
+            const safeDecrypt = async (val) => {
+                if (typeof val !== 'string') return val;
+                return await decryptCloud(val);
+            };
+
+            const title = await safeDecrypt(data.title);
+            const category = await safeDecrypt(data.category);
+            const website = await safeDecrypt(data.website);
+            const username = await safeDecrypt(data.username);
+            const password = await safeDecrypt(data.password);
+            const secret = await safeDecrypt(data.secret);
+            
+            let favorite = false;
+            const favVal = await safeDecrypt(data.favorite);
+            // Handle both boolean (old data) and string "true"/"false" (new encrypted data)
+            favorite = (favVal === 'true' || favVal === true);
+
+            let history = [];
+            const histVal = await safeDecrypt(data.history);
+            if (typeof histVal === 'string') {
+                try { history = JSON.parse(histVal); } catch (e) { history = []; }
+            } else if (Array.isArray(histVal)) {
+                history = histVal;
+            }
+
             newPasswords.push({
                 id: doc.id,
-                ...data,
-                password: decryptedPassword
+                uid: data.uid,
+                title: title || '',
+                category: category || '',
+                website: website || '',
+                username: username || '',
+                password: password || '',
+                secret: secret || '',
+                favorite: favorite,
+                history: history,
+                lastModified: data.lastModified,
+                deleted: data.deleted,
+                deletedAt: data.deletedAt
             });
         }
         savedPasswords = newPasswords;
         renderPasswordList(document.getElementById('fld').value);
+    }, (error) => {
+        console.error("Firestore sync error:", error);
+        showSnackbar(t('error') + ": " + error.code);
     });
 }
 
@@ -3532,6 +3895,8 @@ function listenForNewDevices(user) {
                 }
             }
         });
+    }, (error) => {
+        console.error("New device listener error:", error);
     });
 }
 
@@ -3552,9 +3917,38 @@ async function initLocalApp() {
 }
 
 // Auth State Listener
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("User logged in:", user.email);
+        
+        const requireSecondAuth = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_SECOND_AUTH) === 'true';
+        
+        if (!requireSecondAuth) {
+            cloudKey = await loadCloudKey();
+        }
+
+        if (!cloudKey) {
+            const password = await promptForMasterPassword(true);
+            if (!password) { await signOut(auth); return; }
+            cloudKey = await deriveCloudKey(password, user.uid);
+            
+            // Ensure verifier exists in cloud (for new devices/first run)
+            try {
+                const userConfigRef = doc(db, "user_config", user.uid);
+                const snap = await getDoc(userConfigRef);
+                if (!snap.exists() || !snap.data().verifier) {
+                    const newVerifier = await calculateCloudVerifier(password, user.uid);
+                    await setDoc(userConfigRef, { verifier: newVerifier }, { merge: true });
+                }
+            } catch (e) {
+                console.warn("Failed to sync verifier:", e);
+            }
+
+            if (!requireSecondAuth) {
+                await saveCloudKey(cloudKey);
+            }
+        }
+
         currentUser = user;
         const loginDialog = document.getElementById('login_dialog');
         if (loginDialog) loginDialog.open = false;
@@ -3575,6 +3969,10 @@ onAuthStateChanged(auth, (user) => {
             newDeviceListenerUnsubscribe();
             newDeviceListenerUnsubscribe = null;
         }
+        if (firestoreSyncUnsubscribe) {
+            firestoreSyncUnsubscribe();
+            firestoreSyncUnsubscribe = null;
+        }
         // Check for local master auth
         const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
         if (!masterAuth) {
@@ -3588,6 +3986,31 @@ onAuthStateChanged(auth, (user) => {
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Anti-DevTools: Disable Context Menu & Shortcuts
+    document.addEventListener('contextmenu', (e) => {
+        if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+        e.preventDefault();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'i', 'j', 'c'].includes(e.key)) ||
+            (e.ctrlKey && ['U', 'u'].includes(e.key))
+        ) {
+            e.preventDefault();
+        }
+    });
+
+    // Anti-DevTools: Detect Open (Debugger Timing Attack)
+    setInterval(() => {
+        const start = performance.now();
+        debugger; 
+        if (performance.now() - start > 100) {
+            document.body.innerHTML = '<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;background:#121212;color:#cf6679;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="margin:0 0 16px;">Security Alert</h1><p style="margin:0;">Developer Tools detected.<br>Please close them to continue.</p></div>';
+            throw new Error("DevTools detected");
+        }
+    }, 1000);
+
     // Password Checker
     const passCheckInput = document.getElementById('pass_check_form');
     if (passCheckInput) {
@@ -3803,6 +4226,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentDetailId) {
             showConfirmDialog(t('delete_confirm')).then(async res => {
                 if (res) {
+                    const verified = await verifyDestructiveAction();
+                    if (!verified) return;
+
                     await deleteItem(currentDetailId);
                     closeDetailView();
                     showSnackbar(t('pass_deleted'));
@@ -3903,7 +4329,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('copy_detail_pass_btn')?.addEventListener('click', () => {
+    document.getElementById('copy_detail_pass_btn')?.addEventListener('click', async () => {
+        const verified = await verifySensitiveAction();
+        if (!verified) return;
         const password = document.getElementById('detail_pass_value').value;
         copyToClipboard(password, t('pass_copied'));
     });
@@ -4016,6 +4444,167 @@ document.addEventListener('DOMContentLoaded', () => {
         showSnackbar(t('settings_saved'));
     });
 
+    // Require Second Auth Setting
+    const requireSecondAuthCheckbox = document.getElementById('setting_require_second_auth');
+    if (requireSecondAuthCheckbox) {
+        requireSecondAuthCheckbox.checked = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_SECOND_AUTH) === 'true';
+        requireSecondAuthCheckbox.addEventListener('change', async (e) => {
+            const isRequired = e.target.checked;
+            localStorage.setItem(CONSTANTS.STORAGE.REQUIRE_SECOND_AUTH, isRequired);
+            if (isRequired) {
+                clearCloudKey();
+            } else {
+                if (cloudKey) await saveCloudKey(cloudKey);
+            }
+            showSnackbar(t('settings_saved'));
+        });
+    }
+
+    // Require Auth on Delete Setting
+    const requireAuthOnDeleteCheckbox = document.getElementById('setting_require_auth_on_delete');
+    if (requireAuthOnDeleteCheckbox) {
+        requireAuthOnDeleteCheckbox.checked = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_AUTH_ON_DELETE) === 'true';
+        requireAuthOnDeleteCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem(CONSTANTS.STORAGE.REQUIRE_AUTH_ON_DELETE, e.target.checked);
+            showSnackbar(t('settings_saved'));
+        });
+    }
+
+    // Require Auth on Show/Copy Setting
+    const requireAuthOnShowCopyCheckbox = document.getElementById('setting_require_auth_on_show_copy');
+    if (requireAuthOnShowCopyCheckbox) {
+        requireAuthOnShowCopyCheckbox.checked = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_AUTH_ON_SHOW_COPY) === 'true';
+        requireAuthOnShowCopyCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem(CONSTANTS.STORAGE.REQUIRE_AUTH_ON_SHOW_COPY, e.target.checked);
+            showSnackbar(t('settings_saved'));
+        });
+    }
+
+    // Update Master Password
+    document.getElementById('update_master_pass_btn')?.addEventListener('click', async () => {
+        const currentPass = document.getElementById('setting_current_pass').value;
+        const newPass = document.getElementById('setting_new_pass').value;
+        const confirmPass = document.getElementById('setting_new_pass_confirm').value;
+
+        if (!currentPass || !newPass || !confirmPass) {
+            showSnackbar(t('error'));
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            showAlertDialog(t('login_fail'));
+            return;
+        }
+
+        const confirmChange = await showConfirmDialog(t('change_master_pass_confirm'));
+        if (!confirmChange) return;
+
+        const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+        if (!masterAuth) return;
+
+        // Verify current password
+        const hash = await hashPassword(currentPass, masterAuth.salt);
+        if (hash !== masterAuth.hash) {
+            showAlertDialog(t('login_fail'));
+            return;
+        }
+
+        try {
+            const newSalt = await generateSalt();
+            const newSaltB64 = arrayBufferToBase64(newSalt);
+            const newHash = await hashPassword(newPass, newSalt);
+
+            if (currentUser) {
+                // Cloud Mode
+                const newCloudKey = await deriveCloudKey(newPass, currentUser.uid);
+                
+                // Helper to encrypt with specific key
+                const encryptWithKey = async (text, key) => {
+                     if (!text) return "";
+                     const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                     const encoded = new TextEncoder().encode(text);
+                     const ciphertext = await window.crypto.subtle.encrypt(
+                        { name: "AES-GCM", iv: iv },
+                        key,
+                        encoded
+                     );
+                     const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+                     combined.set(iv);
+                     combined.set(new Uint8Array(ciphertext), iv.length);
+                     return arrayBufferToBase64(combined);
+                };
+
+                showSnackbar("Updating cloud data...");
+                
+                // Pause sync to avoid decryption errors during transition
+                if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
+
+                const updates = savedPasswords.map(async (item) => {
+                    const encryptedTitle = await encryptWithKey(item.title || '', newCloudKey);
+                    const encryptedCategory = await encryptWithKey(item.category || '', newCloudKey);
+                    const encryptedWebsite = await encryptWithKey(item.website || '', newCloudKey);
+                    const encryptedUsername = await encryptWithKey(item.username || '', newCloudKey);
+                    const encryptedPassword = await encryptWithKey(item.password || '', newCloudKey);
+                    const encryptedSecret = await encryptWithKey(item.secret || '', newCloudKey);
+                    const encryptedFavorite = await encryptWithKey(String(item.favorite || false), newCloudKey);
+                    const encryptedHistory = await encryptWithKey(JSON.stringify(item.history || []), newCloudKey);
+
+                    return updateDoc(doc(db, "passwords", item.id), {
+                        title: encryptedTitle,
+                        category: encryptedCategory,
+                        website: encryptedWebsite,
+                        username: encryptedUsername,
+                        password: encryptedPassword,
+                        secret: encryptedSecret,
+                        favorite: encryptedFavorite,
+                        history: encryptedHistory
+                    });
+                });
+
+                await Promise.all(updates);
+                
+                cloudKey = newCloudKey;
+                
+                // Update Cloud Verifier
+                const newVerifier = await calculateCloudVerifier(newPass, currentUser.uid);
+                await setDoc(doc(db, "user_config", currentUser.uid), { verifier: newVerifier }, { merge: true });
+
+                // Update stored auth
+                masterAuth.hash = newHash;
+                masterAuth.salt = newSaltB64;
+                localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
+
+                // Always clear saved cloud key to force authentication on next login
+                clearCloudKey();
+                
+                // Resume sync
+                initFirestoreSync(currentUser);
+
+            } else {
+                // Local Mode
+                const newAppKey = await deriveKey(newPass, newSalt);
+                appKey = newAppKey;
+                
+                masterAuth.hash = newHash;
+                masterAuth.salt = newSaltB64;
+                localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
+                
+                await savePasswordsData();
+            }
+
+            showSnackbar(t('settings_saved'));
+            document.getElementById('setting_current_pass').value = '';
+            document.getElementById('setting_new_pass').value = '';
+            document.getElementById('setting_new_pass_confirm').value = '';
+
+        } catch (e) {
+            console.error("Error updating master password:", e);
+            showAlertDialog(t('error') + ": " + e.message);
+            // Try to resume sync if it failed
+            if (currentUser && !firestoreSyncUnsubscribe) initFirestoreSync(currentUser);
+        }
+    });
+
     // Theme Color Setting
     document.getElementById('setting_theme_color')?.addEventListener('input', (e) => {
         applyThemeColor(e.target.value);
@@ -4063,9 +4652,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const icon = document.createElement('m3e-icon');
             icon.name = 'visibility';
             btn.appendChild(icon);
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 if (el.type === 'password') {
+                    // Check auth for sensitive fields
+                    if (id === 'detail_pass_value' || id === 'detail_pass_secret') {
+                        const verified = await verifySensitiveAction();
+                        if (!verified) return;
+                    }
                     el.type = 'text';
                     icon.name = 'visibility_off';
                 } else {
@@ -4167,11 +4761,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Context Menu Actions
-    document.getElementById('ctx_copy_pass')?.addEventListener('click', () => {
-        if (contextMenuItem) {
-            copyToClipboard(contextMenuItem.password, t('pass_copied'));
-        }
+    document.getElementById('ctx_copy_pass')?.addEventListener('click', async () => {
+        const item = contextMenuItem;
         hideContextMenu();
+        if (item && await verifySensitiveAction()) {
+            copyToClipboard(item.password, t('pass_copied'));
+        }
     });
 
     document.getElementById('ctx_copy_user')?.addEventListener('click', () => {
@@ -4191,8 +4786,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ctx_delete')?.addEventListener('click', () => {
         if (contextMenuItem) {
             const id = contextMenuItem.id;
-            showConfirmDialog(t('delete_confirm')).then(res => {
-                if (res) deleteItem(id);
+            showConfirmDialog(t('delete_confirm')).then(async res => {
+                if (res) {
+                    const verified = await verifyDestructiveAction();
+                    if (verified) deleteItem(id);
+                }
             });
         }
         hideContextMenu();
@@ -4293,7 +4891,10 @@ document.addEventListener('DOMContentLoaded', () => {
         exportLabel.textContent = t('export_json');
         exportBtn.appendChild(exportLabel);
         
-        exportBtn.addEventListener('click', () => {
+        exportBtn.addEventListener('click', async () => {
+            const mpCheck = await promptForMasterPassword();
+            if (!mpCheck) return;
+
             const data = JSON.stringify(savedPasswords, null, 2);
             const blob = new Blob([data], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
@@ -4388,6 +4989,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deleteAllBtn.parentNode.insertBefore(container, deleteAllBtn);
     }
+
+    // Delete All Data Action
+    document.getElementById('delete_all_data_btn')?.addEventListener('click', () => {
+        showConfirmDialog(t('delete_all_desc')).then(async (res) => {
+            if (res) {
+                const mpCheck = await promptForMasterPassword();
+                if (!mpCheck) return;
+
+                if (currentUser) {
+                    try {
+                        const provider = new GoogleAuthProvider();
+                        await reauthenticateWithPopup(currentUser, provider);
+                        
+                        // Delete Cloud Data
+                        const qPass = query(collection(db, "passwords"), where("uid", "==", currentUser.uid));
+                        const snapPass = await getDocs(qPass);
+                        await Promise.all(snapPass.docs.map(d => deleteDoc(d.ref)));
+
+                        const qDev = query(collection(db, "devices"), where("uid", "==", currentUser.uid));
+                        const snapDev = await getDocs(qDev);
+                        await Promise.all(snapDev.docs.map(d => deleteDoc(d.ref)));
+
+                    } catch (e) {
+                        console.error("Re-auth or delete failed", e);
+                        showSnackbar(t('error'));
+                        return;
+                    }
+                }
+                
+                // Local Wipe
+                localStorage.clear();
+                location.reload();
+            }
+        });
+    });
 
     // Initialize Auto Logout
     resetAutoLogoutTimer();
