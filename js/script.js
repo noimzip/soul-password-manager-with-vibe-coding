@@ -96,7 +96,7 @@ const CRYPTO_CONFIG = {
     IV_LENGTH: 12
 };
 
-const FIXED_ENCRYPTION_SECRET = "SoulPasswordManager_Fixed_Secret_Key_2024";
+const FIXED_ENCRYPTION_SECRET = import.meta.env.VITE_ENCRYPTION_SECRET;
 
 let appKey = null; // Session key for Local Mode
 let cloudKey = null; // Session key for Cloud Mode
