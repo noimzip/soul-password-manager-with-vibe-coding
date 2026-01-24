@@ -96,6 +96,8 @@ const CRYPTO_CONFIG = {
     IV_LENGTH: 12
 };
 
+const FIXED_ENCRYPTION_SECRET = "SoulPasswordManager_Fixed_Secret_Key_2024";
+
 let appKey = null; // Session key for Local Mode
 let cloudKey = null; // Session key for Cloud Mode
 let savedPasswords = []; // In-memory list of decrypted passwords
@@ -1663,7 +1665,7 @@ async function generateSalt() {
 async function deriveKey(password, salt) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
-        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
+        "raw", enc.encode(FIXED_ENCRYPTION_SECRET), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
     );
     
     const saltBuffer = typeof salt === 'string' ? base64ToArrayBuffer(salt) : salt;
@@ -1745,7 +1747,7 @@ async function decryptLocal(encryptedJson, key) {
 async function deriveCloudKey(password, uid) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
-        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+        "raw", enc.encode(FIXED_ENCRYPTION_SECRET), { name: "PBKDF2" }, false, ["deriveKey"]
     );
     
     // Use UID as salt to ensure unique keys per user while allowing sync across devices
@@ -1980,7 +1982,7 @@ function showSnackbar(message) {
     }, 3000);
 }
 
-async function promptForMasterPassword(returnPassword = false) {
+async function promptForMasterPassword(returnPassword = false, checkUser = null) {
     return new Promise((resolve) => {
         const dialog = document.createElement('m3e-dialog');
         
@@ -2023,21 +2025,27 @@ async function promptForMasterPassword(returnPassword = false) {
         
         const verify = async () => {
             const password = input.value;
+            const userToCheck = checkUser || currentUser;
 
             // 1. Cloud Verification (Priority if logged in)
-            if (currentUser) {
+            if (userToCheck) {
                 try {
-                    const userConfigRef = doc(db, "user_config", currentUser.uid);
+                    const userConfigRef = doc(db, "user_config", userToCheck.uid);
                     const snap = await getDoc(userConfigRef);
                     if (snap.exists() && snap.data().verifier) {
                         const cloudVerifier = snap.data().verifier;
-                        const check = await calculateCloudVerifier(password, currentUser.uid);
+                        const check = await calculateCloudVerifier(password, userToCheck.uid);
                         if (check !== cloudVerifier) {
                             showSnackbar(t('login_fail'));
                             input.value = '';
                             input.focus();
                             return;
                         }
+                        // Cloud verification passed
+                        dialog.open = false;
+                        resolve(returnPassword ? password : true);
+                        setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+                        return;
                     }
                 } catch (e) {
                     console.warn("Cloud verification skipped (offline or error):", e);
@@ -2048,7 +2056,7 @@ async function promptForMasterPassword(returnPassword = false) {
             const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
             
             if (!masterAuth) {
-                resolve(true);
+                resolve(returnPassword ? password : true);
                 dialog.open = false;
                 setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
                 return;
@@ -3928,16 +3936,20 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         if (!cloudKey) {
-            const password = await promptForMasterPassword(true);
+            const password = await promptForMasterPassword(true, user);
             if (!password) { await signOut(auth); return; }
             cloudKey = await deriveCloudKey(password, user.uid);
             
             // Ensure verifier exists in cloud (for new devices/first run)
-            const userConfigRef = doc(db, "user_config", user.uid);
-            const snap = await getDoc(userConfigRef);
-            if (!snap.exists() || !snap.data().verifier) {
-                const newVerifier = await calculateCloudVerifier(password, user.uid);
-                await setDoc(userConfigRef, { verifier: newVerifier }, { merge: true });
+            try {
+                const userConfigRef = doc(db, "user_config", user.uid);
+                const snap = await getDoc(userConfigRef);
+                if (!snap.exists() || !snap.data().verifier) {
+                    const newVerifier = await calculateCloudVerifier(password, user.uid);
+                    await setDoc(userConfigRef, { verifier: newVerifier }, { merge: true });
+                }
+            } catch (e) {
+                console.warn("Failed to sync verifier:", e);
             }
 
             if (!requireSecondAuth) {
