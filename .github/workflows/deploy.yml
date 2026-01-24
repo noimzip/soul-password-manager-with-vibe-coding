@@ -47,6 +47,7 @@ jobs:
           VITE_FIREBASE_STORAGEBUCKET: ${{ secrets.VITE_FIREBASE_STORAGEBUCKET }}
           VITE_FIREBASE_MESSAGINGSENDERID: ${{ secrets.VITE_FIREBASE_MESSAGINGSENDERID }}
           VITE_FIREBASE_APPID: ${{ secrets.VITE_FIREBASE_APPID }}
+          VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
