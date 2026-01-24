@@ -86,7 +86,8 @@ const CONSTANTS = {
         REQUIRE_SECOND_AUTH: 'soul_require_second_auth',
         CLOUD_KEY: 'soul_cloud_key',
         REQUIRE_AUTH_ON_DELETE: 'soul_require_auth_on_delete',
-        REQUIRE_AUTH_ON_SHOW_COPY: 'soul_require_auth_on_show_copy'
+        REQUIRE_AUTH_ON_SHOW_COPY: 'soul_require_auth_on_show_copy',
+        PASSKEY_FALLBACK: 'soul_passkey_fallback'
     }
 };
 
@@ -278,6 +279,11 @@ const TRANSLATIONS = {
         copy_password: "パスワードをコピー",
         copy_username: "ユーザー名をコピー",
         edit: "編集",
+        decryption_fail: "復号化に失敗しました (マスターパスワードが異なる可能性があります)",
+        passkey_fallback_confirm: "このデバイスはPasskeyへのデータ保存(largeBlob)に対応していません。\n代わりに、アプリ内のローカルストレージに認証情報を保存しますか？\n※注意: セキュリティレベルが低下します。",
+        passkey_fallback_saved: "Passkey登録完了 (ローカルストレージ保存)",
+        passkey_fallback_login: "生体認証でログインしました (ローカルストレージ)",
+        passkey_not_supported_cancel: "largeBlob非対応のためキャンセルしました。",
         
         // JS Strings
         weak: "弱いパスワード",
@@ -486,6 +492,11 @@ const TRANSLATIONS = {
         copy_password: "Copy Password",
         copy_username: "Copy Username",
         edit: "Edit",
+        decryption_fail: "Decryption failed (Master password might be different)",
+        passkey_fallback_confirm: "This device does not support saving data to Passkey (largeBlob).\nDo you want to save credentials to local storage instead?\n*Warning: Security level will be reduced.",
+        passkey_fallback_saved: "Passkey registered (Saved to Local Storage)",
+        passkey_fallback_login: "Logged in with Biometrics (Local Storage)",
+        passkey_not_supported_cancel: "Cancelled due to lack of largeBlob support.",
 
         // JS Strings
         weak: "Weak Password",
@@ -694,6 +705,11 @@ const TRANSLATIONS = {
         copy_password: "复制密码",
         copy_username: "复制用户名",
         edit: "编辑",
+        decryption_fail: "解密失败 (主密码可能不同)",
+        passkey_fallback_confirm: "此设备不支持将数据保存到 Passkey (largeBlob)。\n您想将凭据保存到本地存储吗？\n*警告：安全性将降低。",
+        passkey_fallback_saved: "Passkey 已注册（保存到本地存储）",
+        passkey_fallback_login: "已使用生物识别登录（本地存储）",
+        passkey_not_supported_cancel: "由于不支持 largeBlob 已取消。",
         
         // JS Strings
         weak: "弱密码",
@@ -902,6 +918,11 @@ const TRANSLATIONS = {
         copy_password: "비밀번호 복사",
         copy_username: "사용자명 복사",
         edit: "편집",
+        decryption_fail: "복호화 실패 (마스터 비밀번호가 다를 수 있음)",
+        passkey_fallback_confirm: "이 기기는 Passkey(largeBlob) 데이터 저장을 지원하지 않습니다.\n대신 로컬 스토리지에 자격 증명을 저장하시겠습니까?\n*경고: 보안 수준이 낮아집니다.",
+        passkey_fallback_saved: "Passkey 등록됨 (로컬 스토리지에 저장됨)",
+        passkey_fallback_login: "생체 인증으로 로그인됨 (로컬 스토리지)",
+        passkey_not_supported_cancel: "largeBlob 미지원으로 취소되었습니다.",
         
         // JS Strings
         weak: "약한 비밀번호",
@@ -1110,6 +1131,11 @@ const TRANSLATIONS = {
         copy_password: "Passwort kopieren",
         copy_username: "Benutzernamen kopieren",
         edit: "Bearbeiten",
+        decryption_fail: "Entschlüsselung fehlgeschlagen",
+        passkey_fallback_confirm: "Dieses Gerät unterstützt das Speichern von Daten auf Passkey (largeBlob) nicht.\nMöchten Sie die Anmeldeinformationen stattdessen im lokalen Speicher ablegen?\n*Warnung: Die Sicherheit wird verringert.",
+        passkey_fallback_saved: "Passkey registriert (Im lokalen Speicher gespeichert)",
+        passkey_fallback_login: "Mit Biometrie angemeldet (Lokaler Speicher)",
+        passkey_not_supported_cancel: "Abgebrochen wegen fehlender largeBlob-Unterstützung.",
         
         // JS Strings
         weak: "Schwaches Passwort",
@@ -1318,6 +1344,11 @@ const TRANSLATIONS = {
         copy_password: "Copier le mot de passe",
         copy_username: "Copier le nom d'utilisateur",
         edit: "Modifier",
+        decryption_fail: "Échec du déchiffrement",
+        passkey_fallback_confirm: "Cet appareil ne prend pas en charge l'enregistrement de données sur Passkey (largeBlob).\nVoulez-vous enregistrer les identifiants dans le stockage local ?\n*Attention : Le niveau de sécurité sera réduit.",
+        passkey_fallback_saved: "Passkey enregistré (Sauvegardé dans le stockage local)",
+        passkey_fallback_login: "Connexion biométrique réussie (Stockage local)",
+        passkey_not_supported_cancel: "Annulé en raison de l'absence de prise en charge de largeBlob.",
         
         // JS Strings
         weak: "Mot de passe faible",
@@ -1526,6 +1557,11 @@ const TRANSLATIONS = {
         copy_password: "Copia Password",
         copy_username: "Copia Nome Utente",
         edit: "Modifica",
+        decryption_fail: "Decrittazione fallita",
+        passkey_fallback_confirm: "Questo dispositivo non supporta il salvataggio dei dati su Passkey (largeBlob).\nVuoi salvare le credenziali nella memoria locale?\n*Attenzione: Il livello di sicurezza sarà ridotto.",
+        passkey_fallback_saved: "Passkey registrata (Salvata nella memoria locale)",
+        passkey_fallback_login: "Accesso con biometria (Memoria locale)",
+        passkey_not_supported_cancel: "Annullato per mancanza di supporto largeBlob.",
         
         // JS Strings
         weak: "Password Debole",
@@ -1679,7 +1715,7 @@ async function generateSalt() {
 async function deriveKey(password, salt) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
-        "raw", enc.encode(FIXED_ENCRYPTION_SECRET), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey", "deriveBits"]
     );
     
     const saltBuffer = typeof salt === 'string' ? base64ToArrayBuffer(salt) : salt;
@@ -1761,7 +1797,7 @@ async function decryptLocal(encryptedJson, key) {
 async function deriveCloudKey(password, uid) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
-        "raw", enc.encode(FIXED_ENCRYPTION_SECRET), { name: "PBKDF2" }, false, ["deriveKey"]
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
     );
     
     // Use UID as salt to ensure unique keys per user while allowing sync across devices
@@ -1771,7 +1807,7 @@ async function deriveCloudKey(password, uid) {
         {
             name: "PBKDF2",
             salt: saltBuffer,
-            iterations: 100000,
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
             hash: "SHA-256"
         },
         keyMaterial,
@@ -1797,7 +1833,7 @@ async function calculateCloudVerifier(password, uid) {
         {
             name: "PBKDF2",
             salt: salt,
-            iterations: 100000, // Match cloud key iteration cost
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
             hash: "SHA-256"
         },
         keyMaterial,
@@ -1864,8 +1900,8 @@ async function getHybridKeys(uid) {
     const userConfigRef = doc(db, "user_config", uid);
     const snap = await getDoc(userConfigRef);
     
-    // KEK derived from FIXED_ENCRYPTION_SECRET
-    const kek = await deriveCloudKey(null, uid); 
+    // KEK derived from Master Password (cloudKey)
+    const kek = await getCloudCryptoKey();
     
     if (snap.exists() && snap.data().publicKey && snap.data().encryptedPrivateKey) {
         const pubJwk = JSON.parse(snap.data().publicKey);
@@ -1991,7 +2027,7 @@ async function decryptCloud(encryptedBase64) {
         return new TextDecoder().decode(decrypted);
     } catch (e) {
       console.warn("Cloud Decryption failed, returning original:", e);
-      return encryptedBase64;
+      return t('decryption_fail');
     }
 }
 
@@ -2014,7 +2050,7 @@ async function decryptCloudOld(encryptedBase64) {
       return new TextDecoder().decode(decrypted);
     } catch (e) {
       console.warn("Cloud Decryption failed, returning original:", e);
-      return encryptedBase64;
+      return t('decryption_fail');
     }
 }
 
@@ -2381,6 +2417,48 @@ function bufferToStr(buf) {
     return new TextDecoder().decode(buf);
 }
 
+async function getFallbackKey() {
+    // Use a fixed salt for the fallback key derivation
+    const salt = new TextEncoder().encode("soul_passkey_fallback_salt");
+    
+    // Use FIXED_ENCRYPTION_SECRET for fallback storage (obfuscation)
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(FIXED_ENCRYPTION_SECRET), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function savePasskeyFallback(password) {
+    const key = await getFallbackKey();
+    const encrypted = await encryptLocal(password, key);
+    localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK, encrypted);
+}
+
+async function loadPasskeyFallback() {
+    const encrypted = localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK);
+    if (!encrypted) return null;
+    try {
+        const key = await getFallbackKey();
+        return await decryptLocal(encrypted, key);
+    } catch (e) {
+        console.error("Fallback load failed", e);
+        return null;
+    }
+}
+
 async function registerPasskey() {
     if (!window.PublicKeyCredential) {
         showAlertDialog("このブラウザはPasskeyをサポートしていません。");
@@ -2475,7 +2553,17 @@ async function loginWithPasskey() {
             initLocalApp();
             showSnackbar("生体認証でログインしました");
         } else {
-            showAlertDialog("Passkeyからデータを読み取れませんでした。");
+            // Try fallback
+            const fallbackPassword = await loadPasskeyFallback();
+            if (fallbackPassword) {
+                const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+                appKey = await deriveKey(fallbackPassword, masterAuth.salt);
+                document.getElementById('login_dialog').open = false;
+                initLocalApp();
+                showSnackbar(t('passkey_fallback_login'));
+            } else {
+                showAlertDialog("Passkeyからデータを読み取れませんでした。");
+            }
         }
     } catch (e) {
         console.error(e);
