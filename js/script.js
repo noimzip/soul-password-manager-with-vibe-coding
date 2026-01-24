@@ -1,7 +1,7 @@
 // Import Firebase SDKs
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, reauthenticateWithPopup } from "firebase/auth";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence, setDoc, getDocs } from "firebase/firestore";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence, setDoc, getDocs, getDoc } from "firebase/firestore";
 
 // Import UI Components
 import "@m3e/icon/dist/index.min.js";
@@ -1770,6 +1770,26 @@ async function getCloudCryptoKey() {
     throw new Error("Encryption key not available. Please re-login with master password.");
 }
 
+async function calculateCloudVerifier(password, uid) {
+    const enc = new TextEncoder();
+    // Use UID + suffix as salt to ensure it's distinct from the encryption key derivation
+    const salt = enc.encode(uid + "_verifier");
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits"]
+    );
+    const derivedBits = await window.crypto.subtle.deriveBits(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000, // Match cloud key iteration cost
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        256
+    );
+    return arrayBufferToBase64(derivedBits);
+}
+
 async function saveCloudKey(key) {
     try {
         const exported = await window.crypto.subtle.exportKey("jwk", key);
@@ -2003,6 +2023,28 @@ async function promptForMasterPassword(returnPassword = false) {
         
         const verify = async () => {
             const password = input.value;
+
+            // 1. Cloud Verification (Priority if logged in)
+            if (currentUser) {
+                try {
+                    const userConfigRef = doc(db, "user_config", currentUser.uid);
+                    const snap = await getDoc(userConfigRef);
+                    if (snap.exists() && snap.data().verifier) {
+                        const cloudVerifier = snap.data().verifier;
+                        const check = await calculateCloudVerifier(password, currentUser.uid);
+                        if (check !== cloudVerifier) {
+                            showSnackbar(t('login_fail'));
+                            input.value = '';
+                            input.focus();
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Cloud verification skipped (offline or error):", e);
+                }
+            }
+
+            // 2. Local Verification (Fallback or Local Mode)
             const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
             
             if (!masterAuth) {
@@ -3890,6 +3932,14 @@ onAuthStateChanged(auth, async (user) => {
             if (!password) { await signOut(auth); return; }
             cloudKey = await deriveCloudKey(password, user.uid);
             
+            // Ensure verifier exists in cloud (for new devices/first run)
+            const userConfigRef = doc(db, "user_config", user.uid);
+            const snap = await getDoc(userConfigRef);
+            if (!snap.exists() || !snap.data().verifier) {
+                const newVerifier = await calculateCloudVerifier(password, user.uid);
+                await setDoc(userConfigRef, { verifier: newVerifier }, { merge: true });
+            }
+
             if (!requireSecondAuth) {
                 await saveCloudKey(cloudKey);
             }
@@ -4511,6 +4561,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 cloudKey = newCloudKey;
                 
+                // Update Cloud Verifier
+                const newVerifier = await calculateCloudVerifier(newPass, currentUser.uid);
+                await setDoc(doc(db, "user_config", currentUser.uid), { verifier: newVerifier }, { merge: true });
+
                 // Update stored auth
                 masterAuth.hash = newHash;
                 masterAuth.salt = newSaltB64;
