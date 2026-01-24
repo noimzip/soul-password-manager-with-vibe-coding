@@ -98,8 +98,22 @@ const CRYPTO_CONFIG = {
 
 const FIXED_ENCRYPTION_SECRET = import.meta.env.VITE_ENCRYPTION_SECRET;
 
+const HYBRID_CONFIG = {
+    RSA_ALGO: {
+        name: "RSA-OAEP",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: "SHA-256"
+    },
+    AES_ALGO: {
+        name: "AES-GCM",
+        length: 256
+    }
+};
+
 let appKey = null; // Session key for Local Mode
 let cloudKey = null; // Session key for Cloud Mode
+let hybridKeyPair = null; // RSA Key Pair for Hybrid Mode
 let savedPasswords = []; // In-memory list of decrypted passwords
 let currentDetailId = null; // ID of currently opened item
 let currentUser = null; // Firebase User
@@ -1817,21 +1831,114 @@ function clearCloudKey() {
     localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
 }
 
-async function encryptCloud(plaintext) {
-    if (!plaintext) return "";
-    try {
-      const key = await getCloudCryptoKey();
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-      const encoded = new TextEncoder().encode(plaintext);
-      const ciphertext = await window.crypto.subtle.encrypt(
+async function encryptWithKek(dataObj, key) {
+    const enc = new TextEncoder();
+    const encoded = enc.encode(JSON.stringify(dataObj));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await window.crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv },
         key,
         encoded
-      );
-      const combined = new Uint8Array(iv.length + ciphertext.byteLength);
-      combined.set(iv);
-      combined.set(new Uint8Array(ciphertext), iv.length);
-      return arrayBufferToBase64(combined);
+    );
+    return JSON.stringify({
+        iv: arrayBufferToBase64(iv),
+        data: arrayBufferToBase64(encrypted)
+    });
+}
+
+async function decryptWithKek(jsonStr, key) {
+    const raw = JSON.parse(jsonStr);
+    const iv = base64ToArrayBuffer(raw.iv);
+    const data = base64ToArrayBuffer(raw.data);
+    const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        data
+    );
+    return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+async function getHybridKeys(uid) {
+    if (hybridKeyPair) return hybridKeyPair;
+
+    const userConfigRef = doc(db, "user_config", uid);
+    const snap = await getDoc(userConfigRef);
+    
+    // KEK derived from FIXED_ENCRYPTION_SECRET
+    const kek = await deriveCloudKey(null, uid); 
+    
+    if (snap.exists() && snap.data().publicKey && snap.data().encryptedPrivateKey) {
+        const pubJwk = JSON.parse(snap.data().publicKey);
+        const publicKey = await window.crypto.subtle.importKey(
+            "jwk", pubJwk, HYBRID_CONFIG.RSA_ALGO, true, ["encrypt"]
+        );
+
+        const privateKeyJwk = await decryptWithKek(snap.data().encryptedPrivateKey, kek);
+        const privateKey = await window.crypto.subtle.importKey(
+            "jwk", privateKeyJwk, HYBRID_CONFIG.RSA_ALGO, true, ["decrypt"]
+        );
+
+        hybridKeyPair = { publicKey, privateKey };
+    } else {
+        const keyPair = await window.crypto.subtle.generateKey(
+            HYBRID_CONFIG.RSA_ALGO,
+            true,
+            ["encrypt", "decrypt"]
+        );
+        
+        const pubJwk = await window.crypto.subtle.exportKey("jwk", keyPair.publicKey);
+        const privJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        
+        const encPriv = await encryptWithKek(privJwk, kek);
+        
+        await setDoc(userConfigRef, {
+            publicKey: JSON.stringify(pubJwk),
+            encryptedPrivateKey: encPriv
+        }, { merge: true });
+        
+        hybridKeyPair = keyPair;
+    }
+    
+    return hybridKeyPair;
+}
+
+async function encryptCloud(plaintext) {
+    if (!plaintext) return "";
+    try {
+        if (!currentUser) throw new Error("No user");
+        const keys = await getHybridKeys(currentUser.uid);
+        
+        // 1. Generate Session Key (AES)
+        const sessionKey = await window.crypto.subtle.generateKey(
+            HYBRID_CONFIG.AES_ALGO,
+            true,
+            ["encrypt", "decrypt"]
+        );
+        
+        // 2. Encrypt Data with Session Key
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(plaintext);
+        const encryptedData = await window.crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            sessionKey,
+            encoded
+        );
+        
+        // 3. Encrypt Session Key with RSA Public Key
+        const rawSessionKey = await window.crypto.subtle.exportKey("raw", sessionKey);
+        const encryptedSessionKey = await window.crypto.subtle.encrypt(
+            { name: "RSA-OAEP" },
+            keys.publicKey,
+            rawSessionKey
+        );
+        
+        // 4. Package
+        return JSON.stringify({
+            k: arrayBufferToBase64(encryptedSessionKey),
+            iv: arrayBufferToBase64(iv),
+            d: arrayBufferToBase64(encryptedData),
+            v: 'hybrid-v1'
+        });
     } catch (e) {
       console.error("Cloud Encryption failed:", e);
       return plaintext;
@@ -1839,6 +1946,56 @@ async function encryptCloud(plaintext) {
 }
 
 async function decryptCloud(encryptedBase64) {
+    if (!encryptedBase64) return "";
+    try {
+        let hybridObj;
+        try {
+            hybridObj = JSON.parse(encryptedBase64);
+        } catch (e) {
+            // Not JSON, assume old format
+            return await decryptCloudOld(encryptedBase64);
+        }
+
+        if (!hybridObj.k || !hybridObj.d || !hybridObj.iv) {
+             return await decryptCloudOld(encryptedBase64);
+        }
+
+        if (!currentUser) throw new Error("No user");
+        const keys = await getHybridKeys(currentUser.uid);
+        
+        // 1. Decrypt Session Key
+        const encSessionKey = base64ToArrayBuffer(hybridObj.k);
+        const rawSessionKey = await window.crypto.subtle.decrypt(
+            { name: "RSA-OAEP" },
+            keys.privateKey,
+            encSessionKey
+        );
+        
+        const sessionKey = await window.crypto.subtle.importKey(
+            "raw",
+            rawSessionKey,
+            HYBRID_CONFIG.AES_ALGO,
+            false,
+            ["decrypt"]
+        );
+        
+        // 2. Decrypt Data
+        const iv = base64ToArrayBuffer(hybridObj.iv);
+        const encData = base64ToArrayBuffer(hybridObj.d);
+        const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
+            sessionKey,
+            encData
+        );
+        
+        return new TextDecoder().decode(decrypted);
+    } catch (e) {
+      console.warn("Cloud Decryption failed, returning original:", e);
+      return encryptedBase64;
+    }
+}
+
+async function decryptCloudOld(encryptedBase64) {
     if (!encryptedBase64) return "";
     try {
       const key = await getCloudCryptoKey();
@@ -3969,6 +4126,7 @@ onAuthStateChanged(auth, async (user) => {
         listenForNewDevices(user);
     } else {
         currentUser = null;
+        hybridKeyPair = null;
         if (deviceCheckUnsubscribe) {
             deviceCheckUnsubscribe();
             deviceCheckUnsubscribe = null;
