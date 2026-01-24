@@ -583,6 +583,18 @@
           <div class="text-right mb-3">
             <m3e-button variant="tonal" id="setup_passkey_btn"><span data-i18n="register_passkey">Passkeyを登録</span></m3e-button>
           </div>
+          <label class="checkbox-item mb-3">
+              <m3e-checkbox id="setting_require_second_auth"></m3e-checkbox>
+              <span data-i18n="require_second_auth">Googleログイン後に追加認証を要求</span>
+          </label>
+          <label class="checkbox-item mb-3">
+              <m3e-checkbox id="setting_require_auth_on_delete"></m3e-checkbox>
+              <span data-i18n="require_auth_on_delete">削除時に認証を要求 (マスターパスワード+本人確認)</span>
+          </label>
+          <label class="checkbox-item mb-3">
+              <m3e-checkbox id="setting_require_auth_on_show_copy"></m3e-checkbox>
+              <span data-i18n="require_auth_on_show_copy">表示・コピー時に認証を要求</span>
+          </label>
           <m3e-divider></m3e-divider>
 
           <h3 data-i18n="change_master_pass">マスターパスワードを変更</h3>
