@@ -1815,6 +1815,36 @@ function clearCloudKey() {
     localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
 }
 
+async function getCloudCryptoKey() {
+    if (cloudKey) return cloudKey;
+    throw new Error("Encryption key not available. Please re-login with master password.");
+}
+
+async function saveCloudKey(key) {
+    try {
+        const exported = await window.crypto.subtle.exportKey("jwk", key);
+        localStorage.setItem(CONSTANTS.STORAGE.CLOUD_KEY, JSON.stringify(exported));
+    } catch (e) { console.error("Failed to save key", e); }
+}
+
+async function loadCloudKey() {
+    try {
+        const json = localStorage.getItem(CONSTANTS.STORAGE.CLOUD_KEY);
+        if (!json) return null;
+        return await window.crypto.subtle.importKey(
+            "jwk",
+            JSON.parse(json),
+            { name: "AES-GCM" },
+            true,
+            ["encrypt", "decrypt"]
+        );
+    } catch (e) { console.error("Failed to load key", e); return null; }
+}
+
+function clearCloudKey() {
+    localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
+}
+
 async function encryptCloud(plaintext) {
     if (!plaintext) return "";
     try {
@@ -3933,11 +3963,15 @@ onAuthStateChanged(auth, async (user) => {
             cloudKey = await deriveCloudKey(password, user.uid);
             
             // Ensure verifier exists in cloud (for new devices/first run)
-            const userConfigRef = doc(db, "user_config", user.uid);
-            const snap = await getDoc(userConfigRef);
-            if (!snap.exists() || !snap.data().verifier) {
-                const newVerifier = await calculateCloudVerifier(password, user.uid);
-                await setDoc(userConfigRef, { verifier: newVerifier }, { merge: true });
+            try {
+                const userConfigRef = doc(db, "user_config", user.uid);
+                const snap = await getDoc(userConfigRef);
+                if (!snap.exists() || !snap.data().verifier) {
+                    const newVerifier = await calculateCloudVerifier(password, user.uid);
+                    await setDoc(userConfigRef, { verifier: newVerifier }, { merge: true });
+                }
+            } catch (e) {
+                console.warn("Failed to sync verifier:", e);
             }
 
             if (!requireSecondAuth) {
