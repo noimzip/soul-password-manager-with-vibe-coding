@@ -23,14 +23,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
   </head>
   <body>
-    <script src="./js/theme.js"></script>
+    <script type="module" src="./js/theme.js"></script>
+    <script type="module" src="./js/sw.js"></script>
     <div id="loading_overlay">
       <m3e-loading-indicator></m3e-loading-indicator>
     </div>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js');
+          navigator.serviceWorker.register('./js/sw.js');
         });
       }
     </script>
@@ -42,7 +43,7 @@
         </div>
         <div slot="trailing-icon" class="header-actions">
           <div id="search_passwords" class="header-search">
-            <input id="fld" type="search" placeholder="Search" data-i18n-placeholder="search_placeholder">
+            <input id="fld" type="search" placeholder="Search" data-i18n-placeholder="search_placeholder" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           </div>
           <m3e-icon-button id="start_selection_btn" data-i18n-title="select_mode">
             <m3e-icon name="checklist"></m3e-icon>
@@ -337,7 +338,7 @@
       
       <div class="mb-3">
         <m3e-form-field variant="outlined" label="Service Name" data-i18n-label="service_name" class="w-100">
-          <input id="new_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name">
+          <input id="new_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </m3e-form-field>
       </div>
 
@@ -352,13 +353,13 @@
 
       <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Username" class="flex-1" data-i18n-label="username">
-          <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス" data-i18n-placeholder="username">
+          <input id="new_pass_username" type="text" placeholder="ユーザー名/メールアドレス" data-i18n-placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </m3e-form-field>
         <m3e-icon-button id="fill_new_pass_default_username_btn" title="Fill Default Username"><m3e-icon name="person_add"></m3e-icon></m3e-icon-button>
       </div>
       <div class="flex-row-center-gap">
         <m3e-form-field variant="outlined" label="Password" class="flex-1" data-i18n-label="password">
-          <input id="new_pass_value" type="password" placeholder="パスワード" autocomplete="new-password" data-i18n-placeholder="password">
+          <input id="new_pass_value" type="password" placeholder="パスワード" autocomplete="new-password" data-i18n-placeholder="password" autocorrect="off" autocapitalize="off" spellcheck="false">
         </m3e-form-field>
         <m3e-icon-button id="generate_new_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
       </div>
@@ -385,7 +386,7 @@
       <h2 class="pane-header hidden" data-i18n="detail_title">パスワード詳細</h2>
       <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Service Name" class="flex-1" data-i18n-label="service_name">
-          <input id="detail_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name">
+          <input id="detail_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </m3e-form-field>
         <m3e-icon-button id="detail_pass_favorite_btn" title="Toggle Favorite"><m3e-icon name="star_border"></m3e-icon></m3e-icon-button>
       </div>
@@ -404,7 +405,7 @@
 
       <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Username" class="flex-1" data-i18n-label="username">
-          <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス" data-i18n-placeholder="username">
+          <input id="detail_pass_username" type="text" placeholder="ユーザー名/メールアドレス" data-i18n-placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </m3e-form-field>
         <m3e-icon-button id="copy_detail_username_btn" title="Copy Username"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="fill_default_username_btn" title="Fill Default Username"><m3e-icon name="person_add"></m3e-icon></m3e-icon-button>
@@ -412,7 +413,7 @@
 
       <div class="flex-row-center-gap">
         <m3e-form-field variant="outlined" label="Password" class="flex-1" data-i18n-label="password">
-          <input id="detail_pass_value" type="text" placeholder="パスワード" autocomplete="new-password" data-i18n-placeholder="password">
+          <input id="detail_pass_value" type="text" placeholder="パスワード" autocomplete="new-password" data-i18n-placeholder="password" autocorrect="off" autocapitalize="off" spellcheck="false">
         </m3e-form-field>
         <m3e-icon-button id="copy_detail_pass_btn" title="Copy Password"><m3e-icon name="content_copy"></m3e-icon></m3e-icon-button>
         <m3e-icon-button id="generate_detail_pass_btn" title="Generate Password"><m3e-icon name="autorenew"></m3e-icon></m3e-icon-button>
@@ -516,7 +517,7 @@
               <h4 data-i18n="default_username" class="mt-0">デフォルトユーザー名</h4>
               <div class="flex-row-center-gap">
                   <m3e-form-field variant="outlined" label="Default Username" data-i18n-label="default_username" class="flex-1">
-                    <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名" data-i18n-placeholder="default_username">
+                    <input id="setting_default_username" type="text" placeholder="デフォルトユーザー名" data-i18n-placeholder="default_username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                   </m3e-form-field>
                   <m3e-button variant="tonal" id="save_username_btn">
                     <span data-i18n="save">保存</span>
@@ -595,6 +596,17 @@
               <m3e-checkbox id="setting_require_auth_on_show_copy"></m3e-checkbox>
               <span data-i18n="require_auth_on_show_copy">表示・コピー時に認証を要求</span>
           </label>
+          
+          <m3e-divider></m3e-divider>
+          <h3 data-i18n="recovery_kit" class="mt-0">Recovery Kit</h3>
+          <p class="text-small text-secondary" data-i18n="recovery_kit_desc">マスターパスワードを忘れた場合に備えて、緊急アクセス用のシートを作成します。</p>
+          <div class="text-right mb-3">
+              <m3e-button variant="outlined" id="download_recovery_kit_btn">
+                  <m3e-icon slot="icon" name="download"></m3e-icon>
+                  <span data-i18n="download_recovery_kit">Download Recovery Kit (PDF)</span>
+              </m3e-button>
+          </div>
+
           <m3e-divider></m3e-divider>
 
           <h3 data-i18n="change_master_pass">マスターパスワードを変更</h3>
@@ -616,6 +628,41 @@
           <m3e-divider></m3e-divider>
           <h3 data-i18n="login_devices">ログイン中のデバイス</h3>
           <div id="device_list" class="history-list" style="max-height: 200px;"></div>
+
+          <m3e-divider></m3e-divider>
+          <h3 data-i18n="session_management" class="mt-0">Session Management</h3>
+          <div class="flex-between mb-2">
+              <span data-i18n="session_type" class="text-secondary">Session Type</span>
+              <span id="current_session_type" class="font-bold"></span>
+          </div>
+          <p class="text-small text-secondary" data-i18n="lock_vault_desc">Discard encryption key...</p>
+          <div class="text-right">
+            <m3e-button variant="outlined" id="lock_vault_btn" class="color-error">
+                <m3e-icon slot="icon" name="lock"></m3e-icon>
+                <span data-i18n="lock_vault">Lock Vault</span>
+            </m3e-button>
+          </div>
+
+          <m3e-divider></m3e-divider>
+          <h3 data-i18n="encryption_settings" class="mt-0">Encryption Settings</h3>
+          <div class="encryption-info-box">
+              <div class="flex-between text-small">
+                  <span class="text-secondary">Algorithm (Data)</span>
+                  <span id="enc_algo_data"></span>
+              </div>
+              <div class="flex-between text-small mt-1">
+                  <span class="text-secondary">Algorithm (Key)</span>
+                  <span id="enc_algo_key"></span>
+              </div>
+              <div class="flex-between text-small mt-1">
+                  <span class="text-secondary">Iterations</span>
+                  <span id="enc_iterations"></span>
+              </div>
+              <div class="flex-between text-small mt-1">
+                  <span class="text-secondary">Hybrid (Cloud)</span>
+                  <span id="enc_hybrid"></span>
+              </div>
+          </div>
       </div>
 
       <div id="settings_tab_danger" class="settings-tab-panel">
@@ -640,7 +687,7 @@
       <span slot="header" data-i18n="setup_title">初期設定</span>
       <p data-i18n="setup_desc">マスターユーザー名とパスワードを設定してください。</p>
       <m3e-form-field variant="outlined" label="Username" data-i18n-label="username">
-        <input id="setup_username" type="text" placeholder="ユーザー名" data-i18n-placeholder="username">
+        <input id="setup_username" type="text" placeholder="ユーザー名" data-i18n-placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="Master Password" data-i18n-label="master_pass">
         <input id="setup_password" type="password" placeholder="マスターパスワード" autocomplete="new-password" data-i18n-placeholder="master_pass">
@@ -658,7 +705,7 @@
     <m3e-dialog id="login_dialog" disable-close>
       <span slot="header" data-i18n="login_title">ログイン</span>
       <m3e-form-field variant="outlined" label="Username" data-i18n-label="username">
-        <input id="login_username" type="text" placeholder="ユーザー名" data-i18n-placeholder="username">
+        <input id="login_username" type="text" placeholder="ユーザー名" data-i18n-placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </m3e-form-field>
       <m3e-form-field variant="outlined" label="Master Password" data-i18n-label="master_pass">
         <input id="login_password" type="password" placeholder="マスターパスワード" autocomplete="new-password" data-i18n-placeholder="master_pass">
