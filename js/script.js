@@ -4904,6 +4904,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isTwoPaneMode) {
             document.getElementById('detail_pass_value').value = '';
             document.getElementById('detail_pass_secret').value = '';
+            currentDetailId = null;
         }
     });
 
