@@ -87,7 +87,8 @@ const CONSTANTS = {
         CLOUD_KEY: 'soul_cloud_key',
         REQUIRE_AUTH_ON_DELETE: 'soul_require_auth_on_delete',
         REQUIRE_AUTH_ON_SHOW_COPY: 'soul_require_auth_on_show_copy',
-        PASSKEY_FALLBACK: 'soul_passkey_fallback'
+        PASSKEY_FALLBACK: 'soul_passkey_fallback',
+        LOGIN_ATTEMPTS_PREFIX: 'soul_login_attempts_'
     }
 };
 
@@ -96,6 +97,9 @@ const CRYPTO_CONFIG = {
     SALT_LENGTH: 16,
     IV_LENGTH: 12
 };
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MINUTES = 5;
 
 const FIXED_ENCRYPTION_SECRET = import.meta.env.VITE_ENCRYPTION_SECRET;
 
@@ -111,6 +115,8 @@ const HYBRID_CONFIG = {
         length: 256
     }
 };
+
+const DECRYPTION_ERROR_MARKER = '[[DECRYPTION_FAILED]]';
 
 let appKey = null; // Session key for Local Mode
 let cloudKey = null; // Session key for Cloud Mode
@@ -253,11 +259,13 @@ const TRANSLATIONS = {
         delete_all_desc: "すべてのパスワードと設定を削除し、アプリを初期化します。",
         delete_all_data: "全データを削除",
         setup_title: "初期設定",
-        setup_desc: "マスターユーザー名とパスワードを設定してください。",
+        setup_title_local: "ローカルモードの初期設定",
+        setup_desc_local: "ローカルモードで使用するマスターユーザー名とパスワードを設定してください。",
         master_pass: "マスターパスワード",
         confirm_pass: "マスターパスワードの確認",
         setup_btn: "セットアップ",
         login_title: "ログイン",
+        login_title_local: "ローカルモードでログイン",
         biometric_login: "生体認証でログイン",
         google_login: "Googleでログイン",
         login_btn: "ログイン",
@@ -284,6 +292,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey登録完了 (ローカルストレージ保存)",
         passkey_fallback_login: "生体認証でログインしました (ローカルストレージ)",
         passkey_not_supported_cancel: "largeBlob非対応のためキャンセルしました。",
+        recovery_kit: "リカバリーキット",
+        download_recovery_kit: "リカバリーキットをダウンロード (PDF)",
+        recovery_kit_desc: "マスターパスワードを忘れた場合に備えて、緊急アクセス用のシートを作成します。",
+        login_locked_out: "試行回数が上限に達したため、アカウントは {minutes} 分間ロックされます。",
+        login_locked_out_remaining: "アカウントはロックされています。残り {time} です。",
+        change_local_master_pass: "ローカルマスターパスワードを変更",
+        change_cloud_master_pass: "クラウドマスターパスワードを変更",
+        prompt_cloud_pass: "クラウドマスターパスワードの確認",
+        encryption_settings: "暗号化設定 (技術情報)",
+        session_management: "セッション管理",
+        session_type: "セッションタイプ",
+        session_memory: "メモリのみ (高セキュリティ)",
+        session_storage: "セッションストレージ (標準)",
+        lock_vault: "保管庫をロック (キー破棄)",
+        lock_vault_desc: "メモリおよびストレージから暗号化キーを破棄します。再アクセスにはマスターパスワードが必要です。",
+        lock_confirm: "保管庫をロックしてもよろしいですか？",
         
         // JS Strings
         weak: "弱いパスワード",
@@ -466,11 +490,13 @@ const TRANSLATIONS = {
         delete_all_desc: "Delete all passwords and settings, and reset the app.",
         delete_all_data: "Delete All Data",
         setup_title: "Initial Setup",
-        setup_desc: "Set your master username and password.",
+        setup_title_local: "Local Mode Setup",
+        setup_desc_local: "Set your master username and password for local mode.",
         master_pass: "Master Password",
         confirm_pass: "Confirm Password",
         setup_btn: "Setup",
         login_title: "Login",
+        login_title_local: "Login to Local Mode",
         biometric_login: "Login with Biometrics",
         google_login: "Login with Google",
         login_btn: "Login",
@@ -497,6 +523,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey registered (Saved to Local Storage)",
         passkey_fallback_login: "Logged in with Biometrics (Local Storage)",
         passkey_not_supported_cancel: "Cancelled due to lack of largeBlob support.",
+        recovery_kit: "Recovery Kit",
+        download_recovery_kit: "Download Recovery Kit (PDF)",
+        recovery_kit_desc: "Create an emergency access sheet in case you forget your master password.",
+        login_locked_out: "Too many failed attempts. Your account is locked for {minutes} minutes.",
+        login_locked_out_remaining: "Account is locked. Remaining: {time}.",
+        change_local_master_pass: "Change Local Master Password",
+        change_cloud_master_pass: "Change Cloud Master Password",
+        prompt_cloud_pass: "Confirm Cloud Master Password",
+        encryption_settings: "Encryption Settings (Technical)",
+        session_management: "Session Management",
+        session_type: "Session Type",
+        session_memory: "Memory Only (High Security)",
+        session_storage: "Session Storage (Standard)",
+        lock_vault: "Lock Vault",
+        lock_vault_desc: "Discard encryption key from memory and storage. Master Password required for re-access.",
+        lock_confirm: "Are you sure you want to lock the vault?",
 
         // JS Strings
         weak: "Weak Password",
@@ -679,11 +721,13 @@ const TRANSLATIONS = {
         delete_all_desc: "删除所有密码和设置，并重置应用。",
         delete_all_data: "删除所有数据",
         setup_title: "初始设置",
-        setup_desc: "设置您的主用户名和密码。",
+        setup_title_local: "本地模式设置",
+        setup_desc_local: "为本地模式设置您的主用户名和密码。",
         master_pass: "主密码",
         confirm_pass: "确认密码",
         setup_btn: "设置",
         login_title: "登录",
+        login_title_local: "登录本地模式",
         biometric_login: "生物识别登录",
         google_login: "Google 登录",
         login_btn: "登录",
@@ -710,6 +754,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey 已注册（保存到本地存储）",
         passkey_fallback_login: "已使用生物识别登录（本地存储）",
         passkey_not_supported_cancel: "由于不支持 largeBlob 已取消。",
+        recovery_kit: "恢复套件",
+        download_recovery_kit: "下载恢复套件 (PDF)",
+        recovery_kit_desc: "创建一个紧急访问表单，以防您忘记主密码。",
+        login_locked_out: "尝试次数过多。您的帐户将被锁定 {minutes} 分钟。",
+        login_locked_out_remaining: "帐户已锁定。剩余时间：{time}。",
+        change_local_master_pass: "更改本地主密码",
+        change_cloud_master_pass: "更改云主密码",
+        prompt_cloud_pass: "确认云主密码",
+        encryption_settings: "加密设置 (技术信息)",
+        session_management: "会话管理",
+        session_type: "会话类型",
+        session_memory: "仅内存 (高安全性)",
+        session_storage: "会话存储 (标准)",
+        lock_vault: "锁定保险库",
+        lock_vault_desc: "从内存和存储中丢弃加密密钥。重新访问需要主密码。",
+        lock_confirm: "确定要锁定保险库吗？",
         
         // JS Strings
         weak: "弱密码",
@@ -892,11 +952,13 @@ const TRANSLATIONS = {
         delete_all_desc: "모든 비밀번호와 설정을 삭제하고 앱을 초기화합니다.",
         delete_all_data: "모든 데이터 삭제",
         setup_title: "초기 설정",
-        setup_desc: "마스터 사용자명과 비밀번호를 설정하세요.",
+        setup_title_local: "로컬 모드 설정",
+        setup_desc_local: "로컬 모드에서 사용할 마스터 사용자명과 비밀번호를 설정하세요.",
         master_pass: "마스터 비밀번호",
         confirm_pass: "비밀번호 확인",
         setup_btn: "설정",
         login_title: "로그인",
+        login_title_local: "로컬 모드로 로그인",
         biometric_login: "생체 인증 로그인",
         google_login: "Google 로그인",
         login_btn: "로그인",
@@ -923,6 +985,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey 등록됨 (로컬 스토리지에 저장됨)",
         passkey_fallback_login: "생체 인증으로 로그인됨 (로컬 스토리지)",
         passkey_not_supported_cancel: "largeBlob 미지원으로 취소되었습니다.",
+        recovery_kit: "복구 키트",
+        download_recovery_kit: "복구 키트 다운로드 (PDF)",
+        recovery_kit_desc: "마스터 비밀번호를 잊어버릴 경우를 대비해 비상 액세스 시트를 만드세요.",
+        login_locked_out: "시도 횟수가 너무 많습니다. 계정이 {minutes}분 동안 잠깁니다.",
+        login_locked_out_remaining: "계정이 잠겼습니다. 남은 시간: {time}.",
+        change_local_master_pass: "로컬 마스터 비밀번호 변경",
+        change_cloud_master_pass: "클라우드 마스터 비밀번호 변경",
+        prompt_cloud_pass: "클라우드 마스터 비밀번호 확인",
+        encryption_settings: "암호화 설정 (기술 정보)",
+        session_management: "세션 관리",
+        session_type: "세션 유형",
+        session_memory: "메모리 전용 (높은 보안)",
+        session_storage: "세션 스토리지 (표준)",
+        lock_vault: "보관함 잠금",
+        lock_vault_desc: "메모리 및 스토리지에서 암호화 키를 삭제합니다. 다시 액세스하려면 마스터 비밀번호가 필요합니다.",
+        lock_confirm: "보관함을 잠그시겠습니까?",
         
         // JS Strings
         weak: "약한 비밀번호",
@@ -1105,11 +1183,13 @@ const TRANSLATIONS = {
         delete_all_desc: "Alle Passwörter und Einstellungen löschen und App zurücksetzen.",
         delete_all_data: "Alle Daten löschen",
         setup_title: "Ersteinrichtung",
-        setup_desc: "Legen Sie Ihren Master-Benutzernamen und das Passwort fest.",
+        setup_title_local: "Lokaler Modus Einrichtung",
+        setup_desc_local: "Legen Sie Ihren Master-Benutzernamen und das Passwort für den lokalen Modus fest.",
         master_pass: "Master-Passwort",
         confirm_pass: "Passwort bestätigen",
         setup_btn: "Einrichten",
         login_title: "Anmelden",
+        login_title_local: "Im lokalen Modus anmelden",
         biometric_login: "Mit Biometrie anmelden",
         google_login: "Mit Google anmelden",
         login_btn: "Anmelden",
@@ -1136,6 +1216,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey registriert (Im lokalen Speicher gespeichert)",
         passkey_fallback_login: "Mit Biometrie angemeldet (Lokaler Speicher)",
         passkey_not_supported_cancel: "Abgebrochen wegen fehlender largeBlob-Unterstützung.",
+        recovery_kit: "Wiederherstellungs-Kit",
+        download_recovery_kit: "Wiederherstellungs-Kit herunterladen (PDF)",
+        recovery_kit_desc: "Erstellen Sie ein Notfallzugriffsblatt, falls Sie Ihr Master-Passwort vergessen.",
+        login_locked_out: "Zu viele fehlgeschlagene Versuche. Ihr Konto ist für {minutes} Minuten gesperrt.",
+        login_locked_out_remaining: "Konto ist gesperrt. Verbleibend: {time}.",
+        change_local_master_pass: "Lokales Master-Passwort ändern",
+        change_cloud_master_pass: "Cloud-Master-Passwort ändern",
+        prompt_cloud_pass: "Cloud-Master-Passwort bestätigen",
+        encryption_settings: "Verschlüsselungseinstellungen (Technisch)",
+        session_management: "Sitzungsverwaltung",
+        session_type: "Sitzungstyp",
+        session_memory: "Nur Speicher (Hohe Sicherheit)",
+        session_storage: "Sitzungsspeicher (Standard)",
+        lock_vault: "Tresor sperren",
+        lock_vault_desc: "Verwerfen Sie den Verschlüsselungsschlüssel aus Speicher und Ablage. Master-Passwort für erneuten Zugriff erforderlich.",
+        lock_confirm: "Möchten Sie den Tresor wirklich sperren?",
         
         // JS Strings
         weak: "Schwaches Passwort",
@@ -1318,11 +1414,13 @@ const TRANSLATIONS = {
         delete_all_desc: "Supprimer tous les mots de passe et paramètres, et réinitialiser l'application.",
         delete_all_data: "Supprimer toutes les données",
         setup_title: "Configuration initiale",
-        setup_desc: "Définissez votre nom d'utilisateur et mot de passe maître.",
+        setup_title_local: "Configuration du mode local",
+        setup_desc_local: "Définissez votre nom d'utilisateur et mot de passe maître pour le mode local.",
         master_pass: "Mot de passe maître",
         confirm_pass: "Confirmer le mot de passe",
         setup_btn: "Configurer",
         login_title: "Connexion",
+        login_title_local: "Connexion au mode local",
         biometric_login: "Connexion biométrique",
         google_login: "Connexion avec Google",
         login_btn: "Connexion",
@@ -1349,6 +1447,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey enregistré (Sauvegardé dans le stockage local)",
         passkey_fallback_login: "Connexion biométrique réussie (Stockage local)",
         passkey_not_supported_cancel: "Annulé en raison de l'absence de prise en charge de largeBlob.",
+        recovery_kit: "Kit de récupération",
+        download_recovery_kit: "Télécharger le kit de récupération (PDF)",
+        recovery_kit_desc: "Créez une fiche d'accès d'urgence au cas où vous oublieriez votre mot de passe maître.",
+        login_locked_out: "Trop de tentatives échouées. Votre compte est verrouillé pour {minutes} minutes.",
+        login_locked_out_remaining: "Compte verrouillé. Restant : {time}.",
+        change_local_master_pass: "Changer le mot de passe maître local",
+        change_cloud_master_pass: "Changer le mot de passe maître cloud",
+        prompt_cloud_pass: "Confirmer le mot de passe maître cloud",
+        encryption_settings: "Paramètres de chiffrement (Technique)",
+        session_management: "Gestion de session",
+        session_type: "Type de session",
+        session_memory: "Mémoire uniquement (Haute sécurité)",
+        session_storage: "Stockage de session (Standard)",
+        lock_vault: "Verrouiller le coffre",
+        lock_vault_desc: "Supprimer la clé de chiffrement de la mémoire et du stockage. Mot de passe maître requis pour y accéder à nouveau.",
+        lock_confirm: "Êtes-vous sûr de vouloir verrouiller le coffre ?",
         
         // JS Strings
         weak: "Mot de passe faible",
@@ -1531,11 +1645,13 @@ const TRANSLATIONS = {
         delete_all_desc: "Elimina tutte le password e impostazioni, e resetta l'app.",
         delete_all_data: "Elimina Tutti i Dati",
         setup_title: "Configurazione Iniziale",
-        setup_desc: "Imposta il tuo nome utente e password master.",
+        setup_title_local: "Configurazione Modalità Locale",
+        setup_desc_local: "Imposta il tuo nome utente e password master per la modalità locale.",
         master_pass: "Password Master",
         confirm_pass: "Conferma Password",
         setup_btn: "Configura",
         login_title: "Accedi",
+        login_title_local: "Accedi alla Modalità Locale",
         biometric_login: "Accedi con Biometria",
         google_login: "Accedi con Google",
         login_btn: "Accedi",
@@ -1562,6 +1678,22 @@ const TRANSLATIONS = {
         passkey_fallback_saved: "Passkey registrata (Salvata nella memoria locale)",
         passkey_fallback_login: "Accesso con biometria (Memoria locale)",
         passkey_not_supported_cancel: "Annullato per mancanza di supporto largeBlob.",
+        recovery_kit: "Kit di Recupero",
+        download_recovery_kit: "Scarica Kit di Recupero (PDF)",
+        recovery_kit_desc: "Crea un foglio di accesso di emergenza nel caso dimentichi la password master.",
+        login_locked_out: "Troppi tentativi falliti. Il tuo account è bloccato per {minutes} minuti.",
+        login_locked_out_remaining: "Account bloccato. Rimanente: {time}.",
+        change_local_master_pass: "Cambia Password Master Locale",
+        change_cloud_master_pass: "Cambia Password Master Cloud",
+        prompt_cloud_pass: "Conferma Password Master Cloud",
+        encryption_settings: "Impostazioni Crittografia (Tecnico)",
+        session_management: "Gestione Sessione",
+        session_type: "Tipo Sessione",
+        session_memory: "Solo Memoria (Alta Sicurezza)",
+        session_storage: "Memoria Sessione (Standard)",
+        lock_vault: "Blocca Cassaforte",
+        lock_vault_desc: "Elimina la chiave di crittografia dalla memoria e dall'archivio. Password Master richiesta per accedere nuovamente.",
+        lock_confirm: "Sei sicuro di voler bloccare la cassaforte?",
         
         // JS Strings
         weak: "Password Debole",
@@ -1845,13 +1977,18 @@ async function calculateCloudVerifier(password, uid) {
 async function saveCloudKey(key) {
     try {
         const exported = await window.crypto.subtle.exportKey("jwk", key);
-        localStorage.setItem(CONSTANTS.STORAGE.CLOUD_KEY, JSON.stringify(exported));
+        sessionStorage.setItem(CONSTANTS.STORAGE.CLOUD_KEY, JSON.stringify(exported));
     } catch (e) { console.error("Failed to save key", e); }
 }
 
 async function loadCloudKey() {
     try {
-        const json = localStorage.getItem(CONSTANTS.STORAGE.CLOUD_KEY);
+        // Migrate/Enforce Session Storage: Remove from localStorage if exists
+        if (localStorage.getItem(CONSTANTS.STORAGE.CLOUD_KEY)) {
+            localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
+        }
+
+        const json = sessionStorage.getItem(CONSTANTS.STORAGE.CLOUD_KEY);
         if (!json) return null;
         return await window.crypto.subtle.importKey(
             "jwk",
@@ -1864,7 +2001,8 @@ async function loadCloudKey() {
 }
 
 function clearCloudKey() {
-    localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
+    sessionStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY);
+    localStorage.removeItem(CONSTANTS.STORAGE.CLOUD_KEY); // Ensure cleanup
 }
 
 async function encryptWithKek(dataObj, key) {
@@ -1894,14 +2032,14 @@ async function decryptWithKek(jsonStr, key) {
     return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
-async function getHybridKeys(uid) {
+async function getHybridKeys(uid, overrideKey = null) {
     if (hybridKeyPair) return hybridKeyPair;
 
     const userConfigRef = doc(db, "user_config", uid);
     const snap = await getDoc(userConfigRef);
     
     // KEK derived from Master Password (cloudKey)
-    const kek = await getCloudCryptoKey();
+    const kek = overrideKey || await getCloudCryptoKey();
     
     if (snap.exists() && snap.data().publicKey && snap.data().encryptedPrivateKey) {
         const pubJwk = JSON.parse(snap.data().publicKey);
@@ -2027,7 +2165,7 @@ async function decryptCloud(encryptedBase64) {
         return new TextDecoder().decode(decrypted);
     } catch (e) {
       console.warn("Cloud Decryption failed, returning original:", e);
-      return t('decryption_fail');
+      return DECRYPTION_ERROR_MARKER;
     }
 }
 
@@ -2050,7 +2188,7 @@ async function decryptCloudOld(encryptedBase64) {
       return new TextDecoder().decode(decrypted);
     } catch (e) {
       console.warn("Cloud Decryption failed, returning original:", e);
-      return t('decryption_fail');
+      return DECRYPTION_ERROR_MARKER;
     }
 }
 
@@ -2175,13 +2313,13 @@ function showSnackbar(message) {
     }, 3000);
 }
 
-async function promptForMasterPassword(returnPassword = false, checkUser = null) {
+async function promptForMasterPassword(returnPassword = false, checkUser = null, mode = 'local') {
     return new Promise((resolve) => {
         const dialog = document.createElement('m3e-dialog');
         
         const header = document.createElement('span');
         header.slot = 'header';
-        header.textContent = t('confirm_pass');
+        header.textContent = mode === 'cloud' ? t('prompt_cloud_pass') : t('confirm_pass');
         dialog.appendChild(header);
 
         const content = document.createElement('div');
@@ -2293,8 +2431,8 @@ function calculatePasswordStrength(password) {
     return result.score;
 }
 
-function getStrengthInfo(password) {
-    const strength = calculatePasswordStrength(password);
+function getStrengthInfo(password, score = null) {
+    const strength = score !== null ? score : calculatePasswordStrength(password);
     let strengthClass = 'text-weak';
     let barClass = 'bg-weak';
     let strengthPercent = 0;
@@ -2313,8 +2451,9 @@ function getStrengthInfo(password) {
 }
 
 function updateStrengthView(password, resultElId, barElId, crackTimeElId) {
-    const info = getStrengthInfo(password);
-    
+    const analysis = password ? zxcvbn(password) : null;
+    const info = getStrengthInfo(password, analysis ? analysis.score : 0);
+
     const resultEl = typeof resultElId === 'string' ? document.getElementById(resultElId) : resultElId;
     const barEl = typeof barElId === 'string' ? document.getElementById(barElId) : barElId;
     const crackTimeEl = typeof crackTimeElId === 'string' ? document.getElementById(crackTimeElId) : crackTimeElId;
@@ -2335,16 +2474,13 @@ function updateStrengthView(password, resultElId, barElId, crackTimeElId) {
     }
 
     if (crackTimeEl) {
-        crackTimeEl.textContent = password ? calculateCrackTime(password) : '';
+        crackTimeEl.textContent = analysis ? formatCrackTime(analysis.crack_times_seconds.offline_slow_hashing_1e4_per_second) : '';
     }
 }
 
-function calculateCrackTime(password) {
-    if (!password) return '';
-    const result = zxcvbn(password);
+function formatCrackTime(seconds) {
+    if (seconds === undefined || seconds === null) return '';
     // Use offline_slow_hashing_1e4_per_second for a conservative estimate (e.g. master password cracking)
-    const seconds = result.crack_times_seconds.offline_slow_hashing_1e4_per_second;
-
     let timeString = '一瞬';
     if (seconds >= 31536000 * 100) timeString = '数世紀以上';
     else if (seconds >= 31536000) timeString = Math.floor(seconds / 31536000) + t('year');
@@ -2467,20 +2603,11 @@ async function registerPasskey() {
 
     // We need the plaintext password to store it in the largeBlob.
     // Since we don't keep it in memory, we must ask the user.
-    const password = prompt("Passkeyに保存するため、現在のマスターパスワードを入力してください:");
+    const password = await promptForMasterPassword(true);
     if (!password) return;
 
-    // Verify password first
-    const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
-    if (masterAuth) {
-        const hash = await hashPassword(password, masterAuth.salt);
-        if (hash !== masterAuth.hash) {
-            showAlertDialog("パスワードが間違っています。");
-            return;
-        }
-    }
-
     try {
+        // Verification is now handled inside promptForMasterPassword
         showSnackbar("生体認証/PINを入力して登録してください...");
         
         // 1. Create Credential
@@ -2571,6 +2698,123 @@ async function loginWithPasskey() {
     }
 }
 
+function getLoginAttempts(username) {
+    const key = CONSTANTS.STORAGE.LOGIN_ATTEMPTS_PREFIX + username;
+    const data = localStorage.getItem(key);
+    if (!data) {
+        return { attempts: 0, lockoutUntil: null };
+    }
+    return JSON.parse(data);
+}
+
+function setLoginAttempts(username, data) {
+    const key = CONSTANTS.STORAGE.LOGIN_ATTEMPTS_PREFIX + username;
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function clearLoginAttempts(username) {
+    const key = CONSTANTS.STORAGE.LOGIN_ATTEMPTS_PREFIX + username;
+    localStorage.removeItem(key);
+}
+
+function formatRemainingTime(ms) {
+    const totalSeconds = Math.ceil(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+}
+
+async function handleFailedLogin(username) {
+    const attemptsData = getLoginAttempts(username);
+    attemptsData.attempts++;
+
+    if (attemptsData.attempts >= MAX_LOGIN_ATTEMPTS) {
+        attemptsData.lockoutUntil = Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000;
+        attemptsData.attempts = 0; // Reset counter after lockout
+        setLoginAttempts(username, attemptsData);
+        showAlertDialog(t('login_locked_out', { minutes: LOCKOUT_DURATION_MINUTES }));
+    } else {
+        setLoginAttempts(username, attemptsData);
+        showAlertDialog(t('login_fail'));
+    }
+}
+
+function generateRecoveryKit() {
+    const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+    const username = masterAuth ? masterAuth.username : (currentUser ? (currentUser.email || currentUser.displayName) : 'Unknown');
+    
+    const content = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Soul Password Manager - Recovery Kit</title>
+            <style>
+                body { font-family: sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
+                .header { border-bottom: 2px solid #6750a4; padding-bottom: 20px; margin-bottom: 30px; }
+                .logo { font-size: 24px; font-weight: bold; color: #6750a4; display: flex; align-items: center; gap: 10px; }
+                .warning { background: #fff3e0; border: 1px solid #ffe0b2; padding: 15px; border-radius: 4px; margin-bottom: 30px; color: #e65100; }
+                .field { margin-bottom: 25px; }
+                .label { font-weight: bold; margin-bottom: 8px; display: block; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; color: #666; }
+                .value { border: 1px solid #ccc; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 16px; background: #f9f9f9; min-height: 20px; }
+                .value.write-in { background: white; border: 2px dashed #ccc; color: #ccc; }
+                .footer { margin-top: 50px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }
+                @media print {
+                    body { padding: 0; }
+                    .warning { border: 1px solid #000; color: #000; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="logo">
+                    <span>🔒</span> Soul Password Manager
+                </div>
+                <h1>Recovery Kit</h1>
+            </div>
+            
+            <div class="warning">
+                <strong>EMERGENCY USE ONLY / 緊急用</strong><br>
+                This document contains your login credentials. Store it in a secure location (e.g., a safe).<br>
+                If you lose your Master Password, this is the ONLY way to access your data.<br>
+                <br>
+                このドキュメントにはログイン情報が含まれています。金庫などの安全な場所に保管してください。<br>
+                マスターパスワードを紛失した場合、データにアクセスする唯一の方法となります。
+            </div>
+
+            <div class="field">
+                <span class="label">Username / ユーザー名</span>
+                <div class="value">${username}</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Master Password / マスターパスワード</span>
+                <div class="value write-in">Write your Master Password here / ここにマスターパスワードを記入してください</div>
+            </div>
+
+            <div class="field">
+                <span class="label">Login URL</span>
+                <div class="value">${window.location.origin}</div>
+            </div>
+
+            <div class="footer">
+                Generated on ${new Date().toLocaleString()}
+            </div>
+            <script>
+                window.onload = function() { window.print(); }
+            </script>
+        </body>
+        </html>
+    `;
+
+    const win = window.open('', '_blank');
+    if (win) {
+        win.document.write(content);
+        win.document.close();
+    } else {
+        showAlertDialog("Pop-up blocked. Please allow pop-ups to download the Recovery Kit.");
+    }
+}
+
 let totpInterval = null;
 
 function startTOTPUpdate(secret) {
@@ -2624,6 +2868,23 @@ function resetAutoLogoutTimer() {
                 location.reload();
             }
         }, minutes * 60 * 1000);
+    }
+}
+
+function updateSessionTypeDisplay() {
+    const el = document.getElementById('current_session_type');
+    if (!el) return;
+    
+    if (!currentUser) {
+        el.textContent = t('session_memory');
+        return;
+    }
+
+    const requireSecondAuth = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_SECOND_AUTH) === 'true';
+    if (requireSecondAuth) {
+        el.textContent = t('session_memory');
+    } else {
+        el.textContent = t('session_storage');
     }
 }
 
@@ -3004,8 +3265,19 @@ function openDetailDialog(item) {
     document.getElementById('detail_pass_category').value = item.category || '';
     document.getElementById('detail_pass_website').value = item.website || '';
     document.getElementById('detail_pass_username').value = item.username || '';
-    document.getElementById('detail_pass_value').value = item.password || '';
-    document.getElementById('detail_pass_secret').value = item.secret || '';
+    
+    // Handle decryption errors safely
+    const passInput = document.getElementById('detail_pass_value');
+    if (item.password === DECRYPTION_ERROR_MARKER) {
+        passInput.value = t('decryption_fail');
+        passInput.disabled = true;
+    } else {
+        passInput.value = item.password || '';
+        passInput.disabled = false;
+    }
+
+    // Secret field
+    document.getElementById('detail_pass_secret').value = (item.secret === DECRYPTION_ERROR_MARKER) ? '' : (item.secret || '');
     
     // Reset breach check button
     const breachBtn = document.getElementById('check_breach_btn');
@@ -3088,7 +3360,7 @@ function openDetailDialog(item) {
         });
     }
 
-    updateDetailStrength(item.password || '');
+    updateDetailStrength((item.password === DECRYPTION_ERROR_MARKER) ? '' : (item.password || ''));
     startTOTPUpdate(item.secret);
     updateDetailRisks(item); // Update risks
     checkDetailChanges(); // Initialize button state
@@ -3157,23 +3429,51 @@ async function renderDeviceList() {
             const isCurrent = device.deviceId === currentDeviceId;
             const iconName = getDeviceIcon(device.userAgent);
             
-            div.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px; width:100%;">
-                    <m3e-icon name="${iconName}" style="font-size:24px; color:var(--md-sys-color-secondary);"></m3e-icon>
-                    <div style="flex:1;">
-                        <div class="font-bold" style="display:flex; align-items:center; gap:8px;">
-                            ${device.deviceName || t('unknown_device')}
-                            ${isCurrent ? `<span class="bg-strong" style="color:white; padding:2px 6px; border-radius:4px; font-size:10px;">${t('current_device')}</span>` : ''}
-                        </div>
-                        <div class="text-small text-secondary" style="word-break: break-all; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${device.userAgent}</div>
-                        <div class="text-small text-secondary">${t('last_access')}${new Date(device.lastLogin).toLocaleString()}</div>
-                    </div>
-                    ${!isCurrent ? `<m3e-icon-button class="revoke-btn" title="${t('force_logout')}"><m3e-icon name="logout" class="color-error"></m3e-icon></m3e-icon-button>` : ''}
-                </div>
-            `;
+            // Create elements safely
+            const container = document.createElement('div');
+            container.style.cssText = "display:flex; align-items:center; gap:12px; width:100%;";
+            
+            const icon = document.createElement('m3e-icon');
+            icon.name = iconName;
+            icon.style.cssText = "font-size:24px; color:var(--md-sys-color-secondary);";
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.style.flex = '1';
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'font-bold';
+            nameDiv.style.cssText = "display:flex; align-items:center; gap:8px;";
+            nameDiv.textContent = device.deviceName || t('unknown_device');
+            
+            if (isCurrent) {
+                const badge = document.createElement('span');
+                badge.className = 'bg-strong';
+                badge.style.cssText = "color:white; padding:2px 6px; border-radius:4px; font-size:10px;";
+                badge.textContent = t('current_device');
+                nameDiv.appendChild(badge);
+            }
+            
+            const uaDiv = document.createElement('div');
+            uaDiv.className = 'text-small text-secondary';
+            uaDiv.style.cssText = "word-break: break-all; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;";
+            uaDiv.textContent = device.userAgent;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'text-small text-secondary';
+            timeDiv.textContent = t('last_access') + new Date(device.lastLogin).toLocaleString();
+            
+            infoDiv.appendChild(nameDiv);
+            infoDiv.appendChild(uaDiv);
+            infoDiv.appendChild(timeDiv);
+            
+            container.appendChild(icon);
+            container.appendChild(infoDiv);
             
             if (!isCurrent) {
-                div.querySelector('.revoke-btn').addEventListener('click', () => {
+                const revokeBtn = document.createElement('m3e-icon-button');
+                revokeBtn.title = t('force_logout');
+                revokeBtn.innerHTML = '<m3e-icon name="logout" class="color-error"></m3e-icon>';
+                revokeBtn.addEventListener('click', () => {
                     showConfirmDialog(t('force_logout_confirm')).then(async (res) => {
                         if (res) {
                             const mpCheck = await promptForMasterPassword();
@@ -3190,7 +3490,10 @@ async function renderDeviceList() {
                         }
                     });
                 });
+                container.appendChild(revokeBtn);
             }
+            
+            div.appendChild(container);
             
             list.appendChild(div);
         });
@@ -3766,6 +4069,13 @@ function addPasswordToUI(item, index, listGroup) {
 async function saveOrUpdateItem(item) {
     if (currentUser) {
         // Cloud Mode
+        
+        // Check for decryption errors to prevent overwriting data with error messages
+        if (item.password === DECRYPTION_ERROR_MARKER || item.secret === DECRYPTION_ERROR_MARKER) {
+             showAlertDialog(t('decryption_fail'));
+             return;
+        }
+
         try {
             // Encrypt all sensitive fields
             const encryptedTitle = await encryptCloud(item.title || '');
@@ -3948,20 +4258,35 @@ function renderTrashList() {
     deletedItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'history-item';
-        
-        div.innerHTML = `
-            <div style="flex:1">
-                <div class="font-bold">${item.title}</div>
-                <div class="text-small text-secondary">${new Date(item.deletedAt).toLocaleString()}</div>
-            </div>
-            <div style="display:flex; gap:8px;">
-                <m3e-icon-button class="restore-btn" title="${t('restore')}"><m3e-icon name="restore_from_trash"></m3e-icon></m3e-icon-button>
-                <m3e-icon-button class="delete-forever-btn" title="${t('delete_permanently')}"><m3e-icon name="delete_forever" style="color:var(--md-sys-color-error)"></m3e-icon></m3e-icon-button>
-            </div>
-        `;
 
-        div.querySelector('.restore-btn').addEventListener('click', () => restoreItem(item.id));
-        div.querySelector('.delete-forever-btn').addEventListener('click', () => {
+        // Create elements safely instead of innerHTML
+        const infoDiv = document.createElement('div');
+        infoDiv.style.flex = '1';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'font-bold';
+        titleDiv.textContent = item.title;
+        
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'text-small text-secondary';
+        dateDiv.textContent = new Date(item.deletedAt).toLocaleString();
+        
+        infoDiv.appendChild(titleDiv);
+        infoDiv.appendChild(dateDiv);
+        
+        const btnDiv = document.createElement('div');
+        btnDiv.style.display = 'flex';
+        btnDiv.style.gap = '8px';
+        
+        const restoreBtn = document.createElement('m3e-icon-button');
+        restoreBtn.title = t('restore');
+        restoreBtn.innerHTML = '<m3e-icon name="restore_from_trash"></m3e-icon>';
+        restoreBtn.addEventListener('click', () => restoreItem(item.id));
+        
+        const deleteBtn = document.createElement('m3e-icon-button');
+        deleteBtn.title = t('delete_permanently');
+        deleteBtn.innerHTML = '<m3e-icon name="delete_forever" style="color:var(--md-sys-color-error)"></m3e-icon>';
+        deleteBtn.addEventListener('click', () => {
             showConfirmDialog(t('delete_confirm')).then(async res => {
                 if (res) {
                     const verified = await verifyDestructiveAction();
@@ -3969,6 +4294,12 @@ function renderTrashList() {
                 }
             });
         });
+
+        btnDiv.appendChild(restoreBtn);
+        btnDiv.appendChild(deleteBtn);
+
+        div.appendChild(infoDiv);
+        div.appendChild(btnDiv);
 
         list.appendChild(div);
     });
@@ -4046,7 +4377,7 @@ async function registerLoginDevice(user) {
 }
 
 function initFirestoreSync(user) {
-    console.log("Sync initialized for user:", user.uid);
+    // console.log("Sync initialized for user:", user.uid); // Removed for production privacy
     const q = query(collection(db, "passwords"), where("uid", "==", user.uid));
     
     if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
@@ -4172,7 +4503,7 @@ async function initLocalApp() {
 // Auth State Listener
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        console.log("User logged in:", user.email);
+        console.log("User logged in"); // Removed email logging for privacy
         
         const requireSecondAuth = localStorage.getItem(CONSTANTS.STORAGE.REQUIRE_SECOND_AUTH) === 'true';
         
@@ -4181,7 +4512,7 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         if (!cloudKey) {
-            const password = await promptForMasterPassword(true, user);
+            const password = await promptForMasterPassword(true, user, 'cloud');
             if (!password) { await signOut(auth); return; }
             cloudKey = await deriveCloudKey(password, user.uid);
             
@@ -4265,6 +4596,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 
+    // Privacy Blur on Visibility Change
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            document.body.classList.add('privacy-blur');
+        } else {
+            document.body.classList.remove('privacy-blur');
+        }
+    });
+
     // Password Checker
     const passCheckInput = document.getElementById('pass_check_form');
     if (passCheckInput) {
@@ -4347,21 +4687,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!masterAuth) return;
 
-        if (user !== masterAuth.username) {
-             showAlertDialog(t('login_fail'));
-             return;
+        // Check for lockout
+        const attemptsData = getLoginAttempts(user);
+        if (attemptsData.lockoutUntil && attemptsData.lockoutUntil > Date.now()) {
+            const remainingTime = formatRemainingTime(attemptsData.lockoutUntil - Date.now());
+            showAlertDialog(t('login_locked_out_remaining', { time: remainingTime }));
+            return;
         }
 
-        if (masterAuth.hash && masterAuth.salt) {
+        let loginSuccess = false;
+        if (user === masterAuth.username && masterAuth.hash && masterAuth.salt) {
             const hash = await hashPassword(pass, masterAuth.salt);
             if (hash === masterAuth.hash) {
-                appKey = await deriveKey(pass, masterAuth.salt);
-                document.getElementById('login_dialog').open = false;
-                initLocalApp();
-                return;
+                loginSuccess = true;
             }
         }
-        showAlertDialog(t('login_fail'));
+
+        if (loginSuccess) {
+            clearLoginAttempts(user);
+            appKey = await deriveKey(pass, masterAuth.salt);
+            document.getElementById('login_dialog').open = false;
+            initLocalApp();
+        } else {
+            handleFailedLogin(user);
+        }
     });
 
     // Biometric Login
@@ -4711,6 +5060,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cloudKey) await saveCloudKey(cloudKey);
             }
             showSnackbar(t('settings_saved'));
+            updateSessionTypeDisplay();
         });
     }
 
@@ -4734,17 +5084,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Inject sync warning into setup dialog
+    // ... (This part seems to be missing from the provided context, but it's okay)
+
+    // Settings Dialog Open
+    document.getElementById('settings_dialog')?.addEventListener('open', () => {
+        const localSection = document.getElementById('local_master_pass_section');
+        const cloudSection = document.getElementById('cloud_master_pass_section');
+        if (currentUser) {
+            localSection.classList.add('hidden');
+            cloudSection.classList.remove('hidden');
+        } else {
+            localSection.classList.remove('hidden');
+            cloudSection.classList.add('hidden');
+        }
+        updateSessionTypeDisplay();
+    });
+    // Recovery Kit
+    document.getElementById('download_recovery_kit_btn')?.addEventListener('click', generateRecoveryKit);
+
     // Update Master Password
     document.getElementById('update_master_pass_btn')?.addEventListener('click', async () => {
         const currentPass = document.getElementById('setting_current_pass').value;
         const newPass = document.getElementById('setting_new_pass').value;
-        const confirmPass = document.getElementById('setting_new_pass_confirm').value;
+        const confirmPass = document.getElementById('setting_new_pass_confirm').value; // This is the old combined logic
 
         if (!currentPass || !newPass || !confirmPass) {
             showSnackbar(t('error'));
             return;
         }
-
+        
         if (newPass !== confirmPass) {
             showAlertDialog(t('login_fail'));
             return;
@@ -4859,6 +5228,135 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Update Local Master Password
+    document.getElementById('update_local_master_pass_btn')?.addEventListener('click', async () => {
+        const currentPass = document.getElementById('setting_local_current_pass').value;
+        const newPass = document.getElementById('setting_local_new_pass').value;
+        const confirmPass = document.getElementById('setting_local_new_pass_confirm').value;
+
+        if (!currentPass || !newPass || newPass !== confirmPass) {
+            showAlertDialog(t('login_fail'));
+            return;
+        }
+
+        const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+        if (!masterAuth) return;
+
+        const hash = await hashPassword(currentPass, masterAuth.salt);
+        if (hash !== masterAuth.hash) {
+            showAlertDialog(t('login_fail'));
+            return;
+        }
+
+        const confirmChange = await showConfirmDialog(t('change_master_pass_confirm'));
+        if (!confirmChange) return;
+
+        try {
+            const newSalt = await generateSalt();
+            const newSaltB64 = arrayBufferToBase64(newSalt);
+            const newHash = await hashPassword(newPass, newSalt);
+
+            const newAppKey = await deriveKey(newPass, newSalt);
+            appKey = newAppKey;
+            
+            masterAuth.hash = newHash;
+            masterAuth.salt = newSaltB64;
+            localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
+            
+            await savePasswordsData(); // Re-encrypts with new appKey
+
+            showSnackbar(t('settings_saved'));
+            document.getElementById('setting_local_current_pass').value = '';
+            document.getElementById('setting_local_new_pass').value = '';
+            document.getElementById('setting_local_new_pass_confirm').value = '';
+        } catch (e) {
+            console.error("Error updating local master password:", e);
+            showAlertDialog(t('error') + ": " + e.message);
+        }
+    });
+
+    // Update Cloud Master Password
+    document.getElementById('update_cloud_master_pass_btn')?.addEventListener('click', async () => {
+        if (!currentUser) return;
+
+        const currentPass = document.getElementById('setting_cloud_current_pass').value;
+        const newPass = document.getElementById('setting_cloud_new_pass').value;
+        const confirmPass = document.getElementById('setting_cloud_new_pass_confirm').value;
+
+        if (!currentPass || !newPass || newPass !== confirmPass) {
+            showAlertDialog(t('login_fail'));
+            return;
+        }
+
+        const verified = await promptForMasterPassword(false, currentUser, 'cloud');
+        if (!verified) return;
+
+        const confirmChange = await showConfirmDialog(t('change_master_pass_confirm'));
+        if (!confirmChange) return;
+
+        try {
+            showSnackbar("Updating cloud data...");
+            
+            // Pause sync to avoid decryption errors during transition
+            if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
+
+            // Ensure we have the current keys loaded (decrypted with OLD password)
+            // We use currentPass to derive the key, ensuring we can decrypt even if the session key is stale
+            if (!hybridKeyPair) {
+                const currentCloudKey = await deriveCloudKey(currentPass, currentUser.uid);
+                await getHybridKeys(currentUser.uid, currentCloudKey);
+            }
+            
+            if (!hybridKeyPair || !hybridKeyPair.privateKey) {
+                throw new Error("Failed to load current private key.");
+            }
+
+            const newCloudKey = await deriveCloudKey(newPass, currentUser.uid);
+
+            // Re-encrypt the RSA Private Key with the NEW KEK
+            const privJwk = await window.crypto.subtle.exportKey("jwk", hybridKeyPair.privateKey);
+            const newEncryptedPrivateKey = await encryptWithKek(privJwk, newCloudKey);
+
+            // Update Cloud Verifier
+            const newVerifier = await calculateCloudVerifier(newPass, currentUser.uid);
+            await setDoc(doc(db, "user_config", currentUser.uid), { 
+                encryptedPrivateKey: newEncryptedPrivateKey,
+                verifier: newVerifier 
+            }, { merge: true });
+
+            // Clear any cached key and resume sync
+            clearCloudKey();
+            
+            // Update current session key
+            cloudKey = newCloudKey;
+            
+            initFirestoreSync(currentUser);
+            showSnackbar(t('settings_saved'));
+            
+            // Clear inputs
+            document.getElementById('setting_cloud_current_pass').value = '';
+            document.getElementById('setting_cloud_new_pass').value = '';
+            document.getElementById('setting_cloud_new_pass_confirm').value = '';
+
+        } catch (e) {
+            console.error("Error updating cloud master password:", e);
+            showAlertDialog(t('error') + ": " + e.message);
+            if (currentUser && !firestoreSyncUnsubscribe) initFirestoreSync(currentUser);
+        }
+    });
+
+    // Lock Vault (Destroy Key)
+    document.getElementById('lock_vault_btn')?.addEventListener('click', () => {
+        showConfirmDialog(t('lock_confirm')).then(res => {
+            if (res) {
+                clearCloudKey();
+                appKey = null;
+                cloudKey = null;
+                location.reload();
+            }
+        });
+    });
+
     // Theme Color Setting
     document.getElementById('setting_theme_color')?.addEventListener('input', (e) => {
         applyThemeColor(e.target.value);
@@ -4894,8 +5392,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup Password Toggles
     const passwordIds = [
         'new_pass_value', 'detail_pass_value', 'setup_password', 'setup_password_confirm',
-        'login_password', 'setting_current_pass', 'setting_new_pass', 'setting_new_pass_confirm',
-        'new_pass_secret', 'detail_pass_secret'
+        'login_password', 'new_pass_secret', 'detail_pass_secret',
+        'setting_local_current_pass', 'setting_local_new_pass', 'setting_local_new_pass_confirm',
+        'setting_cloud_current_pass', 'setting_cloud_new_pass', 'setting_cloud_new_pass_confirm'
     ];
     passwordIds.forEach(id => {
         const el = document.getElementById(id);
@@ -5320,6 +5819,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedColor) {
         applyThemeColor(savedColor);
     }
+
+    // Populate Encryption Info
+    const encAlgoDataEl = document.getElementById('enc_algo_data');
+    if (encAlgoDataEl) encAlgoDataEl.textContent = `${HYBRID_CONFIG.AES_ALGO.name} ${HYBRID_CONFIG.AES_ALGO.length}-bit`;
+
+    const encAlgoKeyEl = document.getElementById('enc_algo_key');
+    if (encAlgoKeyEl) encAlgoKeyEl.textContent = `PBKDF2 (SHA-256)`;
+
+    const encIterationsEl = document.getElementById('enc_iterations');
+    if (encIterationsEl) encIterationsEl.textContent = CRYPTO_CONFIG.PBKDF2_ITERATIONS.toLocaleString();
+
+    const encHybridEl = document.getElementById('enc_hybrid');
+    if (encHybridEl) encHybridEl.textContent = `${HYBRID_CONFIG.RSA_ALGO.name} ${HYBRID_CONFIG.RSA_ALGO.modulusLength}-bit`;
 
     // Layout handling
     window.addEventListener('resize', updateLayout);
