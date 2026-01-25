@@ -88,7 +88,9 @@ const CONSTANTS = {
         REQUIRE_AUTH_ON_DELETE: 'soul_require_auth_on_delete',
         REQUIRE_AUTH_ON_SHOW_COPY: 'soul_require_auth_on_show_copy',
         PASSKEY_FALLBACK: 'soul_passkey_fallback',
-        LOGIN_ATTEMPTS_PREFIX: 'soul_login_attempts_'
+        LOGIN_ATTEMPTS_PREFIX: 'soul_login_attempts_',
+        PASSKEY_NAMES: 'soul_passkey_names',
+        PASSKEY_ENCRYPTED_DATA: 'soul_passkey_encrypted_data'
     }
 };
 
@@ -218,7 +220,19 @@ const TRANSLATIONS = {
         passkey_settings: "Passkey (生体認証) 設定",
         passkey_desc: "デバイスの生体認証を使ってログインできるようにします。<br>※ブラウザやデバイスがPasskeyの「largeBlob」拡張に対応している必要があります。",
         register_passkey: "Passkeyを登録",
+        unregister_passkey: "Passkey登録解除",
+        unregister_passkey_confirm: "Passkeyの登録を解除しますか？\n※アプリ内の設定は削除されますが、デバイス上のPasskeyは別途削除が必要です。",
+        passkey_unregistered: "登録を解除しました。デバイスの設定からも削除することをお勧めします。",
+        update_passkey_confirm: "Passkey (生体認証) のデータも更新しますか？\n※更新しない場合、古いPasskeyではログインできなくなります。",
         change_master_pass: "マスターパスワードを変更",
+        passkey_name_title: "Passkeyの名前",
+        passkey_name_label: "名前 (デバイスに表示)",
+        passkey_name_exists: "その名前のPasskeyは既に登録されています。別の名前を指定してください。",
+        manage_passkeys: "Passkey管理",
+        passkey_manager_title: "Passkey管理",
+        passkey_list_empty: "登録されたPasskeyはありません。",
+        passkey_delete_confirm: "このPasskeyをリストから削除しますか？\n※デバイスの設定からも削除する必要があります。",
+        passkey_deleted: "リストから削除しました。",
         change_master_pass_confirm: "マスターパスワードを変更してもよろしいですか？",
         login_devices: "ログイン中のデバイス",
         current_device: "現在のデバイス",
@@ -449,7 +463,19 @@ const TRANSLATIONS = {
         passkey_settings: "Passkey (Biometric) Settings",
         passkey_desc: "Enable login using device biometrics.<br>*Requires browser/device support for Passkey 'largeBlob' extension.",
         register_passkey: "Register Passkey",
+        unregister_passkey: "Unregister Passkey",
+        unregister_passkey_confirm: "Unregister Passkey?\n*App settings will be cleared, but you must also delete the Passkey from your device settings.",
+        passkey_unregistered: "Unregistered. We recommend deleting the Passkey from your device settings as well.",
+        update_passkey_confirm: "Update Passkey (Biometric) data as well?\n*If not updated, the old Passkey will no longer work.",
         change_master_pass: "Change Master Password",
+        passkey_name_title: "Passkey Name",
+        passkey_name_label: "Name (Shown on device)",
+        passkey_name_exists: "A Passkey with that name already exists. Please choose a different name.",
+        manage_passkeys: "Manage Passkeys",
+        passkey_manager_title: "Passkey Manager",
+        passkey_list_empty: "No registered Passkeys.",
+        passkey_delete_confirm: "Remove this Passkey from the list?\n*You must also delete it from your device settings.",
+        passkey_deleted: "Removed from list.",
         change_master_pass_confirm: "Are you sure you want to change your master password?",
         login_devices: "Logged-in Devices",
         current_device: "Current Device",
@@ -680,7 +706,16 @@ const TRANSLATIONS = {
         passkey_settings: "Passkey (生物识别) 设置",
         passkey_desc: "启用设备生物识别登录。<br>*需要浏览器/设备支持 Passkey 'largeBlob' 扩展。",
         register_passkey: "注册 Passkey",
+        update_passkey_confirm: "同时也更新 Passkey (生物识别) 数据吗？\n*如果不更新，旧的 Passkey 将无法使用。",
         change_master_pass: "修改主密码",
+        passkey_name_title: "Passkey 名称",
+        passkey_name_label: "名称 (显示在设备上)",
+        passkey_name_exists: "该名称的 Passkey 已存在。请选择其他名称。",
+        manage_passkeys: "Passkey 管理",
+        passkey_manager_title: "Passkey 管理",
+        passkey_list_empty: "没有注册的 Passkey。",
+        passkey_delete_confirm: "从列表中删除此 Passkey 吗？\n*您还必须从设备设置中删除它。",
+        passkey_deleted: "已从列表中删除。",
         change_master_pass_confirm: "确定要更改主密码吗？",
         login_devices: "登录设备",
         current_device: "当前设备",
@@ -911,7 +946,16 @@ const TRANSLATIONS = {
         passkey_settings: "Passkey (생체 인증) 설정",
         passkey_desc: "기기 생체 인증을 사용하여 로그인합니다.<br>*브라우저/기기가 Passkey 'largeBlob' 확장을 지원해야 합니다.",
         register_passkey: "Passkey 등록",
+        update_passkey_confirm: "Passkey (생체 인증) 데이터도 업데이트하시겠습니까?\n*업데이트하지 않으면 기존 Passkey를 사용할 수 없습니다.",
         change_master_pass: "마스터 비밀번호 변경",
+        passkey_name_title: "Passkey 이름",
+        passkey_name_label: "이름 (기기에 표시됨)",
+        passkey_name_exists: "해당 이름의 Passkey가 이미 존재합니다. 다른 이름을 선택해 주세요.",
+        manage_passkeys: "Passkey 관리",
+        passkey_manager_title: "Passkey 관리",
+        passkey_list_empty: "등록된 Passkey가 없습니다.",
+        passkey_delete_confirm: "목록에서 이 Passkey를 삭제하시겠습니까?\n*기기 설정에서도 삭제해야 합니다.",
+        passkey_deleted: "목록에서 삭제되었습니다.",
         change_master_pass_confirm: "마스터 비밀번호를 변경하시겠습니까?",
         login_devices: "로그인된 기기",
         current_device: "현재 기기",
@@ -1142,7 +1186,16 @@ const TRANSLATIONS = {
         passkey_settings: "Passkey (Biometrie) Einstellungen",
         passkey_desc: "Anmeldung mit Geräte-Biometrie aktivieren.<br>*Erfordert Browser/Geräte-Unterstützung für Passkey 'largeBlob'-Erweiterung.",
         register_passkey: "Passkey registrieren",
+        update_passkey_confirm: "Passkey (Biometrie) Daten ebenfalls aktualisieren?\n*Wenn nicht aktualisiert, funktioniert der alte Passkey nicht mehr.",
         change_master_pass: "Master-Passwort ändern",
+        passkey_name_title: "Passkey-Name",
+        passkey_name_label: "Name (Auf Gerät angezeigt)",
+        passkey_name_exists: "Ein Passkey mit diesem Namen existiert bereits. Bitte wählen Sie einen anderen Namen.",
+        manage_passkeys: "Passkey verwalten",
+        passkey_manager_title: "Passkey-Manager",
+        passkey_list_empty: "Keine registrierten Passkeys.",
+        passkey_delete_confirm: "Diesen Passkey aus der Liste entfernen?\n*Sie müssen ihn auch aus Ihren Geräteeinstellungen löschen.",
+        passkey_deleted: "Aus der Liste entfernt.",
         change_master_pass_confirm: "Möchten Sie Ihr Master-Passwort wirklich ändern?",
         login_devices: "Angemeldete Geräte",
         current_device: "Aktuelles Gerät",
@@ -1373,7 +1426,16 @@ const TRANSLATIONS = {
         passkey_settings: "Paramètres Passkey (Biométrie)",
         passkey_desc: "Activer la connexion via la biométrie de l'appareil.<br>*Nécessite un navigateur/appareil supportant l'extension Passkey 'largeBlob'.",
         register_passkey: "Enregistrer une Passkey",
+        update_passkey_confirm: "Mettre à jour également les données Passkey (Biométrie) ?\n*Si non mis à jour, l'ancien Passkey ne fonctionnera plus.",
         change_master_pass: "Changer le mot de passe maître",
+        passkey_name_title: "Nom de la Passkey",
+        passkey_name_label: "Nom (Affiché sur l'appareil)",
+        passkey_name_exists: "Une Passkey avec ce nom existe déjà. Veuillez choisir un autre nom.",
+        manage_passkeys: "Gérer Passkeys",
+        passkey_manager_title: "Gestionnaire Passkey",
+        passkey_list_empty: "Aucune Passkey enregistrée.",
+        passkey_delete_confirm: "Supprimer cette Passkey de la liste ?\n*Vous devez également la supprimer des paramètres de votre appareil.",
+        passkey_deleted: "Supprimé de la liste.",
         change_master_pass_confirm: "Êtes-vous sûr de vouloir changer votre mot de passe maître ?",
         login_devices: "Appareils connectés",
         current_device: "Appareil actuel",
@@ -1604,7 +1666,16 @@ const TRANSLATIONS = {
         passkey_settings: "Impostazioni Passkey (Biometria)",
         passkey_desc: "Abilita l'accesso usando la biometria del dispositivo.<br>*Richiede supporto browser/dispositivo per estensione Passkey 'largeBlob'.",
         register_passkey: "Registra Passkey",
+        update_passkey_confirm: "Aggiornare anche i dati Passkey (Biometria)?\n*Se non aggiornato, la vecchia Passkey non funzionerà più.",
         change_master_pass: "Cambia Password Master",
+        passkey_name_title: "Nome Passkey",
+        passkey_name_label: "Nome (Mostrato sul dispositivo)",
+        passkey_name_exists: "Esiste già una Passkey con questo nome. Scegli un altro nome.",
+        manage_passkeys: "Gestisci Passkey",
+        passkey_manager_title: "Gestore Passkey",
+        passkey_list_empty: "Nessuna Passkey registrata.",
+        passkey_delete_confirm: "Rimuovere questa Passkey dalla lista?\n*Devi anche eliminarla dalle impostazioni del dispositivo.",
+        passkey_deleted: "Rimosso dalla lista.",
         change_master_pass_confirm: "Sei sicuro di voler cambiare la tua password master?",
         login_devices: "Dispositivi Connessi",
         current_device: "Dispositivo Attuale",
@@ -2313,6 +2384,73 @@ function showSnackbar(message) {
     }, 3000);
 }
 
+function promptForInput(title, label, defaultValue = '') {
+    return new Promise((resolve) => {
+        const dialog = document.createElement('m3e-dialog');
+        
+        const header = document.createElement('span');
+        header.slot = 'header';
+        header.textContent = title;
+        dialog.appendChild(header);
+
+        const content = document.createElement('div');
+        content.style.padding = '10px 0';
+        
+        const field = document.createElement('m3e-form-field');
+        field.setAttribute('variant', 'outlined');
+        field.setAttribute('label', label);
+        field.style.width = '100%';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = defaultValue;
+        input.placeholder = label;
+        input.addEventListener('focus', () => input.select());
+        
+        field.appendChild(input);
+        content.appendChild(field);
+        dialog.appendChild(content);
+
+        const actions = document.createElement('div');
+        actions.slot = 'actions';
+        
+        const cancelBtn = document.createElement('m3e-button');
+        cancelBtn.setAttribute('variant', 'text');
+        cancelBtn.innerHTML = `<span>${t('cancel')}</span>`;
+        cancelBtn.addEventListener('click', () => {
+            dialog.open = false;
+            resolve(null);
+            setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+        });
+        
+        const confirmBtn = document.createElement('m3e-button');
+        confirmBtn.setAttribute('variant', 'filled');
+        confirmBtn.innerHTML = `<span>${t('ok')}</span>`;
+        
+        const submit = () => {
+            const val = input.value;
+            dialog.open = false;
+            resolve(val);
+            setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+        };
+
+        confirmBtn.addEventListener('click', submit);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submit();
+        });
+
+        actions.appendChild(cancelBtn);
+        actions.appendChild(confirmBtn);
+        dialog.appendChild(actions);
+
+        document.body.appendChild(dialog);
+        requestAnimationFrame(() => {
+            dialog.open = true;
+            setTimeout(() => input.focus(), 100);
+        });
+    });
+}
+
 async function promptForMasterPassword(returnPassword = false, checkUser = null, mode = 'local') {
     return new Promise((resolve) => {
         const dialog = document.createElement('m3e-dialog');
@@ -2409,6 +2547,60 @@ async function promptForMasterPassword(returnPassword = false, checkUser = null,
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') verify();
         });
+
+        if (window.PublicKeyCredential) {
+            const bioBtn = document.createElement('m3e-icon-button');
+            bioBtn.innerHTML = '<m3e-icon name="fingerprint"></m3e-icon>';
+            bioBtn.style.marginRight = 'auto';
+            bioBtn.title = t('biometric_login');
+            
+            bioBtn.addEventListener('click', async () => {
+                try {
+                    const assertionOptions = {
+                        challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+                        rpId: window.location.hostname,
+                        userVerification: "required",
+                        extensions: { largeBlob: { read: true } }
+                    };
+
+                    const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
+                    const extResults = assertion.getClientExtensionResults();
+
+                    let password = null;
+                    if (extResults.largeBlob && extResults.largeBlob.blob) {
+                        const blobData = extResults.largeBlob.blob;
+                        const encryptedDataStr = localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA);
+
+                        if (encryptedDataStr) {
+                            // New Mode: Blob is Key (Envelope Encryption)
+                            const key = await window.crypto.subtle.importKey("raw", blobData, {name: "AES-GCM"}, false, ["decrypt"]);
+                            password = await decryptLocal(encryptedDataStr, key);
+                        } else {
+                            // Legacy Mode: Blob is Data
+                            const blobStr = bufferToStr(blobData);
+                            try {
+                                const blobKey = await getPasskeyBlobKey();
+                                password = await decryptLocal(blobStr, blobKey);
+                            } catch (e) {
+                                password = blobStr; // Fallback for legacy plain text
+                            }
+                        }
+                    } else {
+                        password = await loadPasskeyFallback();
+                    }
+
+                    if (password) {
+                        input.value = password;
+                        verify();
+                    } else {
+                        showSnackbar("Passkeyからデータを読み取れませんでした。");
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+            actions.appendChild(bioBtn);
+        }
 
         actions.appendChild(cancelBtn);
         actions.appendChild(confirmBtn);
@@ -2577,6 +2769,29 @@ async function getFallbackKey() {
     );
 }
 
+async function getPasskeyBlobKey() {
+    // Use a different salt for largeBlob encryption
+    const salt = new TextEncoder().encode("soul_passkey_largeblob_salt");
+    
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(FIXED_ENCRYPTION_SECRET), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+
+    return window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: CRYPTO_CONFIG.PBKDF2_ITERATIONS,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+}
+
 async function savePasskeyFallback(password) {
     const key = await getFallbackKey();
     const encrypted = await encryptLocal(password, key);
@@ -2614,10 +2829,27 @@ async function registerPasskey() {
         const userId = new Uint8Array(16);
         window.crypto.getRandomValues(userId);
 
+        let defaultName = "Soul User";
+        if (currentUser) {
+            defaultName = currentUser.email || currentUser.displayName || "Soul User";
+        } else {
+            const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+            if (masterAuth && masterAuth.username) defaultName = masterAuth.username;
+        }
+
+        const username = await promptForInput(t('passkey_name_title'), t('passkey_name_label'), defaultName);
+        if (username === null) return;
+
+        const savedNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
+        if (savedNames.includes(username)) {
+            showAlertDialog(t('passkey_name_exists'));
+            return;
+        }
+
         const publicKeyCredentialCreationOptions = {
             challenge: window.crypto.getRandomValues(new Uint8Array(32)),
             rp: { name: "Soul Password Manager", id: window.location.hostname },
-            user: { id: userId, name: masterAuth.username, displayName: masterAuth.username },
+            user: { id: userId, name: username, displayName: username },
             pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
             authenticatorSelection: { 
                 authenticatorAttachment: "platform", 
@@ -2631,28 +2863,64 @@ async function registerPasskey() {
         };
 
         const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
+        
+        // Check if largeBlob is supported by the authenticator
+        const credExts = credential.getClientExtensionResults();
+        if (!credExts.largeBlob || !credExts.largeBlob.supported) {
+            throw new Error("この認証器はデータ保存(largeBlob)をサポートしていません。");
+        }
 
-        // 2. Write Password to Large Blob (requires a separate assertion immediately after creation)
-        const passwordBuffer = strToBuffer(password);
+        // 2. Generate Random Key and Write to Large Blob (Envelope Encryption)
+        const keyBytes = window.crypto.getRandomValues(new Uint8Array(32)); // 32 bytes random key
+        
         const assertionOptions = {
             challenge: window.crypto.getRandomValues(new Uint8Array(32)),
             rpId: window.location.hostname,
             allowCredentials: [{ id: credential.rawId, type: 'public-key' }],
             userVerification: "required",
-            extensions: { largeBlob: { write: passwordBuffer } }
+            extensions: { largeBlob: { write: keyBytes } }
         };
 
         const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
         const extResults = assertion.getClientExtensionResults();
         if (extResults.largeBlob && extResults.largeBlob.written) {
-            showSnackbar("Passkeyを登録しました。");
+            // 3. Encrypt Password with the Random Key and Save to Local Storage
+            const key = await window.crypto.subtle.importKey("raw", keyBytes, {name: "AES-GCM"}, false, ["encrypt"]);
+            const encryptedPassword = await encryptLocal(password, key);
+            localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA, encryptedPassword);
+
+            let authType = "Passkey";
+            if (credential.authenticatorAttachment === 'platform') {
+                authType = "このデバイス";
+            } else if (credential.authenticatorAttachment === 'cross-platform') {
+                authType = "外部キー";
+            }
+            if (typeof credential.response.getTransports === 'function') {
+                const transports = credential.response.getTransports();
+                if (transports.length > 0) authType += ` (${transports.join(', ')})`;
+            }
+            showSnackbar(`${authType} を登録しました。`);
+            
+            const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
+            if (!currentNames.includes(username)) {
+                currentNames.push(username);
+                localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_NAMES, JSON.stringify(currentNames));
+            }
         } else {
-            throw new Error("データの保存に失敗しました (largeBlob not written)");
+            throw new Error("データの保存に失敗しました。容量不足の可能性があります。");
         }
 
     } catch (e) {
         console.error(e);
-        showAlertDialog("Passkeyの登録に失敗しました: " + e.message);
+        let msg = e.message;
+        if (e.name === 'NotAllowedError') {
+            msg = "認証がキャンセルされたか、タイムアウトしました。";
+        } else if (e.name === 'NotSupportedError') {
+            msg = "このデバイスはPasskeyをサポートしていません。";
+        } else if (e.name === 'SecurityError') {
+            msg = "セキュリティエラー (HTTPSが必要です)。";
+        }
+        showAlertDialog("Passkeyの登録に失敗しました:\n" + msg);
     }
 }
 
@@ -2670,31 +2938,205 @@ async function loginWithPasskey() {
         const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
         const extResults = assertion.getClientExtensionResults();
 
+        let password = null;
+        let isFallback = false;
+
         if (extResults.largeBlob && extResults.largeBlob.blob) {
-            const password = bufferToStr(extResults.largeBlob.blob);
-            const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
-            
-            // Use the retrieved password to login
-            appKey = await deriveKey(password, masterAuth.salt);
-            document.getElementById('login_dialog').open = false;
-            initLocalApp();
-            showSnackbar("生体認証でログインしました");
-        } else {
-            // Try fallback
-            const fallbackPassword = await loadPasskeyFallback();
-            if (fallbackPassword) {
-                const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
-                appKey = await deriveKey(fallbackPassword, masterAuth.salt);
-                document.getElementById('login_dialog').open = false;
-                initLocalApp();
-                showSnackbar(t('passkey_fallback_login'));
+            const blobData = extResults.largeBlob.blob;
+            const encryptedDataStr = localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA);
+
+            if (encryptedDataStr) {
+                // New Mode: Blob is Key
+                const key = await window.crypto.subtle.importKey("raw", blobData, {name: "AES-GCM"}, false, ["decrypt"]);
+                password = await decryptLocal(encryptedDataStr, key);
             } else {
-                showAlertDialog("Passkeyからデータを読み取れませんでした。");
+                // Legacy Mode: Blob is Data
+                const blobStr = bufferToStr(blobData);
+                try {
+                    const blobKey = await getPasskeyBlobKey();
+                    password = await decryptLocal(blobStr, blobKey);
+                } catch (e) {
+                    password = blobStr; // Fallback for legacy plain text
+                }
             }
+        } else {
+            password = await loadPasskeyFallback();
+            isFallback = true;
+        }
+
+        if (password) {
+            if (currentUser) {
+                cloudKey = await deriveCloudKey(password, currentUser.uid);
+                showSnackbar(isFallback ? t('passkey_fallback_login') : "生体認証でロック解除しました");
+                initFirestoreSync(currentUser);
+            } else {
+                const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+                if (masterAuth) {
+                    appKey = await deriveKey(password, masterAuth.salt);
+                    document.getElementById('login_dialog').open = false;
+                    initLocalApp();
+                    showSnackbar(isFallback ? t('passkey_fallback_login') : "生体認証でログインしました");
+                } else {
+                    showAlertDialog("ユーザー情報が見つかりません。");
+                }
+            }
+        } else {
+            showAlertDialog("Passkeyからデータを読み取れませんでした。");
         }
     } catch (e) {
         console.error(e);
-        showSnackbar("認証キャンセルまたはエラー: " + e.message);
+        let msg = e.message;
+        if (e.name === 'NotAllowedError') msg = "認証がキャンセルされました。";
+        else if (e.name === 'NotSupportedError') msg = "サポートされていない操作です。";
+        else if (e.name === 'SecurityError') msg = "セキュリティエラー (HTTPSが必要です)。";
+        showSnackbar("認証エラー: " + msg);
+    }
+}
+
+async function unregisterPasskey() {
+    const confirm = await showConfirmDialog(t('unregister_passkey_confirm'));
+    if (confirm) {
+        localStorage.removeItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK);
+        localStorage.removeItem(CONSTANTS.STORAGE.PASSKEY_NAMES);
+        localStorage.removeItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA);
+        showAlertDialog(t('passkey_unregistered'));
+    }
+}
+
+function openPasskeyManager() {
+    const dialog = document.createElement('m3e-dialog');
+    
+    const header = document.createElement('span');
+    header.slot = 'header';
+    header.textContent = t('passkey_manager_title');
+    dialog.appendChild(header);
+
+    const content = document.createElement('div');
+    content.style.padding = '10px 0';
+    content.style.minWidth = '300px';
+
+    const listContainer = document.createElement('div');
+    
+    const renderList = () => {
+        listContainer.innerHTML = '';
+        const names = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
+        
+        if (names.length === 0) {
+            const empty = document.createElement('div');
+            empty.textContent = t('passkey_list_empty');
+            empty.style.color = 'var(--md-sys-color-secondary)';
+            empty.style.textAlign = 'center';
+            empty.style.padding = '20px';
+            listContainer.appendChild(empty);
+        } else {
+            names.forEach(name => {
+                const item = document.createElement('div');
+                item.style.display = 'flex';
+                item.style.alignItems = 'center';
+                item.style.justifyContent = 'space-between';
+                item.style.padding = '12px';
+                item.style.borderBottom = '1px solid var(--md-sys-color-outline-variant)';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+                nameSpan.style.fontWeight = 'bold';
+                
+                const delBtn = document.createElement('m3e-icon-button');
+                delBtn.innerHTML = '<m3e-icon name="delete" style="color:var(--md-sys-color-error)"></m3e-icon>';
+                delBtn.addEventListener('click', async () => {
+                    const confirm = await showConfirmDialog(t('passkey_delete_confirm'));
+                    if (confirm) {
+                        const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
+                        const newNames = currentNames.filter(n => n !== name);
+                        localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_NAMES, JSON.stringify(newNames));
+                        renderList();
+                        showSnackbar(t('passkey_deleted'));
+                    }
+                });
+                
+                item.appendChild(nameSpan);
+                item.appendChild(delBtn);
+                listContainer.appendChild(item);
+            });
+        }
+    };
+    
+    renderList();
+    content.appendChild(listContainer);
+    dialog.appendChild(content);
+
+    const actions = document.createElement('div');
+    actions.slot = 'actions';
+    
+    const closeBtn = document.createElement('m3e-button');
+    closeBtn.setAttribute('variant', 'text');
+    closeBtn.innerHTML = `<span>${t('close')}</span>`;
+    closeBtn.addEventListener('click', () => {
+        dialog.open = false;
+        setTimeout(() => { if(dialog.parentNode) dialog.parentNode.removeChild(dialog); }, 500);
+    });
+    
+    actions.appendChild(closeBtn);
+    dialog.appendChild(actions);
+
+    document.body.appendChild(dialog);
+    requestAnimationFrame(() => {
+        dialog.open = true;
+    });
+}
+
+async function updatePasskeyData(newPassword) {
+    const hasFallback = !!localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK);
+    const hasSupport = !!window.PublicKeyCredential;
+
+    if (!hasFallback && !hasSupport) return;
+
+    const confirm = await showConfirmDialog(t('update_passkey_confirm'));
+    if (!confirm) return;
+
+    let updated = false;
+    
+    // Update Fallback (Local Storage)
+    if (hasFallback) {
+        await savePasskeyFallback(newPassword);
+        updated = true;
+    }
+
+    // Update Large Blob (Passkey)
+    if (hasSupport) {
+        try {
+            // Generate NEW random key for rotation/migration
+            const keyBytes = window.crypto.getRandomValues(new Uint8Array(32));
+            const assertionOptions = {
+                challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+                rpId: window.location.hostname,
+                userVerification: "required",
+                extensions: { largeBlob: { write: keyBytes } }
+            };
+
+            showSnackbar("Passkeyを更新するために認証してください...");
+            const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
+            const extResults = assertion.getClientExtensionResults();
+            
+            if (extResults.largeBlob && extResults.largeBlob.written) {
+                updated = true;
+                const key = await window.crypto.subtle.importKey("raw", keyBytes, {name: "AES-GCM"}, false, ["encrypt"]);
+                const encryptedPassword = await encryptLocal(newPassword, key);
+                localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA, encryptedPassword);
+            } else {
+                console.warn("Passkey update failed: largeBlob not written");
+                showSnackbar("Passkeyの更新に失敗しました (容量不足または非対応)");
+            }
+        } catch (e) {
+            console.error("Passkey update skipped:", e);
+            if (e.name !== 'NotAllowedError') {
+                showSnackbar("Passkey更新エラー: " + e.message);
+            }
+        }
+    }
+    
+    if (updated) {
+        showSnackbar("Passkeyのデータを更新しました");
     }
 }
 
@@ -4715,7 +5157,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Biometric Login
     document.getElementById('biometric_login_btn')?.addEventListener('click', loginWithPasskey);
-    document.getElementById('setup_passkey_btn')?.addEventListener('click', registerPasskey);
+    const setupPasskeyBtn = document.getElementById('setup_passkey_btn');
+    if (setupPasskeyBtn) {
+        setupPasskeyBtn.addEventListener('click', registerPasskey);
+        
+        const manageBtn = document.createElement('m3e-button');
+        manageBtn.setAttribute('variant', 'outlined');
+        manageBtn.style.marginLeft = '8px';
+        manageBtn.innerHTML = `<span data-i18n="manage_passkeys">${t('manage_passkeys')}</span>`;
+        manageBtn.addEventListener('click', openPasskeyManager);
+        setupPasskeyBtn.parentNode.insertBefore(manageBtn, setupPasskeyBtn.nextSibling);
+
+        const unregisterBtn = document.createElement('m3e-button');
+        unregisterBtn.setAttribute('variant', 'text');
+        unregisterBtn.style.marginLeft = '8px';
+        unregisterBtn.innerHTML = `<span data-i18n="unregister_passkey">${t('unregister_passkey')}</span>`;
+        unregisterBtn.addEventListener('click', unregisterPasskey);
+        setupPasskeyBtn.parentNode.insertBefore(unregisterBtn, manageBtn.nextSibling);
+    }
 
     // Google Login
     document.getElementById('google_login_btn')?.addEventListener('click', () => {
@@ -5216,6 +5675,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 await savePasswordsData();
             }
 
+            await updatePasskeyData(newPass);
+
             showSnackbar(t('settings_saved'));
             document.getElementById('setting_current_pass').value = '';
             document.getElementById('setting_new_pass').value = '';
@@ -5265,6 +5726,8 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem(CONSTANTS.STORAGE.MASTER_AUTH, JSON.stringify(masterAuth));
             
             await savePasswordsData(); // Re-encrypts with new appKey
+
+            await updatePasskeyData(newPass);
 
             showSnackbar(t('settings_saved'));
             document.getElementById('setting_local_current_pass').value = '';
@@ -5332,6 +5795,9 @@ document.addEventListener('DOMContentLoaded', () => {
             cloudKey = newCloudKey;
             
             initFirestoreSync(currentUser);
+            
+            await updatePasskeyData(newPass);
+
             showSnackbar(t('settings_saved'));
             
             // Clear inputs
