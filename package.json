@@ -17,5 +17,8 @@
     "lit": "^3.0.0",
     "otpauth": "^9.4.1",
     "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "vite-plugin-pwa": "^1.2.0"
   }
 }
