@@ -142,6 +142,8 @@ let newDeviceListenerUnsubscribe = null;
 let isTwoPaneMode = false;
 let firestoreSyncUnsubscribe = null;
 let contextMenuItem = null;
+let searchDebounceTimer = null;
+let currentSnackbar = null;
 
 // --- Translations ---
 const TRANSLATIONS = {
@@ -2373,14 +2375,20 @@ function showConfirmDialog(message) {
 }
 
 function showSnackbar(message) {
+    if (currentSnackbar) {
+        if (currentSnackbar.parentNode) currentSnackbar.parentNode.removeChild(currentSnackbar);
+        currentSnackbar = null;
+    }
+
     const el = document.createElement('div');
     el.textContent = message;
     el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background-color:#323232;color:white;padding:14px 24px;border-radius:4px;z-index:10000;box-shadow:0 2px 5px rgba(0,0,0,0.2);opacity:0;transition:opacity 0.3s;font-family:sans-serif;pointer-events:none;';
     document.body.appendChild(el);
+    currentSnackbar = el;
     requestAnimationFrame(function() { el.style.opacity = '1'; });
     setTimeout(function() {
         el.style.opacity = '0';
-        setTimeout(function() { if(el.parentNode) el.parentNode.removeChild(el); }, 300);
+        setTimeout(function() { if(el.parentNode) el.parentNode.removeChild(el); currentSnackbar = null; }, 300);
     }, 3000);
 }
 
@@ -5354,7 +5362,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Search
     document.getElementById('fld')?.addEventListener('input', (e) => {
-        renderPasswordList(e.target.value);
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            renderPasswordList(e.target.value);
+        }, 300);
     });
 
     // Detail Dialog Events
