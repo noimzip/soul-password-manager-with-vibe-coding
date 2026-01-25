@@ -2,9 +2,8 @@ const CACHE_NAME = 'soul-pass-v2';
 const urlsToCache = [
   './',
   './index.html',
-  './css/style.css',
-  './js/script.js',
-  './js/theme.js',
+  './main.css',
+  './main.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'

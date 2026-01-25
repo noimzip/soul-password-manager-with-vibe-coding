@@ -72,7 +72,7 @@ enableIndexedDbPersistence(db).catch((err) => {
 
 // --- Constants & State ---
 const CONSTANTS = {
-    APP_VERSION: '26.01.10 (Unstable)',
+    APP_VERSION: '26.01.25 (Unstable)',
     STORAGE: {
         PASSWORDS: 'soul_passwords',
         MASTER_AUTH: 'soul_master_auth',
