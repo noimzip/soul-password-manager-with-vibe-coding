@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0" />
     
     <!-- SEO & OGP -->
-    <meta name="description" content="Soul Password Managerは、ゼロ知識証明とPasskey認証を採用した次世代のパスワードマネージャーです。安全かつシンプルに、あなたのデジタルライフを守ります。">
+    <meta name="description" content="Soul Password Managerは、E2EE（エンドツーエンド暗号化）とPasskey認証を採用した次世代のパスワードマネージャーです。安全かつシンプルに、あなたのデジタルライフを守ります。">
     <meta property="og:title" content="Soul Password Manager - 次世代のセキュリティ">
     <meta property="og:description" content="モダンな暗号化技術、生体認証（Passkey）、そしてシームレスなクラウド同期。シンプルかつ強力なパスワード管理を、すべてのデバイスで。">
     <meta property="og:type" content="website">
@@ -27,7 +27,8 @@
             <nav>
                 <a href="#features">機能</a>
                 <a href="#security">セキュリティ</a>
-                <a href="../index.html" class="btn btn-primary">アプリを起動</a>
+                <a href="https://github.com/noimzip/soul-password-manager-with-vibe-coding" target="_blank" aria-label="GitHub Source Code"><span class="material-symbols-outlined">code</span></a>
+                <a href="../index.html" class="btn btn-filled">アプリを起動</a>
             </nav>
         </div>
     </header>
@@ -38,7 +39,7 @@
             <div class="container hero-content">
                 <div class="hero-text animate-on-scroll">
                     <h1>あなたのデジタルライフを守る<br>魂（Soul）の盾</h1>
-                    <p>モダンな暗号化技術、生体認証（Passkey）、そしてシームレスなクラウド同期。<br>
+                    <p>完全なエンドツーエンド暗号化、生体認証（Passkey）、そしてシームレスなクラウド同期。<br>
                     シンプルかつ強力なパスワード管理を、すべてのデバイスで。</p>
                     <div class="hero-actions">
                         <a href="../index.html" class="btn btn-large btn-filled">今すぐ始める</a>
@@ -106,8 +107,81 @@
                     </div>
                     <div class="card animate-on-scroll">
                         <span class="material-symbols-outlined icon">lock_clock</span>
-                        <h3>自動ロック</h3>
-                        <p>一定時間操作がない場合、自動的に保管庫をロックして覗き見を防ぎます。</p>
+                        <h3>リカバリーキット</h3>
+                        <p>マスターパスワードを忘れた場合に備えて、緊急アクセス用のPDFシートを作成・ダウンロードできます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="why-soul">
+            <div class="container">
+                <h2 class="section-title animate-on-scroll">なぜ、Soulなのか？</h2>
+                <p class="section-subtitle animate-on-scroll">従来のパスワードマネージャーが抱える「不都合な真実」を解決します。</p>
+                
+                <div class="problem-solution-grid">
+                    <div class="ps-card animate-on-scroll">
+                        <div class="problem">
+                            <div class="ps-icon problem-icon"><span class="material-symbols-outlined">cloud_off</span></div>
+                            <h4>従来の問題: 中央集権リスク</h4>
+                            <p>多くのサービスは、企業が管理するサーバーに依存しています。もし企業がハッキングされたり、内部不正があった場合、あなたのデータは危険に晒されます。</p>
+                        </div>
+                        <div class="solution">
+                            <div class="ps-icon solution-icon"><span class="material-symbols-outlined">verified_user</span></div>
+                            <h4>Soulの解決策: ゼロ知識</h4>
+                            <p>あなたのデータはデバイス内で暗号化されてから送信されます。復号キーはサーバーに送信されず、管理者でさえデータを見ることは数学的に不可能です。</p>
+                        </div>
+                    </div>
+
+                    <div class="ps-card animate-on-scroll">
+                        <div class="problem">
+                            <div class="ps-icon problem-icon"><span class="material-symbols-outlined">visibility_off</span></div>
+                            <h4>従来の問題: ブラックボックス</h4>
+                            <p>クローズドソースのアプリは、裏で何をしているか分かりません。バックドアが仕込まれていないか、本当に暗号化されているか、ユーザーは検証できません。</p>
+                        </div>
+                        <div class="solution">
+                            <div class="ps-icon solution-icon"><span class="material-symbols-outlined">code</span></div>
+                            <h4>Soulの解決策: オープンソース</h4>
+                            <p>ソースコードはGitHubで完全公開。世界中の開発者やセキュリティ専門家が監査可能です。透明性が信頼を生みます。</p>
+                        </div>
+                    </div>
+
+                    <div class="ps-card animate-on-scroll">
+                        <div class="problem">
+                            <div class="ps-icon problem-icon"><span class="material-symbols-outlined">payments</span></div>
+                            <h4>従来の問題: 高額なコスト</h4>
+                            <p>便利な機能（デバイス間同期、2FAなど）を使うには、毎月のサブスクリプション料金が必要なケースがほとんどです。</p>
+                        </div>
+                        <div class="solution">
+                            <div class="ps-icon solution-icon"><span class="material-symbols-outlined">savings</span></div>
+                            <h4>Soulの解決策: ずっと無料</h4>
+                            <p>Soulは営利目的の製品ではありません。高度なセキュリティ機能も、無制限のデバイス同期も、すべて無料で提供されます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="limitations">
+            <div class="container">
+                <h2 class="section-title animate-on-scroll">正直な話：現在の課題と制約</h2>
+                <p class="section-subtitle animate-on-scroll">Soulは発展途上のプロジェクトです。透明性を保つため、現在抱えている技術的な制約や依存について包み隠さず公開します。</p>
+                
+                <div class="grid">
+                    <div class="card animate-on-scroll">
+                        <span class="material-symbols-outlined icon">dns</span>
+                        <h3>Googleインフラへの依存</h3>
+                        <p>バックエンド（認証・DB）にGoogle Firebaseを使用しています。データの中身はE2EEで保護されGoogleも閲覧できませんが、サービスの稼働はGoogleのインフラに依存しています。また、IPアドレス等のアクセスログはプラットフォーム側に残る可能性があります。</p>
+                    </div>
+                    <div class="card animate-on-scroll">
+                        <span class="material-symbols-outlined icon">extension_off</span>
+                        <h3>ネイティブ統合の限界</h3>
+                        <p>Web技術（PWA）ベースで構築されているため、iOSやAndroidのシステムレベルのオートフィル（キーボード上へのパスワード候補表示など）には現在対応していません。</p>
+                    </div>
+                    <div class="card animate-on-scroll">
+                        <span class="material-symbols-outlined icon">construction</span>
+                        <h3>開発段階（ベータ）</h3>
+                        <p>現在は「Unstable（不安定）」なバージョンです。機能の追加や変更が頻繁に行われる可能性があり、商用製品のような長期的な安定サポートは保証されていません。</p>
                     </div>
                 </div>
             </div>
@@ -131,7 +205,7 @@
                         <tbody>
                             <tr>
                                 <th>セキュリティモデル</th>
-                                <td class="highlight">ゼロ知識証明<br><small>(ローカル暗号化)</small></td>
+                                <td class="highlight">E2EE / ゼロ知識<br><small>(ハイブリッド暗号化)</small></td>
                                 <td>サーバーサイド暗号化</td>
                                 <td>ゼロ知識証明<br><small>(オープンソース)</small></td>
                                 <td>ローカルファイル<br><small>(自己管理)</small></td>
@@ -146,12 +220,28 @@
                                 <td>デバイス認証<br><small>(Face/Touch ID)</small></td>
                             </tr>
                             <tr>
+                                <th>自動入力 (Autofill)</th>
+                                <td class="highlight"><span class="material-symbols-outlined cancel">cancel</span><br><small>(PWA制限)</small></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                                <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                            </tr>
+                            <tr>
                                 <th>TOTP (2FA) 生成</th>
                                 <td class="highlight"><span class="material-symbols-outlined check_circle">check_circle</span></td>
                                 <td><span class="material-symbols-outlined cancel">cancel</span></td>
                                 <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
                                 <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
                                 <td><span class="material-symbols-outlined check_circle">check_circle</span></td>
+                            </tr>
+                            <tr>
+                                <th>パスワード共有</th>
+                                <td class="highlight"><span class="material-symbols-outlined cancel">cancel</span><br><small>(個人特化)</small></td>
+                                <td>△ ファミリー</td>
+                                <td>△ 有料版</td>
+                                <td>△ ファイル共有</td>
+                                <td>△ AirDrop等</td>
                             </tr>
                             <tr>
                                 <th>クロスプラットフォーム</th>
@@ -203,6 +293,18 @@
                         <summary>他のパスワードマネージャーから移行できますか？</summary>
                         <p>はい、JSON形式でのインポートに対応しています。現在お使いのマネージャーからデータをエクスポートし、アプリ内の設定メニューからインポートしてください。</p>
                     </details>
+                    <details class="faq-item animate-on-scroll">
+                        <summary>モバイルアプリはありますか？</summary>
+                        <p>ネイティブアプリ（App Store/Play Store）はありませんが、PWA（プログレッシブウェブアプリ）としてインストール可能です。ブラウザのメニューから「ホーム画面に追加」することで、アプリのように利用できます。</p>
+                    </details>
+                    <details class="faq-item animate-on-scroll">
+                        <summary>オフラインでも使えますか？</summary>
+                        <p>はい、PWA技術によりオフラインでもデータの閲覧や編集が可能です。インターネットに接続した際に、変更内容が自動的にクラウドと同期されます。</p>
+                    </details>
+                    <details class="faq-item animate-on-scroll">
+                        <summary>サービスが終了したらどうなりますか？</summary>
+                        <p>Soulはオープンソースソフトウェアです。万が一公式のホスティングが終了しても、ソースコードを使ってご自身でサーバーを構築・運用することが可能です。また、データはいつでもJSON形式でエクスポートして手元に残せます。</p>
+                    </details>
                 </div>
             </div>
         </section>
@@ -218,7 +320,7 @@
                     <div class="sec-arrow"><span class="material-symbols-outlined">arrow_forward</span></div>
                     <div class="sec-step">
                         <div class="sec-icon"><span class="material-symbols-outlined">key</span></div>
-                        <p>PBKDF2<br><small>鍵生成</small></p>
+                        <p>PBKDF2<br><small>鍵導出</small></p>
                     </div>
                     <div class="sec-arrow"><span class="material-symbols-outlined">arrow_forward</span></div>
                     <div class="sec-step">
@@ -234,16 +336,37 @@
 
                 <div class="security-details">
                     <div class="security-item animate-on-scroll">
-                        <h4><span class="material-symbols-outlined">encrypted</span> AES-256 暗号化</h4>
-                        <p>データは保存される前に、AES-GCM (256ビット) を使用してローカルで暗号化されます。平文のパスワードがデバイスの外に出ることはありません。</p>
+                        <h4><span class="material-symbols-outlined">encrypted</span> AES-256 & RSA ハイブリッド暗号化</h4>
+                        <p>データは軍事レベルの<strong>AES-256-GCM</strong>で暗号化され、その鍵は<strong>RSA-2048</strong>で保護されます。この堅牢なハイブリッド方式により、データはデバイスを出る前に完全に暗号化されます。</p>
                     </div>
                     <div class="security-item animate-on-scroll">
-                        <h4><span class="material-symbols-outlined">key</span> PBKDF2 鍵導出</h4>
-                        <p>マスターパスワードは、一意のソルトを使用したPBKDF2（100,000回の反復）によって強化され、強力な暗号化キーが生成されます。</p>
+                        <h4><span class="material-symbols-outlined">key</span> PBKDF2 鍵導出 (600,000回)</h4>
+                        <p>マスターパスワードは、<strong>PBKDF2</strong>アルゴリズム（SHA-256, 600,000回の反復）を用いて暗号化キーに変換されます。これにより、ブルートフォース攻撃に対して極めて高い耐性を持ちます。</p>
                     </div>
                     <div class="security-item animate-on-scroll">
-                        <h4><span class="material-symbols-outlined">visibility_off</span> ゼロ知識証明</h4>
-                        <p>私たちはあなたのマスターパスワードを知りません。サーバーには暗号化されたデータのみが保存され、復号できるのはあなただけです。</p>
+                        <h4><span class="material-symbols-outlined">visibility_off</span> 完全なゼロ知識証明 (Zero-Knowledge)</h4>
+                        <p>私たちはあなたのマスターパスワードを知りませんし、保存もしません。サーバーに保存されるのは「暗号化されたデータ」のみです。<strong>あなた以外の誰（開発者、Google、ハッカー）も、あなたのデータを見ることは数学的に不可能です。</strong></p>
+                    </div>
+                    <div class="security-item animate-on-scroll">
+                        <h4><span class="material-symbols-outlined">blur_on</span> プライバシーシールド</h4>
+                        <p>アプリ切り替え時に画面を自動でぼかし、背後からの覗き見（ショルダーハッキング）を防止。また、暗号化キーはセッション終了時に破棄されるため、共有PCでも安心です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="audit">
+            <div class="container">
+                <div class="audit-card animate-on-scroll">
+                    <div class="audit-text">
+                        <h2><span class="material-symbols-outlined">policy</span> セキュリティ監査と透明性</h2>
+                        <p>Soul Password Managerはオープンソースプロジェクトです。ソースコードはGitHubで公開されており、世界中のセキュリティ研究者や開発者による監査（レビュー）が可能です。透明性を確保することで、バックドアのない信頼できるセキュリティを提供します。</p>
+                    </div>
+                    <div class="audit-action">
+                        <a href="https://github.com/noimzip/soul-password-manager-with-vibe-coding" target="_blank" class="btn btn-large btn-filled-white">
+                            <span class="material-symbols-outlined">code</span>
+                            ソースコードを確認 (GitHub)
+                        </a>
                     </div>
                 </div>
             </div>
