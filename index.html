@@ -739,7 +739,28 @@
       </div>
     </m3e-dialog>
 
-    <m3e-dialog id="guide_dialog" dismissible>
+        <m3e-dialog id="welcome_dialog" dismissible>
+      <span slot="header" data-i18n="welcome_title">Welcome</span>
+      <div style="display: flex; flex-direction: column; align-items: center; padding: 16px;">
+          <img src="./qrcode_direct-preview-697576bfe78885337fb40439.monaca.education.png" alt="QR Code" style="width: 200px; height: 200px; border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--md-sys-color-outline-variant);">
+          <p data-i18n="welcome_desc" style="text-align: center; margin: 0; color: black; font-size: 16px;">Scan QR code</p>
+      </div>
+      <div slot="actions" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+        <m3e-button variant="filled" id="welcome_intro_btn" style="width: 90%;">
+          <m3e-icon slot="icon" name="public"></m3e-icon>
+          <span data-i18n="open_intro_page">Intro Page</span>
+        </m3e-button>
+        <m3e-button variant="outlined" id="welcome_feedback_btn" style="width: 90%;">
+          <m3e-icon slot="icon" name="feedback"></m3e-icon>
+          <span data-i18n="send_feedback">Feedback</span>
+        </m3e-button>
+        <m3e-button variant="text" style="width: 90%;">
+          <m3e-dialog-action return-value="close" data-i18n="close">Close</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
+    <m3e-dialog id="guide_dialog" dismissible open>
       <span slot="header" data-i18n="guide_title">使い方ガイド</span>
       <div class="guide-carousel-container">
         <div class="guide-step active">

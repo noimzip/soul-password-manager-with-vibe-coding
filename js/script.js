@@ -324,6 +324,10 @@ const TRANSLATIONS = {
         lock_vault: "保管庫をロック (キー破棄)",
         lock_vault_desc: "メモリおよびストレージから暗号化キーを破棄します。再アクセスにはマスターパスワードが必要です。",
         lock_confirm: "保管庫をロックしてもよろしいですか？",
+        visit_website: "公式サイト",
+        welcome_title: "ようこそ Soul Password Manager へ",
+        welcome_desc: "monacaには制限があり、更に期限も決まっているため、今後もSoulを利用したい方はQRコードにアクセスし、ブックマークに入れておいてください。下のボタンからは結構いい感じの紹介サイトが見れます。今後の改善のため、フィードバックをぜひお願いします。あと、動作が遅いのはご容赦ください。Javascriptが6300行、260,000字あるので...",
+        open_intro_page: "紹介ページを見る",
         
         // JS Strings
         weak: "弱いパスワード",
@@ -567,6 +571,10 @@ const TRANSLATIONS = {
         lock_vault: "Lock Vault",
         lock_vault_desc: "Discard encryption key from memory and storage. Master Password required for re-access.",
         lock_confirm: "Are you sure you want to lock the vault?",
+        visit_website: "Official Website",
+        welcome_title: "Welcome to Soul Password Manager",
+        welcome_desc: "Scan the QR code to access on mobile.",
+        open_intro_page: "View Intro Page",
 
         // JS Strings
         weak: "Weak Password",
@@ -807,6 +815,10 @@ const TRANSLATIONS = {
         lock_vault: "锁定保险库",
         lock_vault_desc: "从内存和存储中丢弃加密密钥。重新访问需要主密码。",
         lock_confirm: "确定要锁定保险库吗？",
+        visit_website: "官方网站",
+        welcome_title: "欢迎使用 Soul Password Manager",
+        welcome_desc: "扫描二维码以在移动设备上访问。",
+        open_intro_page: "查看介绍页面",
         
         // JS Strings
         weak: "弱密码",
@@ -1047,6 +1059,10 @@ const TRANSLATIONS = {
         lock_vault: "보관함 잠금",
         lock_vault_desc: "메모리 및 스토리지에서 암호화 키를 삭제합니다. 다시 액세스하려면 마스터 비밀번호가 필요합니다.",
         lock_confirm: "보관함을 잠그시겠습니까?",
+        visit_website: "공식 웹사이트",
+        welcome_title: "Soul Password Manager에 오신 것을 환영합니다",
+        welcome_desc: "모바일에서 액세스하려면 QR 코드를 스캔하세요.",
+        open_intro_page: "소개 페이지 보기",
         
         // JS Strings
         weak: "약한 비밀번호",
@@ -1287,6 +1303,10 @@ const TRANSLATIONS = {
         lock_vault: "Tresor sperren",
         lock_vault_desc: "Verwerfen Sie den Verschlüsselungsschlüssel aus Speicher und Ablage. Master-Passwort für erneuten Zugriff erforderlich.",
         lock_confirm: "Möchten Sie den Tresor wirklich sperren?",
+        visit_website: "Offizielle Website",
+        welcome_title: "Willkommen beim Soul Password Manager",
+        welcome_desc: "Scannen Sie den QR-Code für mobilen Zugriff.",
+        open_intro_page: "Intro-Seite ansehen",
         
         // JS Strings
         weak: "Schwaches Passwort",
@@ -1527,6 +1547,10 @@ const TRANSLATIONS = {
         lock_vault: "Verrouiller le coffre",
         lock_vault_desc: "Supprimer la clé de chiffrement de la mémoire et du stockage. Mot de passe maître requis pour y accéder à nouveau.",
         lock_confirm: "Êtes-vous sûr de vouloir verrouiller le coffre ?",
+        visit_website: "Site officiel",
+        welcome_title: "Bienvenue sur Soul Password Manager",
+        welcome_desc: "Scannez le code QR pour y accéder sur mobile.",
+        open_intro_page: "Voir la page d'intro",
         
         // JS Strings
         weak: "Mot de passe faible",
@@ -1767,6 +1791,10 @@ const TRANSLATIONS = {
         lock_vault: "Blocca Cassaforte",
         lock_vault_desc: "Elimina la chiave di crittografia dalla memoria e dall'archivio. Password Master richiesta per accedere nuovamente.",
         lock_confirm: "Sei sicuro di voler bloccare la cassaforte?",
+        visit_website: "Sito ufficiale",
+        welcome_title: "Benvenuto in Soul Password Manager",
+        welcome_desc: "Scansiona il codice QR per accedere da mobile.",
+        open_intro_page: "Vedi pagina introduttiva",
         
         // JS Strings
         weak: "Password Debole",
@@ -6069,6 +6097,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Feedback
     document.getElementById('open_feedback_btn')?.addEventListener('click', () => {
+        document.getElementById('feedback_message').value = '';
+        const logCheck = document.getElementById('feedback_include_logs');
+        if (logCheck) logCheck.checked = false;
+        document.getElementById('feedback_dialog').open = true;
+    });
+
+    // Welcome Dialog Logic
+    const welcomeDialog = document.getElementById('welcome_dialog');
+    if (welcomeDialog) {
+        welcomeDialog.open = true;
+    }
+
+    document.getElementById('welcome_intro_btn')?.addEventListener('click', () => {
+        window.open('./web/index.html', '_blank');
+    });
+
+    document.getElementById('welcome_feedback_btn')?.addEventListener('click', () => {
+        document.getElementById('welcome_dialog').open = false;
         document.getElementById('feedback_message').value = '';
         const logCheck = document.getElementById('feedback_include_logs');
         if (logCheck) logCheck.checked = false;
