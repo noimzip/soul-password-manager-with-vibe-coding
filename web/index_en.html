@@ -85,32 +85,44 @@
             <div class="container">
                 <h2 class="section-title animate-on-scroll">Key Features</h2>
                 <div class="grid">
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="Seamless Cloud Sync"
+                        data-description="Simply log in with your Google account to sync your password data in real-time across all your devices (PC, smartphone, tablet). Your data is encrypted on your device before being sent to the cloud, so not even Google or server administrators can read its contents. Even on a new device, just enter your master password to securely restore all your data.">
                         <span class="material-symbols-outlined icon">cloud_sync</span>
                         <h3>Cloud Sync</h3>
                         <p>Sign in with your Google account to sync passwords across all devices in real-time. Data is encrypted before storage.</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="Next-Gen Authentication with Passkeys"
+                        data-description="Log in securely without entering your master password using Passkeys, which comply with the WebAuthn standard. It supports biometric authentication like Face ID, Touch ID, and Windows Hello, as well as physical security keys like YubiKey. By using the `largeBlob` extension, the master password itself is stored securely within the authenticator, achieving a high level of security that is both passwordless and maintains a zero-knowledge architecture.">
                         <span class="material-symbols-outlined icon">fingerprint</span>
                         <h3>Passkey Support</h3>
                         <p>Log in securely using Face ID, Touch ID, or other biometrics without typing your master password.</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="Privacy-Preserving Breach Check"
+                        data-description="You can check if your passwords have been exposed in past data breaches using the &quot;Have I Been Pwned&quot; database. This feature employs a privacy-protection technique called &quot;k-Anonymity,&quot; meaning your actual password is never sent externally. Only a portion of your password's hash is transmitted, allowing you to check for breaches securely.">
                         <span class="material-symbols-outlined icon">security</span>
                         <h3>Breach Check</h3>
                         <p>Safely check if your passwords have been compromised using the Have I Been Pwned API (k-Anonymity).</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="Customizable Password Generation"
+                        data-description="Instantly create strong, hard-to-guess passwords by customizing the length (from 4 to 2048 characters) and the use of uppercase letters, numbers, and symbols. The strength of the generated password is evaluated in real-time by the `zxcvbn` library, and the &quot;estimated time to crack&quot; is displayed, allowing you to visually confirm the security level. A generation history is also kept, so you can reuse previous passwords.">
                         <span class="material-symbols-outlined icon">password</span>
                         <h3>Password Generator</h3>
                         <p>Instantly generate strong, random passwords. Includes a strength meter and estimated crack time.</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="Integrated 2-Factor Authentication Code Generation"
+                        data-description="No need to open a separate authenticator app like Google Authenticator or Authy. Simply save the TOTP secret key issued when setting up 2-Factor Authentication (2FA) for a service, and Soul will automatically generate a 6-digit authentication code that refreshes every 30 seconds. The code can be copied with a single click, greatly simplifying your login process.">
                         <span class="material-symbols-outlined icon">timer</span>
                         <h3>TOTP Auth</h3>
                         <p>Built-in 2FA code generation (Time-based One-Time Password). No need to open a separate app.</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="Be Prepared with a Recovery Kit"
+                        data-description="No matter how secure a system is, it's useless if you forget your master password. Soul allows you to generate and download a &quot;Recovery Kit,&quot; an emergency access PDF sheet containing your username and login URL. By printing this sheet, writing down your master password, and storing it in a physically secure location like a safe, you can be prepared for any eventuality.">
                         <span class="material-symbols-outlined icon">lock_clock</span>
                         <h3>Recovery Kit</h3>
                         <p>Create and download an emergency access PDF sheet in case you forget your master password.</p>
@@ -431,6 +443,18 @@
         <span class="material-symbols-outlined">arrow_upward</span>
     </button>
 
+    <div id="feature-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close" aria-label="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h3 id="modal-title" class="modal-title"></h3>
+            <div id="modal-body" class="modal-body">
+                <p></p>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const observerOptions = {
@@ -492,6 +516,39 @@
             };
             window.addEventListener('scroll', handleScroll);
             handleScroll(); // Check on load
+
+            // Feature Modal Logic
+            const modal = document.getElementById('feature-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body').querySelector('p');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const featureCards = document.querySelectorAll('#features .card');
+
+            featureCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const title = card.dataset.title;
+                    const description = card.dataset.description;
+                    const icon = card.querySelector('.icon').cloneNode(true);
+                    
+                    modalTitle.innerHTML = ''; // Clear previous content
+                    modalTitle.appendChild(icon);
+                    modalTitle.append(title);
+                    modalBody.textContent = description;
+                    
+                    modal.classList.add('visible');
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.remove('visible');
+            };
+
+            modalCloseBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
 
             // Back to Top Button
             const backToTopBtn = document.getElementById('back-to-top');
