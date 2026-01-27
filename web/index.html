@@ -85,32 +85,44 @@
             <div class="container">
                 <h2 class="section-title animate-on-scroll">主な機能</h2>
                 <div class="grid">
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="シームレスなクラウド同期"
+                        data-description="Googleアカウントで一度ログインするだけで、すべてのデバイス（PC、スマートフォン、タブレット）でパスワードデータがリアルタイムに同期されます。データはあなたのデバイスで暗号化されてからクラウドに送信されるため、Googleやサーバー管理者でさえ内容を読み取ることはできません。新しいデバイスでログインしても、マスターパスワードを入力するだけで、すべてのデータが安全に復元されます。">
                         <span class="material-symbols-outlined icon">cloud_sync</span>
                         <h3>クラウド同期</h3>
                         <p>Googleアカウントでログインすれば、すべてのデバイスでパスワードがリアルタイムに同期されます。データは暗号化されて保存されます。</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="次世代認証 Passkey"
+                        data-description="WebAuthn標準に準拠したPasskeyを利用して、マスターパスワードの入力なしで安全にログインできます。Face ID, Touch ID, Windows Helloなどの生体認証や、YubiKeyなどの物理セキュリティキーに対応しています。`largeBlob`拡張機能を利用してマスターパスワード自体を認証器内に安全に保管することで、パスワードレスでありながらゼロ知識を維持する高度なセキュリティを実現します。">
                         <span class="material-symbols-outlined icon">fingerprint</span>
                         <h3>Passkey 対応</h3>
                         <p>Face IDやTouch IDなどの生体認証を使って、マスターパスワードを入力せずに安全にログインできます。</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="プライバシーを保護する漏洩チェック"
+                        data-description="&quot;Have I Been Pwned&quot;のデータベースを利用して、あなたのパスワードが過去のデータ侵害で漏洩していないかを確認できます。この機能は「k-Anonymity」というプライバシー保護技術を採用しており、あなたのパスワードそのものが外部に送信されることはありません。パスワードのハッシュ値の一部のみを送信するため、安全に漏洩状況をチェックできます。">
                         <span class="material-symbols-outlined icon">security</span>
                         <h3>漏洩チェック</h3>
                         <p>Have I Been Pwned APIと連携し、パスワードが過去に漏洩していないか安全にチェックします（k-Anonymity対応）。</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="カスタマイズ可能なパスワード生成"
+                        data-description="長さ（4〜2048文字）、大文字、数字、記号の使用を自由にカスタマイズして、推測されにくい強力なパスワードを瞬時に作成します。生成されたパスワードは、`zxcvbn`ライブラリによってリアルタイムで強度が評価され、「解読にかかる推定時間」も表示されるため、セキュリティレベルを視覚的に確認できます。生成履歴も残るため、以前のパスワードを再利用することも可能です。">
                         <span class="material-symbols-outlined icon">password</span>
                         <h3>強力な生成ツール</h3>
                         <p>解読困難なランダムパスワードを瞬時に生成。強度メーターと推定解読時間も表示します。</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="統合された2段階認証コード生成"
+                        data-description="Google AuthenticatorやAuthyのような別の認証アプリを開く必要はありません。サービスの2段階認証（2FA）設定時に発行されるTOTP秘密鍵を保存するだけで、Soulが30秒ごとに更新される6桁の認証コードを自動生成します。コードはワンクリックでコピーでき、ログインプロセスを大幅に簡素化します。">
                         <span class="material-symbols-outlined icon">timer</span>
                         <h3>TOTP 認証</h3>
                         <p>2段階認証（2FA）用のワンタイムパスワード生成機能を内蔵。別のアプリを開く必要はありません。</p>
                     </div>
-                    <div class="card animate-on-scroll">
+                    <div class="card animate-on-scroll"
+                        data-title="万が一に備えるリカバリーキット"
+                        data-description="どんなに安全なシステムでも、マスターパスワードを忘れてしまっては元も子もありません。Soulでは、あなたのユーザー名とログインURLが記載された緊急アクセス用のPDFシート「リカバリーキット」を生成・ダウンロードできます。このシートを印刷して、マスターパスワードを書き込み、金庫などの物理的に安全な場所に保管しておくことで、万が一の事態に備えることができます。">
                         <span class="material-symbols-outlined icon">lock_clock</span>
                         <h3>リカバリーキット</h3>
                         <p>マスターパスワードを忘れた場合に備えて、緊急アクセス用のPDFシートを作成・ダウンロードできます。</p>
@@ -431,6 +443,18 @@
         <span class="material-symbols-outlined">arrow_upward</span>
     </button>
 
+    <div id="feature-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close" aria-label="閉じる">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h3 id="modal-title" class="modal-title"></h3>
+            <div id="modal-body" class="modal-body">
+                <p></p>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const observerOptions = {
@@ -492,6 +516,39 @@
             };
             window.addEventListener('scroll', handleScroll);
             handleScroll(); // 初期ロード時にもチェック
+
+            // Feature Modal Logic
+            const modal = document.getElementById('feature-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body').querySelector('p');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const featureCards = document.querySelectorAll('#features .card');
+
+            featureCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const title = card.dataset.title;
+                    const description = card.dataset.description;
+                    const icon = card.querySelector('.icon').cloneNode(true);
+                    
+                    modalTitle.innerHTML = ''; // Clear previous content
+                    modalTitle.appendChild(icon);
+                    modalTitle.append(title);
+                    modalBody.textContent = description;
+                    
+                    modal.classList.add('visible');
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.remove('visible');
+            };
+
+            modalCloseBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
 
             // Back to Top Button
             const backToTopBtn = document.getElementById('back-to-top');
