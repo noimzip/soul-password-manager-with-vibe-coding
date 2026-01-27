@@ -15,7 +15,7 @@ publicDir: 'public',
       input: {
         main: resolve(root, './', './index.html'),
         web: resolve(root, './web', './index.html'),
-        web_en: resolve(root, './web', './index_en.html'),
+        web_en: resolve(root, './web', './index_ja.html'),
         "pwa-512x512": resolve('./icons', './', 'pwa-512x512.png'),
         "pwa-192x192": resolve('./icons', './', 'pwa-192x192.png')
         
