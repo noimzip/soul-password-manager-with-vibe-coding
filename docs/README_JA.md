@@ -4,7 +4,7 @@
 
 モダンなJavaScript、Web Crypto API、Firebase、Viteで構築されたセキュアなパスワードマネージャーです。強力な暗号化、クラウド同期、組み込みのパスワード生成機能、TOTPサポートを備えています。
 
-[**紹介サイトを見る**](../web/index.html)
+[**紹介サイトを見る**](https://noimzip.github.io/soul-password-manager-with-vibe-coding/web/index_ja.html)
 
 ## 機能
 

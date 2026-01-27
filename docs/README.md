@@ -4,7 +4,7 @@
 
 A secure password manager built with modern JavaScript, Web Crypto API, Firebase, and Vite. It features strong encryption, cloud synchronization, a built-in password generator, and TOTP support.
 
-[**Visit Introduction Site**](../web/index_en.html)
+[**Visit Introduction Site**](https://noimzip.github.io/soul-password-manager-with-vibe-coding/web/index.html)
 
 ## Features
 
