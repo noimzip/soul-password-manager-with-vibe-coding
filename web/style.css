@@ -55,6 +55,53 @@
     }
 }
 
+/* Manual Theme Overrides */
+body.light-theme {
+    --primary: #6750a4;
+    --on-primary: #ffffff;
+    --primary-container: #eaddff;
+    --on-primary-container: #21005d;
+    
+    --secondary: #625b71;
+    --on-secondary: #ffffff;
+    --secondary-container: #e8def8;
+    --on-secondary-container: #1d192b;
+    
+    --surface: #fdfcff;
+    --on-surface: #1a1c1e;
+    --surface-variant: #e7e0ec;
+    --on-surface-variant: #49454f;
+    
+    --error: #ba1a1a;
+    --on-error: #ffffff;
+    
+    --outline: #79747e;
+    --background: #fdfcff;
+}
+
+body.dark-theme {
+    --primary: #d0bcff;
+    --on-primary: #381e72;
+    --primary-container: #4f378b;
+    --on-primary-container: #eaddff;
+    
+    --secondary: #ccc2dc;
+    --on-secondary: #332d41;
+    --secondary-container: #4a4458;
+    --on-secondary-container: #e8def8;
+    
+    --surface: #1c1b1f;
+    --on-surface: #e6e1e5;
+    --surface-variant: #49454f;
+    --on-surface-variant: #cac4d0;
+    
+    --error: #ffb4ab;
+    --on-error: #690005;
+    
+    --outline: #938f99;
+    --background: #1c1b1f;
+}
+
 /* Reset & Base */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -184,6 +231,25 @@ nav a:not(.btn):hover {
 .btn-filled-white:hover {
     background-color: #f0f0f0;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.theme-toggle:hover {
+    background-color: var(--surface-variant);
+    color: var(--primary);
 }
 
 /* Hero Section */

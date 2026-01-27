@@ -29,6 +29,9 @@
                 <a href="#features">Features</a>
                 <a href="#security">Security</a>
                 <a href="https://github.com/noimzip/soul-password-manager-with-vibe-coding" target="_blank" aria-label="GitHub Source Code"><span class="material-symbols-outlined">code</span></a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </button>
                 <a href="index.html" style="font-weight: 600;">JP</a>
                 <a href="../index.html" class="btn btn-filled">Launch App</a>
             </nav>
@@ -447,6 +450,36 @@
 
             const elements = document.querySelectorAll('.animate-on-scroll');
             elements.forEach(el => observer.observe(el));
+
+            // Theme Toggle
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeIcon = themeToggleBtn.querySelector('.material-symbols-outlined');
+            
+            const getPreferredTheme = () => {
+                const savedTheme = localStorage.getItem('soul_web_theme');
+                if (savedTheme) return savedTheme;
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            };
+
+            const setTheme = (theme) => {
+                document.body.classList.remove('light-theme', 'dark-theme');
+                document.body.classList.add(`${theme}-theme`);
+                localStorage.setItem('soul_web_theme', theme);
+                themeIcon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+            };
+
+            // Initialize Theme
+            const initialTheme = getPreferredTheme();
+            if (localStorage.getItem('soul_web_theme')) {
+                setTheme(initialTheme);
+            } else {
+                themeIcon.textContent = initialTheme === 'dark' ? 'light_mode' : 'dark_mode';
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : (document.body.classList.contains('light-theme') ? 'light' : getPreferredTheme());
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
 
             // Header scroll effect
             const header = document.querySelector('header');
