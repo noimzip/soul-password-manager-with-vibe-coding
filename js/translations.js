@@ -176,6 +176,8 @@ export const TRANSLATIONS = {
         lock_vault: "保管庫をロック (キー破棄)",
         lock_vault_desc: "メモリおよびストレージから暗号化キーを破棄します。再アクセスにはマスターパスワードが必要です。",
         lock_confirm: "保管庫をロックしてもよろしいですか？",
+        passkey_help_title: "Passkeyと生体認証の違い",
+        passkey_help_content: "【Passkey (推奨)】\nWebAuthn標準のPasskeyを使用します。対応デバイスではマスターパスワードを認証器内に安全に保存(largeBlob)し、非常に高いセキュリティを実現します。\n\n【生体認証 (ローカル)】\nこのデバイス専用の認証です。マスターパスワードはアプリ内に保存され、生体認証で保護されます。Passkeyの同期やポップアップを避けたい場合に便利です。",
         
         // JS Strings
         weak: "弱いパスワード",
@@ -419,6 +421,8 @@ export const TRANSLATIONS = {
         lock_vault: "Lock Vault",
         lock_vault_desc: "Discard encryption key from memory and storage. Master Password required for re-access.",
         lock_confirm: "Are you sure you want to lock the vault?",
+        passkey_help_title: "Passkey vs Biometrics",
+        passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
 
         // JS Strings
         weak: "Weak Password",
@@ -659,6 +663,8 @@ export const TRANSLATIONS = {
         lock_vault: "锁定保险库",
         lock_vault_desc: "从内存和存储中丢弃加密密钥。重新访问需要主密码。",
         lock_confirm: "确定要锁定保险库吗？",
+        passkey_help_title: "Passkey vs Biometrics",
+        passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         
         // JS Strings
         weak: "弱密码",
@@ -899,6 +905,8 @@ export const TRANSLATIONS = {
         lock_vault: "보관함 잠금",
         lock_vault_desc: "메모리 및 스토리지에서 암호화 키를 삭제합니다. 다시 액세스하려면 마스터 비밀번호가 필요합니다.",
         lock_confirm: "보관함을 잠그시겠습니까?",
+        passkey_help_title: "Passkey vs Biometrics",
+        passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         
         // JS Strings
         weak: "약한 비밀번호",
@@ -1139,6 +1147,8 @@ export const TRANSLATIONS = {
         lock_vault: "Tresor sperren",
         lock_vault_desc: "Verwerfen Sie den Verschlüsselungsschlüssel aus Speicher und Ablage. Master-Passwort für erneuten Zugriff erforderlich.",
         lock_confirm: "Möchten Sie den Tresor wirklich sperren?",
+        passkey_help_title: "Passkey vs Biometrics",
+        passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         
         // JS Strings
         weak: "Schwaches Passwort",
@@ -1379,6 +1389,8 @@ export const TRANSLATIONS = {
         lock_vault: "Verrouiller le coffre",
         lock_vault_desc: "Supprimer la clé de chiffrement de la mémoire et du stockage. Mot de passe maître requis pour y accéder à nouveau.",
         lock_confirm: "Êtes-vous sûr de vouloir verrouiller le coffre ?",
+        passkey_help_title: "Passkey vs Biometrics",
+        passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         
         // JS Strings
         weak: "Mot de passe faible",
@@ -1619,6 +1631,8 @@ export const TRANSLATIONS = {
         lock_vault: "Blocca Cassaforte",
         lock_vault_desc: "Elimina la chiave di crittografia dalla memoria e dall'archivio. Password Master richiesta per accedere nuovamente.",
         lock_confirm: "Sei sicuro di voler bloccare la cassaforte?",
+        passkey_help_title: "Passkey vs Biometrics",
+        passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         
         // JS Strings
         weak: "Password Debole",

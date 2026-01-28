@@ -636,6 +636,8 @@ function showDialog(message, isConfirm) {
         const content = document.createElement('div');
         content.textContent = message;
         content.style.padding = '10px 0';
+        content.style.whiteSpace = 'pre-wrap';
+        content.style.lineHeight = '1.5';
         dialog.appendChild(content);
 
         const btnContainer = document.createElement('div');
@@ -3586,6 +3588,13 @@ document.addEventListener('DOMContentLoaded', () => {
         unregisterBtn.innerHTML = `<span data-i18n="unregister_passkey">${t('unregister_passkey')}</span>`;
         unregisterBtn.addEventListener('click', unregisterPasskey);
         setupPasskeyBtn.parentNode.insertBefore(unregisterBtn, manageBtn.nextSibling);
+
+        const helpBtn = document.createElement('m3e-icon-button');
+        helpBtn.innerHTML = '<m3e-icon name="help_outline"></m3e-icon>';
+        helpBtn.style.marginLeft = '8px';
+        helpBtn.title = t('passkey_help_title');
+        helpBtn.addEventListener('click', () => showAlertDialog(t('passkey_help_content')));
+        setupPasskeyBtn.parentNode.appendChild(helpBtn);
     }
 
     // Google Login
