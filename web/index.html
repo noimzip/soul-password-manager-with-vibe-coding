@@ -25,16 +25,30 @@
                 <span class="material-symbols-outlined">lock</span>
                 Soul Password Manager
             </div>
-            <nav>
-                <a href="#features">Features</a>
-                <a href="#security">Security</a>
-                <a href="https://github.com/noimzip/soul-password-manager-with-vibe-coding" target="_blank" aria-label="GitHub Source Code"><span class="material-symbols-outlined">code</span></a>
-                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
-                    <span class="material-symbols-outlined">dark_mode</span>
+            <div class="header-right">
+                <nav id="desktop-nav">
+                    <a href="#features">Features</a>
+                    <a href="#security">Security</a>
+                    <a href="https://github.com/noimzip/soul-password-manager-with-vibe-coding" target="_blank" aria-label="GitHub Source Code"><span class="material-symbols-outlined">code</span></a>
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                    <a href="index_ja.html" style="font-weight: 600;">JP</a>
+                    <a href="../index.html" class="btn btn-filled">Launch App</a>
+                </nav>
+                <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu">
+                    <span class="material-symbols-outlined">menu</span>
                 </button>
-                <a href="index_ja.html" style="font-weight: 600;">JP</a>
-                <a href="../index.html" class="btn btn-filled">Launch App</a>
-            </nav>
+            </div>
+        </div>
+        <div id="mobile-nav" class="mobile-nav">
+            <div class="mobile-nav-content">
+                <a href="#features" class="mobile-link">Features</a>
+                <a href="#security" class="mobile-link">Security</a>
+                <a href="https://github.com/noimzip/soul-password-manager-with-vibe-coding" target="_blank" class="mobile-link">GitHub</a>
+                <a href="index_ja.html" class="mobile-link">Japanese</a>
+                <a href="../index.html" class="btn btn-filled w-full">Launch App</a>
+            </div>
         </div>
     </header>
 
@@ -569,6 +583,36 @@
                     behavior: 'smooth'
                 });
             });
+            
+            // Mobile Menu Logic
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileNav = document.getElementById('mobile-nav');
+            const mobileLinks = document.querySelectorAll('.mobile-link');
+            
+            if (mobileMenuBtn && mobileNav) {
+                const toggleMenu = () => {
+                    const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+                    mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+                    mobileNav.classList.toggle('open');
+                    
+                    const icon = mobileMenuBtn.querySelector('.material-symbols-outlined');
+                    if (icon) {
+                        icon.textContent = isExpanded ? 'menu' : 'close';
+                    }
+                    
+                    document.body.style.overflow = isExpanded ? '' : 'hidden'; // Prevent background scrolling
+                };
+
+                mobileMenuBtn.addEventListener('click', toggleMenu);
+
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (mobileNav.classList.contains('open')) {
+                            toggleMenu();
+                        }
+                    });
+                });
+            }
         });
     </script>
 </body>
