@@ -35,7 +35,8 @@ publicDir: 'public',
   plugins: [
     VitePWA({
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 3000000
       },
       registerType: 'autoUpdate',
       devOptions: {
