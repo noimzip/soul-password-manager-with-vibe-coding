@@ -1262,6 +1262,62 @@ async function registerPasskey() {
     }
 }
 
+async function registerLocalBiometric() {
+    if (!window.PublicKeyCredential) {
+        showAlertDialog("This browser does not support biometrics.");
+        return;
+    }
+
+    const password = await promptForMasterPassword(true);
+    if (!password) return;
+
+    try {
+        showSnackbar("Please authenticate to register...");
+        
+        const userId = new Uint8Array(16);
+        window.crypto.getRandomValues(userId);
+
+        let defaultName = "Soul User";
+        if (currentUser) {
+            defaultName = currentUser.email || currentUser.displayName || "Soul User";
+        } else {
+            const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
+            if (masterAuth && masterAuth.username) defaultName = masterAuth.username;
+        }
+
+        const publicKeyCredentialCreationOptions = {
+            challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+            rp: { name: "Soul Password Manager", id: window.location.hostname },
+            user: { id: userId, name: defaultName, displayName: defaultName },
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+            authenticatorSelection: { 
+                authenticatorAttachment: "platform", 
+                residentKey: "discouraged", // Avoid creating a "Passkey" (Resident Key)
+                requireResidentKey: false, 
+                userVerification: "required" 
+            },
+            timeout: 60000,
+            attestation: "none"
+        };
+
+        const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
+        
+        // Save Credential ID for later use (allowCredentials)
+        const credId = arrayBufferToBase64(credential.rawId);
+        localStorage.setItem('soul_biometric_cred_id', credId);
+        
+        // Save Password using the existing fallback mechanism (Local Storage)
+        await savePasskeyFallback(password);
+        
+        // Also add to names list for UI consistency if needed, or just notify
+        showSnackbar("Biometrics (Local) registered.");
+
+    } catch (e) {
+        console.error(e);
+        showAlertDialog("Registration failed: " + e.message);
+    }
+}
+
 async function loginWithPasskey() {
     if (!window.PublicKeyCredential) return;
 
@@ -1272,6 +1328,16 @@ async function loginWithPasskey() {
             userVerification: "required",
             extensions: { largeBlob: { read: true } }
         };
+
+        // Check for local biometric credential
+        const localCredId = localStorage.getItem('soul_biometric_cred_id');
+        if (localCredId) {
+            assertionOptions.allowCredentials = [{
+                id: base64ToArrayBuffer(localCredId),
+                type: 'public-key',
+                transports: ['internal']
+            }];
+        }
 
         const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
         const extResults = assertion.getClientExtensionResults();
@@ -1337,6 +1403,7 @@ async function unregisterPasskey() {
         localStorage.removeItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK);
         localStorage.removeItem(CONSTANTS.STORAGE.PASSKEY_NAMES);
         localStorage.removeItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA);
+        localStorage.removeItem('soul_biometric_cred_id');
         showAlertDialog(t('passkey_unregistered'));
     }
 }
@@ -3505,6 +3572,13 @@ document.addEventListener('DOMContentLoaded', () => {
         manageBtn.innerHTML = `<span data-i18n="manage_passkeys">${t('manage_passkeys')}</span>`;
         manageBtn.addEventListener('click', openPasskeyManager);
         setupPasskeyBtn.parentNode.insertBefore(manageBtn, setupPasskeyBtn.nextSibling);
+
+        const bioLocalBtn = document.createElement('m3e-button');
+        bioLocalBtn.setAttribute('variant', 'outlined');
+        bioLocalBtn.style.marginLeft = '8px';
+        bioLocalBtn.textContent = currentLang === 'ja' ? "生体認証 (ローカル)" : "Biometrics (Local)";
+        bioLocalBtn.addEventListener('click', registerLocalBiometric);
+        setupPasskeyBtn.parentNode.insertBefore(bioLocalBtn, manageBtn.nextSibling);
 
         const unregisterBtn = document.createElement('m3e-button');
         unregisterBtn.setAttribute('variant', 'text');
