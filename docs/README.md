@@ -2,84 +2,99 @@
 
 # Soul Password Manager
 
-A secure password manager built with modern JavaScript, Web Crypto API, Firebase, and Vite. It features strong encryption, cloud synchronization, a built-in password generator, and TOTP support.
+![Status](https://img.shields.io/badge/status-Beta-orange.svg)
+![Security](https://img.shields.io/badge/security-E2EE-brightgreen.svg)
+![Platform](https://img.shields.io/badge/platform-PWA-blueviolet.svg)
 
-[**Visit Introduction Site**](https://noimzip.github.io/soul-password-manager-with-vibe-coding/web/index.html)
+**A secure, zero-knowledge password manager built for the modern web.**
+
+Soul Password Manager combines military-grade encryption (AES-256-GCM) with next-generation authentication (Passkeys) to provide a seamless and secure experience across all your devices.
+
+> **[🚀 Access the Web App](https://noimzip.github.io/soul-password-manager-with-vibe-coding/web/index.html)**
 
 ## Features
 
 ### ☁️ Cloud Sync & Auth
-*   **Google Login**: Sign in with your Google account to sync passwords across devices.
-*   **Real-time Sync**: Data is stored in Firestore and updates instantly across open sessions.
-*   **Cloud Encryption**: Passwords stored in the cloud are encrypted before upload.
+
+- **Google Login**: Sign in with your Google account to sync passwords across devices.
+- **Real-time Sync**: Data is stored in Firestore and updates instantly across open sessions.
+- **Cloud Encryption**: Passwords stored in the cloud are encrypted before upload.
 
 ### 🔒 Security
-*   **AES-256 Encryption**: All data is encrypted locally using AES-GCM before being saved to `localStorage`.
-*   **PBKDF2 Key Derivation**: The master password is strengthened using PBKDF2 (600,000 iterations) with a unique salt.
-*   **Zero Knowledge**: The master password is never stored in plain text; only the derived hash is verified.
-*   **Auto-Logout**: Automatically locks the vault after a configurable period of inactivity.
-*   **Login Lockout**: Temporarily locks the account after consecutive failed login attempts to prevent brute-force attacks.
-*   **Session Key Management**: Cloud encryption keys are stored in `sessionStorage` and are automatically discarded when the tab or browser is closed (improving security on shared PCs).
-*   **Privacy Protection**: The screen blurs when the app goes to the background to prevent shoulder surfing. Auto-learning and caching for input fields are disabled.
+
+- **AES-256 Encryption**: All data is encrypted locally using AES-GCM before being saved to `localStorage`.
+- **PBKDF2 Key Derivation**: The master password is strengthened using PBKDF2 (600,000 iterations) with a unique salt.
+- **Zero Knowledge**: The master password is never stored in plain text; only the derived hash is verified.
+- **Auto-Logout**: Automatically locks the vault after a configurable period of inactivity.
+- **Login Lockout**: Temporarily locks the account after consecutive failed login attempts to prevent brute-force attacks.
+- **Session Key Management**: Cloud encryption keys are stored in `sessionStorage` and are automatically discarded when the tab or browser is closed (improving security on shared PCs).
+- **Privacy Protection**: The screen blurs when the app goes to the background to prevent shoulder surfing. Auto-learning and caching for input fields are disabled.
 
 ### 🔐 Next-Gen Authentication (Passkeys)
-*   **Biometric Login**: Support for **Passkeys (WebAuthn)** allows logging in with Face ID, Touch ID, or Windows Hello.
-*   **Secure Key Storage**: Utilizes the **`largeBlob`** extension of the WebAuthn standard to store the master password safely within the authenticator. This allows for a seamless "passwordless" experience while maintaining zero-knowledge encryption locally.
-*   **Fallback Support**: Includes a fallback mechanism using local storage for devices that do not support `largeBlob` (with reduced security).
 
-###  Password Management
-*   **Organization**: Group passwords by categories and mark important items as favorites.
-*   **Drag & Drop**: Reorder your password list easily.
-*   **History Tracking**: Keeps a revision history of password entries, allowing you to restore previous versions.
-*   **Search & Sort**: Filter entries by title or website, and sort by name, strength, or modification date.
-*   **Recovery Kit**: Generate and download an emergency access PDF sheet in case you forget your master password.
+- **Biometric Login**: Support for **Passkeys (WebAuthn)** allows logging in with Face ID, Touch ID, or Windows Hello.
+- **Secure Key Storage**: Utilizes the **`largeBlob`** extension of the WebAuthn standard to store the master password safely within the authenticator. This allows for a seamless "passwordless" experience while maintaining zero-knowledge encryption locally.
+- **Fallback Support**: Includes a fallback mechanism using local storage for devices that do not support `largeBlob` (with reduced security).
+
+### Password Management
+
+- **Organization**: Group passwords by categories and mark important items as favorites.
+- **Drag & Drop**: Reorder your password list easily.
+- **History Tracking**: Keeps a revision history of password entries, allowing you to restore previous versions.
+- **Search & Sort**: Filter entries by title or website, and sort by name, strength, or modification date.
+- **Recovery Kit**: Generate and download an emergency access PDF sheet in case you forget your master password.
 
 ### 🛠 Tools
-*   **Password Generator**: Generate strong, random passwords with customizable length and character types (uppercase, numbers, symbols).
-*   **Strength Meter**: Real-time feedback on password strength and estimated crack time.
-*   **TOTP Authenticator**: Built-in support for generating 2FA codes (Time-based One-Time Passwords).
-*   **Breach Detection**: Integrated **Have I Been Pwned** check.
-    *   **Privacy-Preserving**: Uses *k-Anonymity* model. Only the first 5 characters of the password's SHA-1 hash are sent to the API; the full hash never leaves your device.
+
+- **Password Generator**: Generate strong, random passwords with customizable length and character types (uppercase, numbers, symbols).
+- **Strength Meter**: Real-time feedback on password strength and estimated crack time.
+- **TOTP Authenticator**: Built-in support for generating 2FA codes (Time-based One-Time Passwords).
+- **Breach Detection**: Integrated **Have I Been Pwned** check.
+  - **Privacy-Preserving**: Uses _k-Anonymity_ model. Only the first 5 characters of the password's SHA-1 hash are sent to the API; the full hash never leaves your device.
 
 ### ⚙️ Settings & Data
-*   **Import/Export**: Backup your vault to JSON or import data from other sources.
-*   **Dark Mode**: Toggle between light and dark themes.
-*   **Default Username**: Configure a default username to speed up entry creation.
+
+- **Import/Export**: Backup your vault to JSON or import data from other sources.
+- **Dark Mode**: Toggle between light and dark themes.
+- **Default Username**: Configure a default username to speed up entry creation.
 
 ## Security Architecture
 
 ### Local Mode (High Security)
-*   **Key Derivation**: The master password is never stored. An encryption key is derived using **PBKDF2** (SHA-256, 100,000 iterations) with a unique 16-byte random salt.
-*   **Encryption**: Data is encrypted using **AES-GCM** (256-bit) with a random 12-byte IV (Initialization Vector) for each save operation.
-*   **Storage**: The encrypted blob (IV + Ciphertext) is stored in the browser's `localStorage`.
+
+- **Key Derivation**: The master password is never stored. An encryption key is derived using **PBKDF2** (SHA-256, 100,000 iterations) with a unique 16-byte random salt.
+- **Encryption**: Data is encrypted using **AES-GCM** (256-bit) with a random 12-byte IV (Initialization Vector) for each save operation.
+- **Storage**: The encrypted blob (IV + Ciphertext) is stored in the browser's `localStorage`.
 
 ### Cloud Mode (E2EE / Zero-Knowledge)
-*   **Authentication**: Uses Firebase Authentication (Google Sign-In).
-*   **Hybrid Encryption (E2EE)**:
-    *   **Data Encryption**: Each password entry is encrypted client-side using a random **Session Key (AES-256-GCM)**.
-    *   **Key Protection**: The Session Key is encrypted using the user's unique **RSA-2048 Public Key** and stored with the data.
-    *   **Private Key Protection**: The RSA Private Key is encrypted using a **Key Encryption Key (KEK)** derived from the user's Master Password and stored in the cloud.
-*   **Zero-Knowledge Architecture**:
-    *   **Master Password Privacy**: The Master Password never leaves your device. Authentication and decryption occur entirely client-side (in the browser).
-    *   **Protection from Admins**: The server (Firebase) stores only "encrypted data" and the "encrypted private key". Without the Master Password, it is mathematically impossible for developers or server administrators to decrypt your data.
-*   **Transport**: All data transfer to Firebase is secured via HTTPS/TLS.
+
+- **Authentication**: Uses Firebase Authentication (Google Sign-In).
+- **Hybrid Encryption (E2EE)**:
+  - **Data Encryption**: Each password entry is encrypted client-side using a random **Session Key (AES-256-GCM)**.
+  - **Key Protection**: The Session Key is encrypted using the user's unique **RSA-2048 Public Key** and stored with the data.
+  - **Private Key Protection**: The RSA Private Key is encrypted using a **Key Encryption Key (KEK)** derived from the user's Master Password and stored in the cloud.
+- **Zero-Knowledge Architecture**:
+  - **Master Password Privacy**: The Master Password never leaves your device. Authentication and decryption occur entirely client-side (in the browser).
+  - **Protection from Admins**: The server (Firebase) stores only "encrypted data" and the "encrypted private key". Without the Master Password, it is mathematically impossible for developers or server administrators to decrypt your data.
+- **Transport**: All data transfer to Firebase is secured via HTTPS/TLS.
 
 ## Current Limitations
+
 Soul is a developing project. For transparency, we openly disclose current technical limitations and dependencies.
 
-*   **Dependency on Google Infrastructure**: Uses Google Firebase for backend (Auth/DB). While data is E2EE protected and unreadable by Google, service availability depends on Google's infrastructure.
-*   **Native Integration Limits**: Built on Web technologies (PWA), it currently does not support system-level autofill (e.g., keyboard password suggestions) on iOS or Android.
-*   **Development Stage (Beta)**: Currently an "Unstable" version. Frequent feature additions or changes may occur, and long-term stable support like commercial products is not guaranteed.
+- **Dependency on Google Infrastructure**: Uses Google Firebase for backend (Auth/DB). While data is E2EE protected and unreadable by Google, service availability depends on Google's infrastructure.
+- **Native Integration Limits**: Built on Web technologies (PWA), it currently does not support system-level autofill (e.g., keyboard password suggestions) on iOS or Android.
+- **Development Stage (Beta)**: Currently an "Unstable" version. Frequent feature additions or changes may occur, and long-term stable support like commercial products is not guaranteed.
 
 ## Technical Overview
 
 The application relies on the browser's native `window.crypto.subtle` API for cryptographic operations and Firebase for cloud features.
 
-*   **Storage Keys**:
-    *   `soul_passwords`: Encrypted vault data.
-    *   `soul_master_auth`: Salt and hash for master password verification.
-    *   `soul_theme`: User interface theme preference.
-    *   **Firestore**: Used for storing encrypted password entries when logged in.
+- **Storage Keys**:
+  - `soul_passwords`: Encrypted vault data.
+  - `soul_master_auth`: Salt and hash for master password verification.
+  - `soul_theme`: User interface theme preference.
+  - **Firestore**: Used for storing encrypted password entries when logged in.
 
 ### Data Structure (Firestore)
 
@@ -107,19 +122,22 @@ The application relies on the browser's native `window.crypto.subtle` API for cr
 ## Getting Started
 
 ### Prerequisites
-*   Node.js (v16 or higher)
-*   npm or yarn
-*   A Firebase project (for cloud sync features)
+
+- Node.js (v16 or higher)
+- npm or yarn
+- A Firebase project (for cloud sync features)
 
 ### Installation
 
 1.  **Clone the repository**
+
     ```bash
     git clone https://github.com/yourusername/soul-password-manager.git
     cd soul-password-manager
     ```
 
 2.  **Install dependencies**
+
     ```bash
     npm install
     ```
@@ -149,12 +167,12 @@ To secure your data in Firestore, apply the following security rules in your Fir
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     match /passwords/{docId} {
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow read, update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
-    
+
     match /devices/{docId} {
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow read, update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
@@ -175,10 +193,10 @@ service cloud.firestore {
 
 This application uses modern web standards.
 
-*   **Core Features**: Chrome, Edge, Firefox, Safari (Latest versions).
-*   **Passkey (largeBlob)**:
-    *   Chrome / Edge on macOS (Touch ID) and Windows (Hello).
-    *   *Note*: Support for `largeBlob` extension varies by platform and browser implementation.
+- **Core Features**: Chrome, Edge, Firefox, Safari (Latest versions).
+- **Passkey (largeBlob)**:
+  - Chrome / Edge on macOS (Touch ID) and Windows (Hello).
+  - _Note_: Support for `largeBlob` extension varies by platform and browser implementation.
 
 ## Directory Structure
 
@@ -204,8 +222,8 @@ www/
 
 The application relies on the following key libraries:
 
-*   **Firebase SDK**: Authentication and Firestore.
-*   **@m3e/components**: Custom Material Design 3 web components for the UI.
-*   **zxcvbn**: For realistic password strength estimation.
-*   **otpauth**: For TOTP (2FA) code generation.
-*   **DOMPurify**: For sanitizing imported data to prevent XSS attacks.
+- **Firebase SDK**: Authentication and Firestore.
+- **@m3e/components**: Custom Material Design 3 web components for the UI.
+- **zxcvbn**: For realistic password strength estimation.
+- **otpauth**: For TOTP (2FA) code generation.
+- **DOMPurify**: For sanitizing imported data to prevent XSS attacks.
