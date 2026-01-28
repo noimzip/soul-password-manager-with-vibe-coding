@@ -3078,10 +3078,13 @@ function addPasswordToUI(item, index, listGroup) {
         
         icon.slot = 'icon';
 
-        const strengthClass = getStrengthInfo(item.password).strengthClass;
-        if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
-            icon.classList.add(strengthClass);
-        }
+        // Async strength calculation for UI
+        getStrengthInfo(item.password).then(info => {
+            if (icon.tagName.toLowerCase() === 'm3e-icon' && icon.name === 'key') {
+                icon.classList.add(info.strengthClass);
+            }
+            titleSpan.classList.add(info.strengthClass);
+        });
 
         const label = document.createElement('div');
         label.slot = 'label';
@@ -3089,7 +3092,8 @@ function addPasswordToUI(item, index, listGroup) {
 
         const titleSpan = document.createElement('span');
         titleSpan.textContent = item.title;
-        titleSpan.className = 'nav-item-title ' + strengthClass;
+        titleSpan.className = 'nav-item-title'; // Classes added async above
+
         label.appendChild(titleSpan);
 
         if (item.category) {
