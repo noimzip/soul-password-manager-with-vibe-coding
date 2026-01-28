@@ -71,7 +71,7 @@ enableIndexedDbPersistence(db).catch((err) => {
 });
 
 // --- Constants & State ---
-const CONSTANTS = {
+const CONSTANTS = Object.freeze({
     APP_VERSION: '26.01.25 (Unstable)',
     STORAGE: {
         PASSWORDS: 'soul_passwords',
@@ -92,20 +92,20 @@ const CONSTANTS = {
         PASSKEY_NAMES: 'soul_passkey_names',
         PASSKEY_ENCRYPTED_DATA: 'soul_passkey_encrypted_data'
     }
-};
+});
 
-const CRYPTO_CONFIG = {
+const CRYPTO_CONFIG = Object.freeze({
     PBKDF2_ITERATIONS: 600000,
     SALT_LENGTH: 16,
     IV_LENGTH: 12
-};
+});
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 5;
 
 const FIXED_ENCRYPTION_SECRET = import.meta.env.VITE_ENCRYPTION_SECRET;
 
-const HYBRID_CONFIG = {
+const HYBRID_CONFIG = Object.freeze({
     RSA_ALGO: {
         name: "RSA-OAEP",
         modulusLength: 2048,
@@ -116,7 +116,7 @@ const HYBRID_CONFIG = {
         name: "AES-GCM",
         length: 256
     }
-};
+});
 
 const DECRYPTION_ERROR_MARKER = '[[DECRYPTION_FAILED]]';
 
@@ -199,6 +199,13 @@ function updateLanguage(lang) {
     renderPasswordList(document.getElementById('fld').value);
     renderGeneratorHistory();
     
+}
+
+// Helper to set innerHTML safely using DOMPurify if needed
+async function setSafeHTML(element, content) {
+    if (!element) return;
+    const { default: DOMPurify } = await import('dompurify');
+    element.innerHTML = DOMPurify.sanitize(content);
 }
 
 // --- Crypto Utilities (Local Mode - High Security) ---
@@ -4563,6 +4570,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearCloudKey();
                 appKey = null;
                 cloudKey = null;
+                savedPasswords = []; // Clear data from memory
+                hybridKeyPair = null;
                 location.reload();
             }
         });
