@@ -1320,6 +1320,16 @@ async function registerLocalBiometric() {
     }
 }
 
+async function unregisterLocalBiometric() {
+    const confirm = await showConfirmDialog(t('unregister_passkey_confirm')); // Reuse confirmation message
+    if (confirm) {
+        localStorage.removeItem('soul_biometric_cred_id');
+        // Note: We don't remove PASSKEY_FALLBACK here as it might be used by Passkey fallback flow too, or we can if we want strict separation.
+        // For simplicity and safety, we just remove the ID so it won't be used for login.
+        showSnackbar(t('passkey_unregistered'));
+    }
+}
+
 async function loginWithPasskey() {
     if (!window.PublicKeyCredential) return;
 
@@ -3581,6 +3591,13 @@ document.addEventListener('DOMContentLoaded', () => {
         bioLocalBtn.textContent = currentLang === 'ja' ? "生体認証 (ローカル)" : "Biometrics (Local)";
         bioLocalBtn.addEventListener('click', registerLocalBiometric);
         setupPasskeyBtn.parentNode.insertBefore(bioLocalBtn, manageBtn.nextSibling);
+
+        const unregisterBioLocalBtn = document.createElement('m3e-button');
+        unregisterBioLocalBtn.setAttribute('variant', 'text');
+        unregisterBioLocalBtn.style.marginLeft = '8px';
+        unregisterBioLocalBtn.textContent = currentLang === 'ja' ? "削除 (ローカル)" : "Unregister (Local)";
+        unregisterBioLocalBtn.addEventListener('click', unregisterLocalBiometric);
+        setupPasskeyBtn.parentNode.insertBefore(unregisterBioLocalBtn, bioLocalBtn.nextSibling);
 
         const unregisterBtn = document.createElement('m3e-button');
         unregisterBtn.setAttribute('variant', 'text');
