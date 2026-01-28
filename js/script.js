@@ -1185,48 +1185,67 @@ async function registerPasskey() {
         
         // Check if largeBlob is supported by the authenticator
         const credExts = credential.getClientExtensionResults();
-        if (!credExts.largeBlob || !credExts.largeBlob.supported) {
-            throw new Error("この認証器はデータ保存(largeBlob)をサポートしていません。");
+        let largeBlobSuccess = false;
+
+        if (credExts.largeBlob && credExts.largeBlob.supported) {
+            try {
+                // 2. Generate Random Key and Write to Large Blob (Envelope Encryption)
+                const keyBytes = window.crypto.getRandomValues(new Uint8Array(32)); // 32 bytes random key
+                
+                const assertionOptions = {
+                    challenge: window.crypto.getRandomValues(new Uint8Array(32)),
+                    rpId: window.location.hostname,
+                    allowCredentials: [{ id: credential.rawId, type: 'public-key' }],
+                    userVerification: "required",
+                    extensions: { largeBlob: { write: keyBytes } }
+                };
+
+                const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
+                const extResults = assertion.getClientExtensionResults();
+                if (extResults.largeBlob && extResults.largeBlob.written) {
+                    // 3. Encrypt Password with the Random Key and Save to Local Storage
+                    const key = await window.crypto.subtle.importKey("raw", keyBytes, {name: "AES-GCM"}, false, ["encrypt"]);
+                    const encryptedPassword = await encryptLocal(password, key);
+                    localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA, encryptedPassword);
+
+                    let authType = "Passkey";
+                    if (credential.authenticatorAttachment === 'platform') {
+                        authType = "このデバイス";
+                    } else if (credential.authenticatorAttachment === 'cross-platform') {
+                        authType = "外部キー";
+                    }
+                    if (typeof credential.response.getTransports === 'function') {
+                        const transports = credential.response.getTransports();
+                        if (transports.length > 0) authType += ` (${transports.join(', ')})`;
+                    }
+                    showSnackbar(`${authType} を登録しました。`);
+                    
+                    const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
+                    if (!currentNames.includes(username)) {
+                        currentNames.push(username);
+                        localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_NAMES, JSON.stringify(currentNames));
+                    }
+                    largeBlobSuccess = true;
+                }
+            } catch (e) {
+                console.warn("LargeBlob write failed, attempting fallback", e);
+            }
         }
 
-        // 2. Generate Random Key and Write to Large Blob (Envelope Encryption)
-        const keyBytes = window.crypto.getRandomValues(new Uint8Array(32)); // 32 bytes random key
-        
-        const assertionOptions = {
-            challenge: window.crypto.getRandomValues(new Uint8Array(32)),
-            rpId: window.location.hostname,
-            allowCredentials: [{ id: credential.rawId, type: 'public-key' }],
-            userVerification: "required",
-            extensions: { largeBlob: { write: keyBytes } }
-        };
-
-        const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
-        const extResults = assertion.getClientExtensionResults();
-        if (extResults.largeBlob && extResults.largeBlob.written) {
-            // 3. Encrypt Password with the Random Key and Save to Local Storage
-            const key = await window.crypto.subtle.importKey("raw", keyBytes, {name: "AES-GCM"}, false, ["encrypt"]);
-            const encryptedPassword = await encryptLocal(password, key);
-            localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA, encryptedPassword);
-
-            let authType = "Passkey";
-            if (credential.authenticatorAttachment === 'platform') {
-                authType = "このデバイス";
-            } else if (credential.authenticatorAttachment === 'cross-platform') {
-                authType = "外部キー";
+        if (!largeBlobSuccess) {
+            const confirmFallback = await showConfirmDialog(t('passkey_fallback_confirm'));
+            if (confirmFallback) {
+                await savePasskeyFallback(password);
+                
+                const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
+                if (!currentNames.includes(username)) {
+                    currentNames.push(username);
+                    localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_NAMES, JSON.stringify(currentNames));
+                }
+                showSnackbar(t('passkey_fallback_saved'));
+            } else {
+                showSnackbar(t('passkey_not_supported_cancel'));
             }
-            if (typeof credential.response.getTransports === 'function') {
-                const transports = credential.response.getTransports();
-                if (transports.length > 0) authType += ` (${transports.join(', ')})`;
-            }
-            showSnackbar(`${authType} を登録しました。`);
-            
-            const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
-            if (!currentNames.includes(username)) {
-                currentNames.push(username);
-                localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_NAMES, JSON.stringify(currentNames));
-            }
-        } else {
-            throw new Error("データの保存に失敗しました。容量不足の可能性があります。");
         }
 
     } catch (e) {
