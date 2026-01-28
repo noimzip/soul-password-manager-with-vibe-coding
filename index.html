@@ -359,9 +359,14 @@
       <div class="strength-meter-container mb-3 mt-1">
          <div id="new_pass_strength_bar" class="strength-meter-fill"></div>
       </div>
-      <m3e-form-field variant="outlined" label="TOTP Secret (Optional)" data-i18n-label="totp_secret_opt" class="w-100">
-        <input id="new_pass_secret" type="password" placeholder="TOTP 秘密鍵" autocomplete="new-password" data-i18n-placeholder="totp_secret">
-      </m3e-form-field>
+      <div class="flex-row-center-gap">
+        <m3e-form-field variant="outlined" label="TOTP Secret (Optional)" data-i18n-label="totp_secret_opt" class="flex-1">
+          <input id="new_pass_secret" type="password" placeholder="TOTP 秘密鍵" autocomplete="new-password" data-i18n-placeholder="totp_secret">
+        </m3e-form-field>
+        <m3e-icon-button id="scan_qr_new_btn" title="Scan QR Code">
+          <m3e-icon name="qr_code_scanner"></m3e-icon>
+        </m3e-icon-button>
+      </div>
       <div slot="actions">
         <m3e-button variant="text">
           <m3e-dialog-action return-value="cancel" data-i18n="cancel">キャンセル</m3e-dialog-action>
@@ -426,9 +431,14 @@
         <span data-i18n="check_breach">漏洩チェック (Have I Been Pwned)</span>
       </m3e-button>
 
-      <m3e-form-field variant="outlined" label="TOTP Secret" data-i18n-label="totp_secret" class="w-100">
-        <input id="detail_pass_secret" type="password" autocomplete="new-password">
-      </m3e-form-field>
+      <div class="flex-row-center-gap">
+        <m3e-form-field variant="outlined" label="TOTP Secret" data-i18n-label="totp_secret" class="flex-1">
+          <input id="detail_pass_secret" type="password" autocomplete="new-password">
+        </m3e-form-field>
+        <m3e-icon-button id="scan_qr_detail_btn" title="Scan QR Code">
+          <m3e-icon name="qr_code_scanner"></m3e-icon>
+        </m3e-icon-button>
+      </div>
       
       <div id="totp_display_area" class="totp-display">
         <div class="totp-code" id="totp_code" title="Click to copy"></div>

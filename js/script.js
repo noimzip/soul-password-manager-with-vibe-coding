@@ -24,6 +24,7 @@ import "@m3e/option/dist/index.min.js";
 import zxcvbn from 'zxcvbn';
 import * as OTPAuth from 'otpauth';
 import DOMPurify from 'dompurify';
+import jsQR from 'jsqr';
 import { TRANSLATIONS } from './translations.js';
 
 // --- Firebase Configuration ---
@@ -1792,6 +1793,243 @@ function updateSessionTypeDisplay() {
         el.textContent = t('session_memory');
     } else {
         el.textContent = t('session_storage');
+    }
+}
+
+async function scanQRCode(targetInputId) {
+    const video = document.createElement('video');
+    const canvasElement = document.createElement('canvas');
+    const canvas = canvasElement.getContext('2d');
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.8); z-index: 10001; display: flex; 
+        flex-direction: column; align-items: center; justify-content: center;
+    `;
+
+    const scanArea = document.createElement('div');
+    scanArea.style.cssText = `
+        position: relative;
+        width: 250px;
+        height: 250px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+
+    const message = document.createElement('p');
+    message.textContent = t('scan_qr_guide') || 'QRコードを枠内に合わせてください';
+    message.style.cssText = 'color: white; margin-bottom: 24px; font-size: 16px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10002;';
+
+    const closeBtn = document.createElement('m3e-button');
+    closeBtn.setAttribute('variant', 'filled');
+    closeBtn.innerHTML = `<span>${t('cancel')}</span>`;
+    closeBtn.style.cssText = 'margin-top: 32px; z-index: 10002;';
+    
+    const switchCameraBtn = document.createElement('m3e-icon-button');
+    switchCameraBtn.innerHTML = '<m3e-icon name="cameraswitch" style="color: white; font-size: 32px;"></m3e-icon>';
+    switchCameraBtn.style.cssText = 'position: absolute; top: 24px; right: 24px; z-index: 10002; display: none;';
+    
+    const flashBtn = document.createElement('m3e-icon-button');
+    flashBtn.innerHTML = '<m3e-icon name="flash_on" style="color: white; font-size: 32px;"></m3e-icon>';
+    flashBtn.style.cssText = 'position: absolute; top: 24px; left: 24px; z-index: 10002; display: none;';
+    
+    const uploadBtn = document.createElement('m3e-icon-button');
+    uploadBtn.innerHTML = '<m3e-icon name="image" style="color: white; font-size: 32px;"></m3e-icon>';
+    uploadBtn.style.cssText = 'position: absolute; top: 24px; right: 80px; z-index: 10002;';
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                tempCtx.drawImage(img, 0, 0);
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+                
+                if (code && code.data.startsWith('otpauth://')) {
+                    if (navigator.vibrate) navigator.vibrate(200);
+
+                    try {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        if (AudioContext) {
+                            const ctx = new AudioContext();
+                            const osc = ctx.createOscillator();
+                            const gain = ctx.createGain();
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.frequency.value = 800;
+                            gain.gain.value = 0.1;
+                            osc.start();
+                            setTimeout(() => { osc.stop(); ctx.close(); }, 150);
+                        }
+                    } catch (e) {}
+
+                    const url = new URL(code.data);
+                    const secret = url.searchParams.get('secret');
+                    document.getElementById(targetInputId).value = secret;
+                    stopScan();
+                } else {
+                    showSnackbar(t('qr_not_found') || "QR code not found");
+                }
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Video should be behind the overlay
+    video.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;';
+
+    container.appendChild(video); // Video first (background)
+    container.appendChild(message);
+    container.appendChild(flashBtn);
+    container.appendChild(switchCameraBtn);
+    container.appendChild(uploadBtn);
+    container.appendChild(scanArea);
+    container.appendChild(closeBtn);
+    document.body.appendChild(container);
+
+    let stream = null;
+    let currentCameraIndex = 0;
+    let videoDevices = [];
+    let isFlashOn = false;
+
+    const stopScan = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        if (container.parentNode) {
+            container.parentNode.removeChild(container);
+        }
+    };
+
+    closeBtn.addEventListener('click', stopScan);
+
+    const toggleFlash = async () => {
+        if (!stream) return;
+        const track = stream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        
+        if (capabilities.torch) {
+            isFlashOn = !isFlashOn;
+            try {
+                await track.applyConstraints({ advanced: [{ torch: isFlashOn }] });
+                flashBtn.querySelector('m3e-icon').name = isFlashOn ? 'flash_off' : 'flash_on';
+            } catch (e) {
+                console.error("Flash toggle failed", e);
+                isFlashOn = !isFlashOn; // Revert state on fail
+            }
+        }
+    };
+
+    const startCamera = async (deviceId = null) => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        
+        const constraints = { 
+            video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" } 
+        };
+
+        try {
+            const s = await navigator.mediaDevices.getUserMedia(constraints);
+            stream = s;
+            video.srcObject = stream;
+            video.setAttribute("playsinline", true); // for iOS
+            video.play();
+            
+            // Check flash support
+            const track = s.getVideoTracks()[0];
+            const capabilities = track.getCapabilities();
+            if (capabilities.torch) {
+                flashBtn.style.display = 'block';
+                isFlashOn = false; // Reset state
+                flashBtn.querySelector('m3e-icon').name = 'flash_on';
+            } else {
+                flashBtn.style.display = 'none';
+            }
+            requestAnimationFrame(tick);
+        } catch (err) {
+            console.error(err);
+            showAlertDialog('カメラにアクセスできませんでした。');
+            stopScan();
+        }
+    };
+    
+    flashBtn.addEventListener('click', toggleFlash);
+
+    // Get available cameras
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        if (videoDevices.length > 1) {
+            switchCameraBtn.style.display = 'block';
+            switchCameraBtn.addEventListener('click', () => {
+                currentCameraIndex = (currentCameraIndex + 1) % videoDevices.length;
+                startCamera(videoDevices[currentCameraIndex].deviceId);
+            });
+        }
+        
+        // Start with default (usually back camera due to facingMode: environment preference if no deviceId)
+        startCamera();
+    } catch (e) {
+        console.error("Error enumerating devices", e);
+        startCamera(); // Try starting anyway
+    }
+
+    function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvasElement.height = video.videoHeight;
+            canvasElement.width = video.videoWidth;
+            canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+            const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            if (code && code.data.startsWith('otpauth://')) {
+                if (navigator.vibrate) navigator.vibrate(200);
+
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        const ctx = new AudioContext();
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.frequency.value = 800;
+                        gain.gain.value = 0.1;
+                        osc.start();
+                        setTimeout(() => { osc.stop(); ctx.close(); }, 150);
+                    }
+                } catch (e) {}
+
+                const url = new URL(code.data);
+                const secret = url.searchParams.get('secret');
+                document.getElementById(targetInputId).value = secret;
+                stopScan();
+                return;
+            }
+        }
+        requestAnimationFrame(tick);
     }
 }
 
@@ -3720,6 +3958,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStrengthView(e.target.value, null, 'new_pass_strength_bar', null);
     });
 
+    document.getElementById('scan_qr_new_btn')?.addEventListener('click', () => {
+        scanQRCode('new_pass_secret');
+    });
+
     // Update Password
     document.getElementById('update_password_btn')?.addEventListener('click', async () => {
         if (currentDetailId) {
@@ -3827,6 +4069,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('detail_pass_value').value = password;
         updateDetailStrength(password);
         checkDetailChanges();
+    });
+
+    document.getElementById('scan_qr_detail_btn')?.addEventListener('click', () => {
+        scanQRCode('detail_pass_secret');
     });
 
     document.getElementById('regenerate_password_btn')?.addEventListener('click', generatePassword);
