@@ -1970,7 +1970,11 @@ async function scanQRCode(targetInputId) {
             requestAnimationFrame(tick);
         } catch (err) {
             console.error(err);
-            showAlertDialog('カメラにアクセスできませんでした。');
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                showAlertDialog('カメラへのアクセスが拒否されました。ブラウザの設定で許可してください。');
+            } else {
+                showAlertDialog('カメラにアクセスできませんでした: ' + err.message);
+            }
             stopScan();
         }
     };
