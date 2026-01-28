@@ -21,10 +21,6 @@ import "@m3e/checkbox/dist/index.min.js";
 import "@m3e/select/dist/index.min.js";
 import "@m3e/option/dist/index.min.js";
 
-import zxcvbn from 'zxcvbn';
-import * as OTPAuth from 'otpauth';
-import DOMPurify from 'dompurify';
-import jsQR from 'jsqr';
 import { TRANSLATIONS } from './translations.js';
 
 // --- Firebase Configuration ---
@@ -60,10 +56,12 @@ function captureLog(level, args) {
     }
 }
 
-const originalLog = console.log; console.log = (...args) => { captureLog('INFO', args); originalLog.apply(console, args); };
-const originalWarn = console.warn; console.warn = (...args) => { captureLog('WARN', args); originalWarn.apply(console, args); };
-const originalError = console.error; console.error = (...args) => { captureLog('ERROR', args); originalError.apply(console, args); };
-window.addEventListener('error', (e) => captureLog('UNCAUGHT', [e.message, e.filename, e.lineno]));
+if (import.meta.env.DEV) {
+    const originalLog = console.log; console.log = (...args) => { captureLog('INFO', args); originalLog.apply(console, args); };
+    const originalWarn = console.warn; console.warn = (...args) => { captureLog('WARN', args); originalWarn.apply(console, args); };
+    const originalError = console.error; console.error = (...args) => { captureLog('ERROR', args); originalError.apply(console, args); };
+    window.addEventListener('error', (e) => captureLog('UNCAUGHT', [e.message, e.filename, e.lineno]));
+}
 
 // Enable Offline Persistence
 enableIndexedDbPersistence(db).catch((err) => {
@@ -958,15 +956,16 @@ async function promptForMasterPassword(returnPassword = false, checkUser = null,
 
 // --- Password Strength & TOTP ---
 
-function calculatePasswordStrength(password) {
+async function calculatePasswordStrength(password) {
     if (!password) return 0;
+    const { default: zxcvbn } = await import('zxcvbn');
     // zxcvbn returns a score from 0 (weak) to 4 (very strong)
     const result = zxcvbn(password);
     return result.score;
 }
 
-function getStrengthInfo(password, score = null) {
-    const strength = score !== null ? score : calculatePasswordStrength(password);
+async function getStrengthInfo(password, score = null) {
+    const strength = score !== null ? score : await calculatePasswordStrength(password);
     let strengthClass = 'text-weak';
     let barClass = 'bg-weak';
     let strengthPercent = 0;
@@ -984,9 +983,13 @@ function getStrengthInfo(password, score = null) {
     return { strength, strengthPercent, strengthClass, barClass, labelKey };
 }
 
-function updateStrengthView(password, resultElId, barElId, crackTimeElId) {
-    const analysis = password ? zxcvbn(password) : null;
-    const info = getStrengthInfo(password, analysis ? analysis.score : 0);
+async function updateStrengthView(password, resultElId, barElId, crackTimeElId) {
+    let analysis = null;
+    if (password) {
+        const { default: zxcvbn } = await import('zxcvbn');
+        analysis = zxcvbn(password);
+    }
+    const info = await getStrengthInfo(password, analysis ? analysis.score : 0);
 
     const resultEl = typeof resultElId === 'string' ? document.getElementById(resultElId) : resultElId;
     const barEl = typeof barElId === 'string' ? document.getElementById(barElId) : barElId;
@@ -1056,6 +1059,7 @@ async function generateTOTP(secret) {
         const cleanSecret = secret.replace(/\s/g, '');
         
         // Create TOTP object using otpauth library
+        const OTPAuth = await import('otpauth');
         const totp = new OTPAuth.TOTP({
             algorithm: 'SHA1',
             digits: 6,
@@ -1797,6 +1801,7 @@ function updateSessionTypeDisplay() {
 }
 
 async function scanQRCode(targetInputId) {
+    const { default: jsQR } = await import('jsqr');
     const video = document.createElement('video');
     const canvasElement = document.createElement('canvas');
     const canvas = canvasElement.getContext('2d');
