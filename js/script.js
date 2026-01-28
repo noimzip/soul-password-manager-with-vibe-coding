@@ -877,15 +877,31 @@ async function promptForMasterPassword(returnPassword = false, checkUser = null,
             
             bioBtn.addEventListener('click', async () => {
                 try {
+                    const localKeys = getBiometricKeys(false);
+                    const cloudKeys = getBiometricKeys(true);
+                    
+                    const localCredId = localStorage.getItem(localKeys.credId);
+                    const cloudCredId = localStorage.getItem(cloudKeys.credId);
+                    
+                    const allowCredentials = [];
+                    if (localCredId) allowCredentials.push({ id: base64ToArrayBuffer(localCredId), type: 'public-key', transports: ['internal'] });
+                    if (cloudCredId) allowCredentials.push({ id: base64ToArrayBuffer(cloudCredId), type: 'public-key', transports: ['internal'] });
+
                     const assertionOptions = {
                         challenge: window.crypto.getRandomValues(new Uint8Array(32)),
                         rpId: window.location.hostname,
                         userVerification: "required",
                         extensions: { largeBlob: { read: true } }
                     };
+                    
+                    if (allowCredentials.length > 0) {
+                        assertionOptions.allowCredentials = allowCredentials;
+                    }
 
                     const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
                     const extResults = assertion.getClientExtensionResults();
+                    const usedCredId = arrayBufferToBase64(assertion.rawId);
+                    const isCloudLogin = (usedCredId === cloudCredId);
 
                     let password = null;
                     if (extResults.largeBlob && extResults.largeBlob.blob) {
@@ -907,7 +923,11 @@ async function promptForMasterPassword(returnPassword = false, checkUser = null,
                             }
                         }
                     } else {
-                        password = await loadPasskeyFallback();
+                        if (isCloudLogin) {
+                            password = await loadPasskeyFallback(cloudKeys.fallback);
+                        } else {
+                            password = await loadPasskeyFallback(localKeys.fallback);
+                        }
                     }
 
                     if (password) {
@@ -1066,6 +1086,16 @@ function bufferToStr(buf) {
     return new TextDecoder().decode(buf);
 }
 
+function getBiometricKeys(isCloud) {
+    return isCloud ? {
+        credId: 'soul_biometric_cred_id_cloud',
+        fallback: 'soul_passkey_fallback_cloud'
+    } : {
+        credId: 'soul_biometric_cred_id',
+        fallback: CONSTANTS.STORAGE.PASSKEY_FALLBACK
+    };
+}
+
 async function getFallbackKey() {
     // Use a fixed salt for the fallback key derivation
     const salt = new TextEncoder().encode("soul_passkey_fallback_salt");
@@ -1113,14 +1143,14 @@ async function getPasskeyBlobKey() {
     );
 }
 
-async function savePasskeyFallback(password) {
+async function savePasskeyFallback(password, storageKey = CONSTANTS.STORAGE.PASSKEY_FALLBACK) {
     const key = await getFallbackKey();
     const encrypted = await encryptLocal(password, key);
-    localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK, encrypted);
+    localStorage.setItem(storageKey, encrypted);
 }
 
-async function loadPasskeyFallback() {
-    const encrypted = localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_FALLBACK);
+async function loadPasskeyFallback(storageKey = CONSTANTS.STORAGE.PASSKEY_FALLBACK) {
+    const encrypted = localStorage.getItem(storageKey);
     if (!encrypted) return null;
     try {
         const key = await getFallbackKey();
@@ -1139,7 +1169,8 @@ async function registerPasskey() {
 
     // We need the plaintext password to store it in the largeBlob.
     // Since we don't keep it in memory, we must ask the user.
-    const password = await promptForMasterPassword(true);
+    const isCloud = !!currentUser;
+    const password = await promptForMasterPassword(true, currentUser, isCloud ? 'cloud' : 'local');
     if (!password) return;
 
     try {
@@ -1237,7 +1268,8 @@ async function registerPasskey() {
         if (!largeBlobSuccess) {
             const confirmFallback = await showConfirmDialog(t('passkey_fallback_confirm'));
             if (confirmFallback) {
-                await savePasskeyFallback(password);
+                const keys = getBiometricKeys(isCloud);
+                await savePasskeyFallback(password, keys.fallback);
                 
                 const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
                 if (!currentNames.includes(username)) {
@@ -1270,7 +1302,8 @@ async function registerLocalBiometric() {
         return;
     }
 
-    const password = await promptForMasterPassword(true);
+    const isCloud = !!currentUser;
+    const password = await promptForMasterPassword(true, currentUser, isCloud ? 'cloud' : 'local');
     if (!password) return;
 
     try {
@@ -1306,13 +1339,14 @@ async function registerLocalBiometric() {
         
         // Save Credential ID for later use (allowCredentials)
         const credId = arrayBufferToBase64(credential.rawId);
-        localStorage.setItem('soul_biometric_cred_id', credId);
+        const keys = getBiometricKeys(isCloud);
+        localStorage.setItem(keys.credId, credId);
         
         // Save Password using the existing fallback mechanism (Local Storage)
-        await savePasskeyFallback(password);
+        await savePasskeyFallback(password, keys.fallback);
         
         // Also add to names list for UI consistency if needed, or just notify
-        showSnackbar("Biometrics (Local) registered.");
+        showSnackbar(isCloud ? "Biometrics (Cloud) registered." : "Biometrics (Local) registered.");
 
     } catch (e) {
         console.error(e);
@@ -1323,9 +1357,9 @@ async function registerLocalBiometric() {
 async function unregisterLocalBiometric() {
     const confirm = await showConfirmDialog(t('unregister_passkey_confirm')); // Reuse confirmation message
     if (confirm) {
-        localStorage.removeItem('soul_biometric_cred_id');
-        // Note: We don't remove PASSKEY_FALLBACK here as it might be used by Passkey fallback flow too, or we can if we want strict separation.
-        // For simplicity and safety, we just remove the ID so it won't be used for login.
+        const keys = getBiometricKeys(!!currentUser);
+        localStorage.removeItem(keys.credId);
+        localStorage.removeItem(keys.fallback);
         showSnackbar(t('passkey_unregistered'));
     }
 }
@@ -1334,6 +1368,16 @@ async function loginWithPasskey() {
     if (!window.PublicKeyCredential) return;
 
     try {
+        const localKeys = getBiometricKeys(false);
+        const cloudKeys = getBiometricKeys(true);
+        
+        const localCredId = localStorage.getItem(localKeys.credId);
+        const cloudCredId = localStorage.getItem(cloudKeys.credId);
+        
+        const allowCredentials = [];
+        if (localCredId) allowCredentials.push({ id: base64ToArrayBuffer(localCredId), type: 'public-key', transports: ['internal'] });
+        if (cloudCredId) allowCredentials.push({ id: base64ToArrayBuffer(cloudCredId), type: 'public-key', transports: ['internal'] });
+
         const assertionOptions = {
             challenge: window.crypto.getRandomValues(new Uint8Array(32)),
             rpId: window.location.hostname,
@@ -1341,21 +1385,17 @@ async function loginWithPasskey() {
             extensions: { largeBlob: { read: true } }
         };
 
-        // Check for local biometric credential
-        const localCredId = localStorage.getItem('soul_biometric_cred_id');
-        if (localCredId) {
-            assertionOptions.allowCredentials = [{
-                id: base64ToArrayBuffer(localCredId),
-                type: 'public-key',
-                transports: ['internal']
-            }];
+        if (allowCredentials.length > 0) {
+            assertionOptions.allowCredentials = allowCredentials;
         }
 
         const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
         const extResults = assertion.getClientExtensionResults();
+        const usedCredId = arrayBufferToBase64(assertion.rawId);
 
         let password = null;
         let isFallback = false;
+        let isCloudLogin = (usedCredId === cloudCredId);
 
         if (extResults.largeBlob && extResults.largeBlob.blob) {
             const blobData = extResults.largeBlob.blob;
@@ -1376,12 +1416,20 @@ async function loginWithPasskey() {
                 }
             }
         } else {
-            password = await loadPasskeyFallback();
+            if (isCloudLogin) {
+                password = await loadPasskeyFallback(cloudKeys.fallback);
+            } else {
+                password = await loadPasskeyFallback(localKeys.fallback);
+            }
             isFallback = true;
         }
 
         if (password) {
-            if (currentUser) {
+            if (currentUser || isCloudLogin) {
+                if (!currentUser) {
+                    showAlertDialog("Cloud session expired. Please login with Google first.");
+                    return;
+                }
                 cloudKey = await deriveCloudKey(password, currentUser.uid);
                 showSnackbar(isFallback ? t('passkey_fallback_login') : "生体認証でロック解除しました");
                 initFirestoreSync(currentUser);
