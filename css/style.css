@@ -167,9 +167,10 @@ body.loaded #loading_overlay {
 }
 
 #make_fab {
-    position: absolute;
+    position: fixed;
     right: 30px;
     bottom: 30px;
+    z-index: 999;
 }
 
 /* Utility Classes */
@@ -957,4 +958,16 @@ body.privacy-blur {
     height: 24px;
     border-radius: 4px;
     object-fit: cover;
+}
+
+.mobile-drag-handle {
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    padding: 8px; /* Larger touch area */
+    margin: -8px; 
+}
+
+.swipe-item {
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s ease;
+    user-select: none;
 }

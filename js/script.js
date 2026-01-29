@@ -3235,13 +3235,16 @@ function addPasswordToUI(item, index, listGroup) {
         newItem.appendChild(icon);
         newItem.appendChild(label);
 
+        // Trailing Icons Container
+        const trailingContainer = document.createElement('div');
+        trailingContainer.slot = 'trailing-icon';
+        trailingContainer.style.display = 'flex';
+        trailingContainer.style.alignItems = 'center';
+        trailingContainer.style.gap = '4px';
+        trailingContainer.style.paddingRight = '8px';
+
         // Favorite Button
         const favBtn = document.createElement('m3e-icon-button');
-        favBtn.style.position = 'absolute';
-        favBtn.style.right = '8px';
-        favBtn.style.top = '50%';
-        favBtn.style.transform = 'translateY(-50%)';
-        favBtn.style.zIndex = '2';
         const favIcon = document.createElement('m3e-icon');
         favIcon.name = item.favorite ? 'star' : 'star_border';
         if (item.favorite) favIcon.style.color = '#fbc02d';
@@ -3252,7 +3255,82 @@ function addPasswordToUI(item, index, listGroup) {
             item.favorite = !item.favorite;
             await saveOrUpdateItem(item);
         });
-        newItem.appendChild(favBtn);
+        trailingContainer.appendChild(favBtn);
+
+        // Drag Handle for Mobile
+        const dragHandle = document.createElement('m3e-icon');
+        dragHandle.setAttribute('name', 'drag_indicator');
+        dragHandle.name = 'drag_indicator';
+        dragHandle.style.cursor = 'grab';
+        dragHandle.style.color = 'var(--md-sys-color-on-surface-variant)';
+        dragHandle.classList.add('mobile-drag-handle');
+
+        let isDragging = false;
+        let startY = 0;
+        let lastItem = null;
+
+        dragHandle.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startY = e.touches[0].clientY;
+            newItem.style.zIndex = '100';
+            newItem.style.boxShadow = 'var(--md-sys-elevation-3)';
+            newItem.style.backgroundColor = 'var(--md-sys-color-surface-container-high)';
+            if (navigator.vibrate) navigator.vibrate(10);
+            e.stopPropagation();
+        }, {passive: false});
+
+        dragHandle.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const currentY = e.touches[0].clientY;
+            const diffY = currentY - startY;
+            newItem.style.transform = `translateY(${diffY}px)`;
+
+            // Find item under touch
+            const elementUnder = document.elementFromPoint(e.touches[0].clientX, currentY);
+            const targetItem = elementUnder?.closest('m3e-nav-menu-item');
+            
+            if (targetItem && targetItem !== newItem && targetItem.dataset.index !== undefined) {
+                if (lastItem) lastItem.style.border = '';
+                targetItem.style.borderTop = diffY < 0 ? '2px solid var(--md-sys-color-primary)' : '';
+                targetItem.style.borderBottom = diffY > 0 ? '2px solid var(--md-sys-color-primary)' : '';
+                lastItem = targetItem;
+            } else if (lastItem) {
+                lastItem.style.border = '';
+                lastItem = null;
+            }
+        }, {passive: false});
+
+        dragHandle.addEventListener('touchend', async (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            newItem.style.zIndex = '';
+            newItem.style.boxShadow = '';
+            newItem.style.transform = '';
+            newItem.style.backgroundColor = '';
+            if (lastItem) lastItem.style.border = '';
+
+            const currentY = e.changedTouches[0].clientY;
+            const elementUnder = document.elementFromPoint(e.changedTouches[0].clientX, currentY);
+            const targetItem = elementUnder?.closest('m3e-nav-menu-item');
+
+            if (targetItem && targetItem !== newItem && targetItem.dataset.index !== undefined) {
+                const srcIndex = parseInt(newItem.dataset.index);
+                const targetIndex = parseInt(targetItem.dataset.index);
+                
+                if (!isNaN(srcIndex) && !isNaN(targetIndex)) {
+                    const itemToMove = savedPasswords[srcIndex];
+                    savedPasswords.splice(srcIndex, 1);
+                    savedPasswords.splice(targetIndex, 0, itemToMove);
+                    if (!currentUser) await savePasswordsData();
+                    renderPasswordList(document.getElementById('fld').value);
+                }
+            }
+            lastItem = null;
+        });
+
+        trailingContainer.appendChild(dragHandle);
+        newItem.appendChild(trailingContainer);
 
         // Click to open detail
         newItem.addEventListener('click', function(e) {
@@ -4916,6 +4994,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ctx_edit')?.addEventListener('click', () => {
         if (contextMenuItem) {
             openDetailDialog(contextMenuItem);
+        }
+        hideContextMenu();
+    });
+
+    document.getElementById('ctx_move_up')?.addEventListener('click', async () => {
+        if (contextMenuItem) {
+            const index = savedPasswords.findIndex(p => p.id === contextMenuItem.id);
+            if (index > 0) {
+                const item = savedPasswords[index];
+                savedPasswords.splice(index, 1);
+                savedPasswords.splice(index - 1, 0, item);
+                if (!currentUser) await savePasswordsData();
+                renderPasswordList(document.getElementById('fld').value);
+            }
+        }
+        hideContextMenu();
+    });
+
+    document.getElementById('ctx_move_down')?.addEventListener('click', async () => {
+        if (contextMenuItem) {
+            const index = savedPasswords.findIndex(p => p.id === contextMenuItem.id);
+            if (index !== -1 && index < savedPasswords.length - 1) {
+                const item = savedPasswords[index];
+                savedPasswords.splice(index, 1);
+                savedPasswords.splice(index + 1, 0, item);
+                if (!currentUser) await savePasswordsData();
+                renderPasswordList(document.getElementById('fld').value);
+            }
         }
         hideContextMenu();
     });
