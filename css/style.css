@@ -886,3 +886,75 @@ body.privacy-blur {
     pointer-events: none;
     user-select: none;
 }
+.icon-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background-color: var(--md-sys-color-surface-container-low);
+    border-radius: 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.icon-preview-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background-color: var(--md-sys-color-surface-container-high);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.icon-preview-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.icon-preview-wrapper m3e-icon {
+    font-size: 32px;
+    color: var(--md-sys-color-primary);
+}
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 8px;
+    margin-top: 16px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.icon-grid-item {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: 1px solid transparent;
+}
+
+.icon-grid-item:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.icon-grid-item.selected {
+    background-color: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary);
+}
+
+.nav-item-custom-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+}

@@ -328,6 +328,23 @@
     <m3e-dialog id="add_password_dialog" dismissible>
       <span slot="header" data-i18n="add_pass_title">新しいパスワードを追加</span>
       
+      <div class="icon-selector-container">
+        <div class="icon-preview-wrapper" id="new_pass_icon_preview">
+          <m3e-icon name="key"></m3e-icon>
+        </div>
+        <div class="flex-1">
+          <m3e-button variant="tonal" id="open_new_icon_picker_btn" style="width: 100%; margin-bottom: 8px;">
+            <m3e-icon slot="icon" name="face"></m3e-icon>
+            <span data-i18n="select_icon">アイコンを選択</span>
+          </m3e-button>
+          <m3e-button variant="outlined" id="upload_new_icon_btn" style="width: 100%;">
+            <m3e-icon slot="icon" name="upload"></m3e-icon>
+            <span data-i18n="upload_image">画像をアップロード</span>
+          </m3e-button>
+          <input type="file" id="new_pass_icon_upload" accept="image/*" class="hidden">
+        </div>
+      </div>
+      
       <div class="mb-3">
         <m3e-form-field variant="outlined" label="Service Name" data-i18n-label="service_name" class="w-100">
           <input id="new_pass_title" type="text" placeholder="サービス名" data-i18n-placeholder="service_name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
@@ -380,6 +397,23 @@
       <span slot="header" data-i18n="detail_title">パスワード詳細</span>
       
       <div id="detail_form_body">
+      <div class="icon-selector-container">
+        <div class="icon-preview-wrapper" id="detail_pass_icon_preview">
+          <m3e-icon name="key"></m3e-icon>
+        </div>
+        <div class="flex-1">
+          <m3e-button variant="tonal" id="open_detail_icon_picker_btn" style="width: 100%; margin-bottom: 8px;">
+            <m3e-icon slot="icon" name="face"></m3e-icon>
+            <span data-i18n="select_icon">アイコンを選択</span>
+          </m3e-button>
+          <m3e-button variant="outlined" id="upload_detail_icon_btn" style="width: 100%;">
+            <m3e-icon slot="icon" name="upload"></m3e-icon>
+            <span data-i18n="upload_image">画像をアップロード</span>
+          </m3e-button>
+          <input type="file" id="detail_pass_icon_upload" accept="image/*" class="hidden">
+        </div>
+      </div>
+
       <h2 class="pane-header hidden" data-i18n="detail_title">パスワード詳細</h2>
       <div class="flex-row-center-gap mb-3">
         <m3e-form-field variant="outlined" label="Service Name" class="flex-1" data-i18n-label="service_name">
@@ -866,7 +900,23 @@
       </div>
     </m3e-dialog>
 
+    <m3e-dialog id="icon_picker_dialog" dismissible>
+      <span slot="header" data-i18n="select_icon">アイコンを選択</span>
+      <div class="icon-grid" id="icon_picker_grid">
+          <!-- Icons will be injected here -->
+      </div>
+      <div slot="actions">
+          <m3e-button variant="text" id="reset_icon_btn">
+              <span data-i18n="default_icon">デフォルト</span>
+          </m3e-button>
+          <m3e-button autofocus>
+            <m3e-dialog-action return-value="close" data-i18n="close">とじる</m3e-dialog-action>
+          </m3e-button>
+      </div>
+    </m3e-dialog>
+
     <div id="context_menu" class="context-menu hidden">
+
         <div class="context-menu-item" id="ctx_copy_pass">
             <m3e-icon name="content_copy"></m3e-icon>
             <span data-i18n="copy_password">Copy Password</span>

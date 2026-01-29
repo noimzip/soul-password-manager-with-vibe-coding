@@ -145,6 +145,11 @@ let firestoreSyncUnsubscribe = null;
 let contextMenuItem = null;
 let searchDebounceTimer = null;
 let currentSnackbar = null;
+let selectedIconName = null;
+let selectedIconImage = null;
+let currentIconPickerTarget = null;
+const PREDEFINED_ICONS = ['key', 'lock', 'public', 'account_circle', 'mail', 'shopping_cart', 'credit_card', 'account_balance', 'cloud', 'smartphone', 'computer', 'shield', 'vpn_key', 'passkey', 'fingerprint', 'face', 'description', 'notes', 'attachment', 'link', 'apps', 'more_horiz'];
+
 
 function t(key, params = {}) {
     let str = TRANSLATIONS[currentLang][key] || key;
@@ -2450,7 +2455,8 @@ function hasDetailChanges() {
     const currentUsername = document.getElementById('detail_pass_username').value;
     const currentValue = document.getElementById('detail_pass_value').value;
     const currentSecret = document.getElementById('detail_pass_secret').value;
-    const isFavorite = document.getElementById('detail_pass_favorite_btn').querySelector('m3e-icon').name === 'star';
+    const favIcon = document.getElementById('detail_pass_favorite_btn')?.querySelector('m3e-icon');
+    const isFavorite = favIcon ? (favIcon.getAttribute('name') === 'star') : (item.favorite || false);
 
     return (
         currentTitle !== (item.title || '') ||
@@ -2459,9 +2465,71 @@ function hasDetailChanges() {
         currentUsername !== (item.username || '') ||
         currentValue !== (item.password || '') ||
         currentSecret !== (item.secret || '') ||
-        isFavorite !== (item.favorite || false)
+        isFavorite !== (item.favorite || false) ||
+        (selectedIconName || null) !== (item.iconCustom || null) ||
+        (selectedIconImage || null) !== (item.iconImage || null)
     );
 }
+
+function updateIconPreview(target, iconName, iconImage) {
+    const preview = document.getElementById(target === 'new' ? 'new_pass_icon_preview' : 'detail_pass_icon_preview');
+    if (!preview) return;
+    preview.innerHTML = '';
+    
+    if (iconImage) {
+        const img = document.createElement('img');
+        img.src = iconImage;
+        preview.appendChild(img);
+    } else {
+        const icon = document.createElement('m3e-icon');
+        icon.setAttribute('name', iconName || 'key');
+        preview.appendChild(icon);
+    }
+}
+
+function initIconPicker() {
+    const grid = document.getElementById('icon_picker_grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    PREDEFINED_ICONS.forEach(iconName => {
+        const item = document.createElement('div');
+        item.className = 'icon-grid-item';
+        item.innerHTML = `<m3e-icon name="${iconName}"></m3e-icon>`;
+        item.addEventListener('click', () => {
+            selectedIconName = iconName;
+            selectedIconImage = null;
+            updateIconPreview(currentIconPickerTarget, selectedIconName, selectedIconImage);
+            document.getElementById('icon_picker_dialog').open = false;
+            if (currentIconPickerTarget === 'detail') checkDetailChanges();
+        });
+        grid.appendChild(item);
+    });
+
+    document.getElementById('reset_icon_btn')?.addEventListener('click', () => {
+        selectedIconName = null;
+        selectedIconImage = null;
+        updateIconPreview(currentIconPickerTarget, null, null);
+        document.getElementById('icon_picker_dialog').open = false;
+        if (currentIconPickerTarget === 'detail') checkDetailChanges();
+    });
+}
+
+function handleIconUpload(e, target) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        // Simple resize/crop could be added here, but for now just base64
+        selectedIconImage = event.target.result;
+        selectedIconName = null;
+        updateIconPreview(target, null, selectedIconImage);
+        if (target === 'detail') checkDetailChanges();
+    };
+    reader.readAsDataURL(file);
+}
+
 
 function checkDetailChanges() {
     const updateBtn = document.getElementById('update_password_btn');
@@ -2506,6 +2574,10 @@ function openDetailDialog(item) {
     
     const lastMod = item.lastModified ? new Date(item.lastModified).toLocaleString() : '-';
     document.getElementById('detail_last_modified').textContent = lastMod;
+
+    selectedIconName = item.iconCustom || null;
+    selectedIconImage = item.iconImage || null;
+    updateIconPreview('detail', selectedIconName, selectedIconImage);
 
     const history = item.history || [];
     document.getElementById('detail_revision_count').textContent = history.length;
@@ -3109,7 +3181,14 @@ function addPasswordToUI(item, index, listGroup) {
         }
 
         let icon;
-        if (item.website) {
+        if (item.iconImage) {
+            icon = document.createElement('img');
+            icon.src = item.iconImage;
+            icon.className = 'nav-item-custom-icon';
+        } else if (item.iconCustom) {
+            icon = document.createElement('m3e-icon');
+            icon.setAttribute('name', item.iconCustom);
+        } else if (item.website) {
             try {
                 const domain = new URL(item.website).hostname;
                 icon = document.createElement('img');
@@ -3312,6 +3391,8 @@ async function saveOrUpdateItem(item) {
                 secret: encryptedSecret,
                 favorite: encryptedFavorite,
                 history: encryptedHistory,
+                iconCustom: item.iconCustom || null,
+                iconImage: item.iconImage || null,
                 lastModified: item.lastModified,
                 deleted: item.deleted || false,
                 deletedAt: item.deletedAt || null
@@ -3638,6 +3719,8 @@ function initFirestoreSync(user) {
                 secret: secret || '',
                 favorite: favorite,
                 history: history,
+                iconCustom: data.iconCustom || null,
+                iconImage: data.iconImage || null,
                 lastModified: data.lastModified,
                 deleted: data.deleted,
                 deletedAt: data.deletedAt
@@ -4005,6 +4088,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 username: document.getElementById('new_pass_username').value,
                 password: document.getElementById('new_pass_value').value,
                 secret: document.getElementById('new_pass_secret').value,
+                iconCustom: selectedIconName,
+                iconImage: selectedIconImage,
                 favorite: false,
                 lastModified: Date.now(),
                 history: []
@@ -4019,6 +4104,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('new_pass_username').value = '';
             document.getElementById('new_pass_value').value = '';
             document.getElementById('new_pass_secret').value = '';
+            selectedIconName = null;
+            selectedIconImage = null;
+            updateIconPreview('new', null, null);
+
             document.getElementById('add_password_dialog').open = false;
             showSnackbar(t('pass_created'));
         }
@@ -4040,6 +4129,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const oldItem = savedPasswords.find(p => p.id === currentDetailId);
                 if (!oldItem) return;
 
+                const favIcon = document.getElementById('detail_pass_favorite_btn')?.querySelector('m3e-icon');
+                const isFavorite = favIcon ? (favIcon.getAttribute('name') === 'star') : oldItem.favorite;
+
                 const newItem = {
                     ...oldItem,
                     title: title,
@@ -4048,13 +4140,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     username: document.getElementById('detail_pass_username').value,
                     password: document.getElementById('detail_pass_value').value,
                     secret: document.getElementById('detail_pass_secret').value,
-                    favorite: document.getElementById('detail_pass_favorite_btn').querySelector('m3e-icon').name === 'star'
+                    iconCustom: selectedIconName || null,
+                    iconImage: selectedIconImage || null,
+                    favorite: isFavorite
                 };
 
                 // Check changes for history
                 const hasChanged = (oldItem.title !== newItem.title) ||
                                    (oldItem.password !== newItem.password) ||
-                                   (oldItem.username !== newItem.username);
+                                   (oldItem.username !== newItem.username) ||
+                                   (oldItem.iconCustom !== newItem.iconCustom) ||
+                                   (oldItem.iconImage !== newItem.iconImage);
                 
                 if (hasChanged) {
                     const history = oldItem.history || [];
@@ -4065,7 +4161,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         website: oldItem.website,
                         username: oldItem.username,
                         password: oldItem.password,
-                        secret: oldItem.secret
+                        secret: oldItem.secret,
+                        iconCustom: oldItem.iconCustom,
+                        iconImage: oldItem.iconImage
                     });
                     newItem.history = history;
                     newItem.lastModified = Date.now();
@@ -4162,9 +4260,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     });
 
+    // FAB Listener
+    document.getElementById('make_fab')?.addEventListener('click', () => {
+        selectedIconName = null;
+        selectedIconImage = null;
+        updateIconPreview('new', null, null);
+        document.getElementById('add_password_dialog').open = true;
+    });
+
     // Detail Dialog Events
     document.getElementById('detail_password_dialog')?.addEventListener('closed', () => {
         stopTOTPUpdate();
+        selectedIconName = null;
+        selectedIconImage = null;
         if (!isTwoPaneMode) {
             document.getElementById('detail_pass_value').value = '';
             document.getElementById('detail_pass_secret').value = '';
@@ -4177,6 +4285,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('new_pass_value').value = '';
         document.getElementById('new_pass_secret').value = '';
         updateStrengthView('', null, 'new_pass_strength_bar', null);
+        selectedIconName = null;
+        selectedIconImage = null;
     });
 
     document.getElementById('detail_pass_value')?.addEventListener('input', (e) => {
@@ -5113,6 +5223,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (encHybridEl) encHybridEl.textContent = `${HYBRID_CONFIG.RSA_ALGO.name} ${HYBRID_CONFIG.RSA_ALGO.modulusLength}-bit`;
 
     // Layout handling
+    // Icon Picker Initialization
+    initIconPicker();
+
+    // New Password Icon Selection
+    document.getElementById('open_new_icon_picker_btn')?.addEventListener('click', () => {
+        currentIconPickerTarget = 'new';
+        document.getElementById('icon_picker_dialog').open = true;
+    });
+
+    document.getElementById('upload_new_icon_btn')?.addEventListener('click', () => {
+        document.getElementById('new_pass_icon_upload').click();
+    });
+
+    document.getElementById('new_pass_icon_upload')?.addEventListener('change', (e) => {
+        handleIconUpload(e, 'new');
+    });
+
+    // Detail Password Icon Selection
+    document.getElementById('open_detail_icon_picker_btn')?.addEventListener('click', () => {
+        currentIconPickerTarget = 'detail';
+        document.getElementById('icon_picker_dialog').open = true;
+    });
+
+    document.getElementById('upload_detail_icon_btn')?.addEventListener('click', () => {
+        document.getElementById('detail_pass_icon_upload').click();
+    });
+
+    document.getElementById('detail_pass_icon_upload')?.addEventListener('change', (e) => {
+        handleIconUpload(e, 'detail');
+    });
+
     window.addEventListener('resize', updateLayout);
     updateLayout(); // Initial check
 });
