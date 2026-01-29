@@ -2322,35 +2322,59 @@ function hexToRgb(hex) {
     } : null;
 }
 
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0; // achromatic
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
 function applyThemeColor(color) {
     const root = document.documentElement;
     const rgb = hexToRgb(color);
     if (!rgb) return;
 
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    const isDark = document.body.classList.contains('dark-theme');
+
     // Update primary color variables
     root.style.setProperty('--md-sys-color-primary', color);
     
-    // Generate container/on-colors (simplified logic for demo)
-    // In a real Material 3 implementation, we would use a tonal palette generator.
-    // Here we just adjust opacity/lightness for containers.
-    
-    // Primary Container (Lighter version of primary)
-    const containerColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`;
-    // On Primary Container (Darker version of primary)
-    // For simplicity, we keep using the primary color or a dark variant for text on container
-    
-    // We need to be careful about dark mode.
-    // The CSS variables are redefined in .dark-theme.
-    // To support custom colors in both modes properly without a full palette generator,
-    // we will just override the main primary color which is the most visible one.
-    // More complex theming would require updating all related tokens.
-    
-    // For this implementation, we will update:
-    // --md-sys-color-primary
-    // --md-sys-color-primary-container (approx)
-    
-    // Note: This simple override might not have perfect contrast in all cases.
-    
+    // Generate Palette Tokens
+    // Logic: Adjust lightness for containers and secondary colors
+    if (isDark) {
+        // Dark Mode Adjustments
+        root.style.setProperty('--md-sys-color-primary-container', `hsl(${hsl.h}, ${hsl.s * 0.8}%, 30%)`);
+        root.style.setProperty('--md-sys-color-on-primary-container', `hsl(${hsl.h}, ${hsl.s * 0.5}%, 90%)`);
+        
+        root.style.setProperty('--md-sys-color-secondary', `hsl(${hsl.h}, ${hsl.s * 0.4}%, 70%)`);
+        root.style.setProperty('--md-sys-color-on-secondary', `hsl(${hsl.h}, 10%, 10%)`);
+        root.style.setProperty('--md-sys-color-secondary-container', `hsl(${hsl.h}, ${hsl.s * 0.3}%, 25%)`);
+        root.style.setProperty('--md-sys-color-on-secondary-container', `hsl(${hsl.h}, ${hsl.s * 0.4}%, 85%)`);
+    } else {
+        // Light Mode Adjustments
+        root.style.setProperty('--md-sys-color-primary-container', `hsl(${hsl.h}, ${hsl.s * 0.7}%, 90%)`);
+        root.style.setProperty('--md-sys-color-on-primary-container', `hsl(${hsl.h}, ${hsl.s}%, 15%)`);
+        
+        root.style.setProperty('--md-sys-color-secondary', `hsl(${hsl.h}, ${hsl.s * 0.3}%, 40%)`);
+        root.style.setProperty('--md-sys-color-on-secondary', '#ffffff');
+        root.style.setProperty('--md-sys-color-secondary-container', `hsl(${hsl.h}, ${hsl.s * 0.2}%, 92%)`);
+        root.style.setProperty('--md-sys-color-on-secondary-container', `hsl(${hsl.h}, ${hsl.s * 0.3}%, 15%)`);
+    }
+
     // Update UI input
     const input = document.getElementById('setting_theme_color');
     const label = document.getElementById('theme_color_value');
@@ -2361,7 +2385,8 @@ function applyThemeColor(color) {
     localStorage.setItem(CONSTANTS.STORAGE.THEME_COLOR, color);
     
     // Update meta theme-color
-    document.querySelector('meta[name="theme-color"]').setAttribute('content', color);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', color);
 }
 
 function updateLayout() {
