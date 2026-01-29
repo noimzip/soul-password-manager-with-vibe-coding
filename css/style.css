@@ -752,7 +752,6 @@ body.dark-theme ::-webkit-scrollbar-thumb:hover {
 }
 
 m3e-nav-menu-item.selected {
-    background-color: var(--md-sys-color-secondary-container);
     --md-sys-color-on-surface: var(--md-sys-color-on-secondary-container);
 }
 
