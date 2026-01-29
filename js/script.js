@@ -22,6 +22,7 @@ import "@m3e/select/dist/index.min.js";
 import "@m3e/option/dist/index.min.js";
 
 import { TRANSLATIONS } from './translations.js';
+import DOMPurify from 'dompurify';
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -4941,7 +4942,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (Array.isArray(importedData)) {
                         showConfirmDialog(t('import_confirm', {count: importedData.length})).then(async res => {
                             if (res) {
-                                importedData.forEach(item => {
+                                for (const item of importedData) {
                                     // Sanitize imported data using DOMPurify to prevent XSS
                                     // Note: Password and Secret are NOT sanitized to preserve exact values
                                     if (typeof item.title === 'string') item.title = DOMPurify.sanitize(item.title);
@@ -4959,16 +4960,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
 
                                     if (!item.lastModified) item.lastModified = Date.now();
-                                    // If cloud mode, we should probably add them one by one, but for now just local array
+                                    
+                                    // Ensure new IDs for imported items if they don't have them or to avoid conflicts
+                                    if (!item.id || !currentUser) {
+                                        item.id = crypto.randomUUID();
+                                    }
+
                                     if (currentUser) {
-                                        saveOrUpdateItem(item); // Will trigger async saves
+                                        await saveOrUpdateItem(item);
                                     } else {
                                         savedPasswords.push(item);
                                     }
-                                });
+                                }
                                 if (!currentUser) {
                                     await savePasswordsData();
-                                    renderPasswordList();
+                                    renderPasswordList(document.getElementById('fld').value);
                                 }
                                 showAlertDialog(t('import_done'));
                             }
