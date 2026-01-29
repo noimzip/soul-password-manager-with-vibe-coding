@@ -1958,37 +1958,61 @@ async function scanQRCode(targetInputId) {
             stream.getTracks().forEach(track => track.stop());
         }
         
-        const constraints = { 
+        // Try strict constraints first
+        let constraints = { 
             video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" } 
         };
 
         try {
             const s = await navigator.mediaDevices.getUserMedia(constraints);
-            stream = s;
-            video.srcObject = stream;
-            video.setAttribute("playsinline", true); // for iOS
-            video.play();
-            
-            // Check flash support
-            const track = s.getVideoTracks()[0];
-            const capabilities = track.getCapabilities();
-            if (capabilities.torch) {
-                flashBtn.style.display = 'block';
-                isFlashOn = false; // Reset state
-                flashBtn.querySelector('m3e-icon').name = 'flash_on';
-            } else {
-                flashBtn.style.display = 'none';
-            }
-            requestAnimationFrame(tick);
+            handleStreamSuccess(s);
         } catch (err) {
-            console.error(err);
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                showAlertDialog('カメラへのアクセスが拒否されました。ブラウザの設定で許可してください。');
+            console.warn("Primary camera constraint failed, retrying...", err);
+            
+            // Fallback: try relaxed constraints if environment/deviceId fails
+            if (!deviceId && (err.name === 'OverconstrainedError' || err.name === 'NotFoundError')) {
+                try {
+                    console.log("Retrying with relaxed constraints...");
+                    constraints = { video: true };
+                    const s = await navigator.mediaDevices.getUserMedia(constraints);
+                    handleStreamSuccess(s);
+                    return;
+                } catch (retryErr) {
+                    handleCameraError(retryErr);
+                }
             } else {
-                showAlertDialog('カメラにアクセスできませんでした: ' + err.message);
+                handleCameraError(err);
             }
-            stopScan();
         }
+    };
+
+    const handleStreamSuccess = (s) => {
+        stream = s;
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true); // for iOS
+        video.play();
+        
+        // Check flash support
+        const track = s.getVideoTracks()[0];
+        const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+        if (capabilities.torch) {
+            flashBtn.style.display = 'block';
+            isFlashOn = false; // Reset state
+            flashBtn.querySelector('m3e-icon').name = 'flash_on';
+        } else {
+            flashBtn.style.display = 'none';
+        }
+        requestAnimationFrame(tick);
+    };
+
+    const handleCameraError = (err) => {
+        console.error(err);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            showAlertDialog('カメラへのアクセスが拒否されました。ブラウザの設定で許可してください。');
+        } else {
+            showAlertDialog('カメラにアクセスできませんでした: ' + err.message);
+        }
+        stopScan();
     };
     
     flashBtn.addEventListener('click', toggleFlash);
