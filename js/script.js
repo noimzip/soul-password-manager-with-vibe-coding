@@ -4265,7 +4265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedIconName = null;
         selectedIconImage = null;
         updateIconPreview('new', null, null);
-        document.getElementById('add_password_dialog').open = true;
+        // document.getElementById('add_password_dialog').open = true; // Removed per user request
     });
 
     // Detail Dialog Events
