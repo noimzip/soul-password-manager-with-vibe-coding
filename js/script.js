@@ -2079,6 +2079,247 @@ async function scanQRCode(targetInputId) {
     }
 }
 
+// --- Security Advisor AI (Aura) ---
+
+async function openSecurityAdvisor() {
+    const dialog = document.getElementById('security_advisor_dialog');
+    const list = document.getElementById('advisor_recommendations');
+    if (!dialog || !list) return;
+
+    list.innerHTML = `<div class="text-center mt-3"><m3e-loading-indicator></m3e-loading-indicator><p class="text-small text-secondary mt-1">${t('aura_thinking')}</p></div>`;
+    
+    const chatHistory = document.getElementById('advisor_chat_history');
+    if (chatHistory) {
+        // Keep only the first welcome message if it's the first time
+        const welcome = chatHistory.querySelector('.advisor-avatar-row');
+        chatHistory.innerHTML = '';
+        if (welcome) chatHistory.appendChild(welcome);
+        chatHistory.appendChild(list);
+    }
+    
+    dialog.open = true;
+
+    // Simulate AI thinking for initial advice
+    setTimeout(async () => {
+        const advice = await generateAIAdvice();
+        renderAdvice(advice);
+    }, 1200);
+}
+
+function sendAdvisorMessage(text, role = 'aura') {
+    const chatHistory = document.getElementById('advisor_chat_history');
+    if (!chatHistory) return;
+
+    const row = document.createElement('div');
+    row.className = role === 'user' ? 'user-message-row' : 'advisor-avatar-row';
+
+    if (role === 'user') {
+        row.innerHTML = `<div class="user-bubble">${DOMPurify.sanitize(text)}</div>`;
+    } else {
+        row.innerHTML = `
+            <div class="advisor-avatar shine-animation">
+                <m3e-icon name="auto_awesome"></m3e-icon>
+            </div>
+            <div class="advisor-bubble">
+                <p>${text}</p>
+            </div>
+        `;
+    }
+
+    chatHistory.appendChild(row);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+async function handleAdvisorChat() {
+    const input = document.getElementById('advisor_chat_input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    sendAdvisorMessage(text, 'user');
+
+    // Show typing indicator
+    const chatHistory = document.getElementById('advisor_chat_history');
+    const typingRow = document.createElement('div');
+    typingRow.className = 'advisor-avatar-row aura-typing-indicator';
+    typingRow.innerHTML = `
+        <div class="advisor-avatar shine-animation">
+            <m3e-icon name="auto_awesome"></m3e-icon>
+        </div>
+        <div class="advisor-bubble typing-bubble">
+            <div class="dot-pulse"></div>
+            <span>${t('aura_typing')}</span>
+        </div>
+    `;
+    chatHistory.appendChild(typingRow);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    setTimeout(async () => {
+        typingRow.remove();
+        const response = await generateAIResponse(text);
+        sendAdvisorMessage(response, 'aura');
+    }, 1000 + Math.random() * 1000);
+}
+
+async function generateAIResponse(userMessage) {
+    const msg = userMessage.toLowerCase();
+    const adviceList = await generateAIAdvice();
+
+    // 1. Weak Passwords
+    if (msg.includes('弱い') || msg.includes('weak') || msg.includes('強度') || msg.includes('strength')) {
+        const weak = adviceList.filter(a => a.priority === 'high' || a.title === t('advice_strong_pass'));
+        if (weak.length > 0) {
+            return `現在、${weak.length}件の重要なアカウントで強力なパスワードへの変更が推奨されています。特に<b>${weak[0].item.title}</b>のパスワードを更新することをお勧めします。`;
+        }
+        return "素晴らしいです！現在、あなたの保管庫に極端に脆弱なパスワードは見当たりません。";
+    }
+
+    // 2. 2FA / 二段階認証
+    if (msg.includes('2fa') || msg.includes('認証') || msg.includes('auth')) {
+        const no2fa = adviceList.filter(a => a.title === t('advice_enable_2fa'));
+        if (no2fa.length > 0) {
+            return `セキュリティをさらに高めるために、<b>${no2fa[0].item.title}</b>などで2段階認証（2FA）を有効にすることをお勧めします。OTPコードをこのアプリで管理することも可能です。`;
+        }
+        return "お使いの重要なサービスでは、すでに2段階認証の設定や管理が行われているようですね。安全です！";
+    }
+
+    // 3. Reuse / 使い回し
+    if (msg.includes('使い回し') || msg.includes('同じ') || msg.includes('reuse') || msg.includes('same')) {
+        const reused = adviceList.filter(a => a.title === t('advice_unique_pass'));
+        if (reused.length > 0) {
+            return `複数のサービスで同じパスワードが使われています：<b>${reused[0].desc}</b>。1つが漏洩すると芋づる式に被害が広がるため、個別のパスワードに変更しましょう。`;
+        }
+        return "パスワードの使い回しは検出されませんでした。完璧です！";
+    }
+
+    // 4. Specific service check
+    for (const item of savedPasswords) {
+        if (item.deleted) continue;
+        if (msg.includes(item.title.toLowerCase()) || (item.website && msg.includes(item.website.toLowerCase()))) {
+            const score = await calculatePasswordStrength(item.password);
+            let response = `<b>${item.title}</b>についてですね。`;
+            if (score < 3) response += "現在、パスワードの強度が十分ではありません。";
+            if (!item.secret) response += "2段階認証が設定されておらず、セキュリティ強化の余地があります。";
+            if (score >= 3 && item.secret) response += "現在の設定は非常に安全です！引き続きこの状態を維持してください。";
+            return response;
+        }
+    }
+
+    // Default
+    return t('aura_no_match');
+}
+
+async function generateAIAdvice() {
+    if (!savedPasswords) return [];
+    const adviceList = [];
+
+    // Prioritize high-value accounts (keywords in title/website)
+    const highValueKeywords = ['google', 'gmail', 'bank', 'bank', 'crypto', 'coin', 'amazon', 'apple', 'microsoft', 'github', 'paypal', 'facebook', 'instagram', 'twitter', 'x.com'];
+    
+    for (const item of savedPasswords) {
+        if (item.deleted) continue;
+
+        const lowcaseTitle = (item.title || "").toLowerCase();
+        const lowcaseWebsite = (item.website || "").toLowerCase();
+        const isHighValue = highValueKeywords.some(kw => lowcaseTitle.includes(kw) || lowcaseWebsite.includes(kw));
+        
+        const score = await calculatePasswordStrength(item.password);
+        
+        // 1. Weak Password on High Value Account
+        if (isHighValue && score < 3) {
+            adviceList.push({
+                priority: 'high',
+                title: t('advice_strong_pass'),
+                desc: `${item.title}: ${t('risk_weak')}`,
+                icon: 'priority_high',
+                itemId: item.id,
+                item: item
+            });
+        }
+
+        // 2. Missing 2FA on High Value Account
+        if (isHighValue && !item.secret) {
+            adviceList.push({
+                priority: 'medium',
+                title: t('advice_enable_2fa'),
+                desc: `${item.title}: ${t('risk_no_2fa')}`,
+                icon: 'vpn_key',
+                itemId: item.id,
+                item: item
+            });
+        }
+    }
+
+    // 3. Password Reuse
+    const passGroups = {};
+    savedPasswords.forEach(item => {
+        if (item.deleted || !item.password) return;
+        if (!passGroups[item.password]) passGroups[item.password] = [];
+        passGroups[item.password].push(item);
+    });
+
+    Object.values(passGroups).forEach(group => {
+        if (group.length > 1) {
+            adviceList.push({
+                priority: 'medium',
+                title: t('advice_unique_pass'),
+                desc: group.map(p => p.title).join(', '),
+                icon: 'sync_problem',
+                itemId: group[0].id,
+                item: group[0]
+            });
+        }
+    });
+
+    // Sort by priority
+    const priorityMap = { high: 0, medium: 1, low: 2 };
+    return adviceList.sort((a, b) => priorityMap[a.priority] - priorityMap[b.priority]);
+}
+
+function renderAdvice(adviceList) {
+    const list = document.getElementById('advisor_recommendations');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (adviceList.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'text-center mt-3 text-secondary';
+        empty.textContent = t('safe');
+        list.appendChild(empty);
+        return;
+    }
+
+    adviceList.forEach((adv, index) => {
+        const card = document.createElement('div');
+        card.className = 'recommendation-card';
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        card.innerHTML = `
+            <div class="recommendation-header">
+                <span class="priority-tag priority-${adv.priority}">${t(adv.priority + '_priority')}</span>
+                <m3e-icon name="chevron_right" style="font-size: 18px; color: var(--md-sys-color-outline);"></m3e-icon>
+            </div>
+            <div class="recommendation-title">
+                <m3e-icon name="${adv.icon}" style="font-size: 20px; color: var(--md-sys-color-primary);"></m3e-icon>
+                <span>${adv.title}</span>
+            </div>
+            <div class="recommendation-desc">${adv.desc}</div>
+            <div class="recommendation-target">
+                ${adv.item.iconImage ? `<img src="${adv.item.iconImage}" class="recommendation-target-icon">` : `<m3e-icon name="${adv.item.iconCustom || 'key'}" class="recommendation-target-m3e-icon"></m3e-icon>`}
+                <span class="text-small text-secondary">${adv.item.title}</span>
+            </div>
+        `;
+
+        card.addEventListener('click', () => {
+            document.getElementById('security_advisor_dialog').open = false;
+            document.getElementById('security_hub_dialog').open = false;
+            openDetailDialog(adv.item);
+        });
+
+        list.appendChild(card);
+    });
+}
+
 // --- Main App Logic ---
 
 function generatePassword() {
@@ -4950,6 +5191,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guide
     document.getElementById('open_guide_btn')?.addEventListener('click', () => {
         document.getElementById('guide_dialog').open = true;
+    });
+
+    document.getElementById('open_ai_advisor_btn')?.addEventListener('click', () => {
+        openSecurityAdvisor();
+    });
+
+    document.getElementById('fab_open_advisor_btn')?.addEventListener('click', () => {
+        openSecurityAdvisor();
+    });
+
+    document.getElementById('send_advisor_chat_btn')?.addEventListener('click', handleAdvisorChat);
+    document.getElementById('advisor_chat_input')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleAdvisorChat();
     });
 
     // Guide Actions
