@@ -971,3 +971,286 @@ body.privacy-blur {
     transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s ease;
     user-select: none;
 }
+
+/* Security Advisor AI Styles */
+.aura-button {
+    background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #a8c7fa 100%) !important;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.aura-button:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.advisor-chat-container {
+    padding: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.advisor-avatar-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.advisor-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6750a4 0%, #a8c7fa 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+}
+
+.advisor-bubble {
+    background-color: var(--md-sys-color-surface-container-high);
+    padding: 12px 16px;
+    border-radius: 4px 20px 20px 20px;
+    max-width: 85%;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.advisor-recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recommendation-card {
+    background-color: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.recommendation-card:hover {
+    background-color: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-primary);
+    transform: translateX(4px);
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.priority-tag {
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.priority-high {
+    background-color: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+}
+
+.priority-medium {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+body.dark-theme .priority-medium {
+    background-color: #4a2c00;
+    color: #ffb74d;
+}
+
+.priority-low {
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.recommendation-title {
+    font-weight: bold;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recommendation-desc {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.recommendation-target {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--md-sys-color-outline-variant);
+}
+
+.recommendation-target-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.recommendation-target-m3e-icon {
+    font-size: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.shine-animation {
+    position: relative;
+    overflow: hidden;
+}
+
+.shine-animation::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.4) 50%, transparent 55%);
+    animation: aura-shine 3s infinite;
+}
+
+@keyframes aura-shine {
+    0% { transform: translateX(-100%) translateY(-100%); }
+    100% { transform: translateX(100%) translateY(100%); }
+}
+
+/* Chat Interface Styles */
+.advisor-chat-interface {
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+    max-height: 70vh;
+}
+
+.advisor-chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scrollbar-width: thin;
+}
+
+.advisor-chat-input-container {
+    display: flex;
+    gap: 8px;
+    padding: 16px 0 0 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    background-color: var(--md-sys-color-surface-container-lowest);
+}
+
+.advisor-chat-input-container input {
+    flex: 1;
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 24px;
+    padding: 10px 20px;
+    color: var(--md-sys-color-on-surface);
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.advisor-chat-input-container input:focus {
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-surface-container-highest);
+}
+
+.user-message-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.user-bubble {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    padding: 12px 16px;
+    border-radius: 20px 20px 4px 20px;
+    max-width: 85%;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.typing-bubble {
+    font-style: italic;
+    color: var(--md-sys-color-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot-pulse {
+    position: relative;
+    left: -9999px;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+    box-shadow: 9999px 0 0 -5px var(--md-sys-color-primary);
+    animation: dotPulse 1.5s infinite linear;
+    animation-delay: .25s;
+}
+
+.dot-pulse::before, .dot-pulse::after {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+}
+
+.dot-pulse::before {
+    box-shadow: 9984px 0 0 -5px var(--md-sys-color-primary);
+    animation: dotPulseBefore 1.5s infinite linear;
+    animation-delay: 0s;
+}
+
+.dot-pulse::after {
+    box-shadow: 10014px 0 0 -5px var(--md-sys-color-primary);
+    animation: dotPulseAfter 1.5s infinite linear;
+    animation-delay: .5s;
+}
+
+@keyframes dotPulseBefore {
+    0% { box-shadow: 9984px 0 0 -5px var(--md-sys-color-primary); }
+    30% { box-shadow: 9984px 0 0 2px var(--md-sys-color-primary); }
+    60%, 100% { box-shadow: 9984px 0 0 -5px var(--md-sys-color-primary); }
+}
+
+@keyframes dotPulse {
+    0% { box-shadow: 9999px 0 0 -5px var(--md-sys-color-primary); }
+    30% { box-shadow: 9999px 0 0 2px var(--md-sys-color-primary); }
+    60%, 100% { box-shadow: 9999px 0 0 -5px var(--md-sys-color-primary); }
+}
+
+@keyframes dotPulseAfter {
+    0% { box-shadow: 10014px 0 0 -5px var(--md-sys-color-primary); }
+    30% { box-shadow: 10014px 0 0 2px var(--md-sys-color-primary); }
+    60%, 100% { box-shadow: 10014px 0 0 -5px var(--md-sys-color-primary); }
+}

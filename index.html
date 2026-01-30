@@ -143,6 +143,10 @@
           <span data-i18n="security_hub">セキュリティハブ</span>
         </m3e-dialog-trigger>
       </m3e-fab-menu-item>
+      <m3e-fab-menu-item id="fab_open_advisor_btn">
+        <m3e-icon slot="icon" name="auto_awesome" filled></m3e-icon>
+        <span data-i18n="security_advisor">セキュリティアドバイザー</span>
+      </m3e-fab-menu-item>
       <m3e-fab-menu-item>
         <m3e-icon slot="icon" name="check" filled></m3e-icon>
         <m3e-dialog-trigger for="pass_checker">
@@ -267,6 +271,14 @@
               <summary class="text-small cursor-pointer text-secondary" style="text-align: center; margin-top: 16px;" data-i18n="score_breakdown">スコアの内訳</summary>
               <div id="hub_score_details" class="text-small mt-2 score-breakdown-content"></div>
           </details>
+
+          <!-- Advisor Entrance -->
+          <div class="ai-advisor-entrance mt-3">
+              <m3e-button variant="filled" id="open_ai_advisor_btn" style="width: 100%; border-radius: 12px; height: 54px;" class="aura-button">
+                  <m3e-icon slot="icon" name="auto_awesome"></m3e-icon>
+                  <span data-i18n="ask_aura">Auraに相談する</span>
+              </m3e-button>
+          </div>
       </div>
 
 
@@ -276,6 +288,40 @@
         </m3e-button>
       </div>
     </m3e-dialog>
+
+    <m3e-dialog id="security_advisor_dialog" dismissible>
+      <span slot="header" data-i18n="security_advisor">セキュリティアドバイザー</span>
+      
+      <div class="advisor-chat-interface">
+          <div id="advisor_chat_history" class="advisor-chat-history">
+              <div class="advisor-avatar-row">
+                  <div class="advisor-avatar shine-animation">
+                      <m3e-icon name="auto_awesome"></m3e-icon>
+                  </div>
+                  <div class="advisor-bubble">
+                      <p data-i18n="aura_welcome">こんにちは！私はセキュリティアドバイザーのAuraです。あなたの保管庫を分析して、いくつかの改善提案をまとめました。</p>
+                  </div>
+              </div>
+              <div id="advisor_recommendations" class="advisor-recommendations-list">
+                  <!-- Recommendations will still be shown initially or mixed with chat -->
+              </div>
+          </div>
+
+          <div class="advisor-chat-input-container">
+              <input type="text" id="advisor_chat_input" data-i18n-placeholder="chat_placeholder" placeholder="Auraに何でも聞いてください...">
+              <m3e-button variant="filled" id="send_advisor_chat_btn">
+                  <m3e-icon name="send"></m3e-icon>
+              </m3e-button>
+          </div>
+      </div>
+
+      <div slot="actions">
+        <m3e-button autofocus>
+          <m3e-dialog-action return-value="ok" data-i18n="close">とじる</m3e-dialog-action>
+        </m3e-button>
+      </div>
+    </m3e-dialog>
+
 
     <m3e-dialog id="trash_dialog" dismissible>
       <span slot="header" data-i18n="trash">ゴミ箱</span>
