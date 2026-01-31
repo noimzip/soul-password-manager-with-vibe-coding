@@ -946,7 +946,7 @@ async function promptForMasterPassword(returnPassword = false, checkUser = null,
                         input.value = password;
                         verify();
                     } else {
-                        showSnackbar("Passkeyからデータを読み取れませんでした。");
+                        showSnackbar(t('passkey_read_failed'));
                     }
                 } catch (e) {
                     console.error(e);
@@ -1031,15 +1031,15 @@ async function updateStrengthView(password, resultElId, barElId, crackTimeElId) 
 function formatCrackTime(seconds) {
     if (seconds === undefined || seconds === null) return '';
     // Use offline_slow_hashing_1e4_per_second for a conservative estimate (e.g. master password cracking)
-    let timeString = '一瞬';
-    if (seconds >= 31536000 * 100) timeString = '数世紀以上';
+    let timeString = 'instant';
+    if (seconds >= 31536000 * 100) timeString = 'centuries';
     else if (seconds >= 31536000) timeString = Math.floor(seconds / 31536000) + t('year');
     else if (seconds >= 86400) timeString = Math.floor(seconds / 86400) + t('day');
     else if (seconds >= 3600) timeString = Math.floor(seconds / 3600) + t('hour');
     else if (seconds >= 60) timeString = Math.floor(seconds / 60) + t('minute');
     else if (seconds >= 1) timeString = Math.floor(seconds) + t('second');
 
-    return t('crack_time') + (timeString === '一瞬' || timeString === '数世紀以上' ? t(timeString === '一瞬' ? 'instant' : 'centuries') : timeString);
+    return t('crack_time') + (timeString === 'instant' || timeString === 'centuries' ? t(timeString) : timeString);
 }
 
 async function checkPwnedPassword(password) {
@@ -1181,7 +1181,7 @@ async function loadPasskeyFallback(storageKey = CONSTANTS.STORAGE.PASSKEY_FALLBA
 
 async function registerPasskey() {
     if (!window.PublicKeyCredential) {
-        showAlertDialog("このブラウザはPasskeyをサポートしていません。");
+        showAlertDialog(t('browser_not_support_biometric'));
         return;
     }
 
@@ -1193,7 +1193,7 @@ async function registerPasskey() {
 
     try {
         // Verification is now handled inside promptForMasterPassword
-        showSnackbar("生体認証/PINを入力して登録してください...");
+        showSnackbar(t('passkey_register_prompt'));
         
         // 1. Create Credential
         const userId = new Uint8Array(16);
@@ -1261,15 +1261,15 @@ async function registerPasskey() {
 
                     let authType = "Passkey";
                     if (credential.authenticatorAttachment === 'platform') {
-                        authType = "このデバイス";
+                        authType = t('passkey_device_type');
                     } else if (credential.authenticatorAttachment === 'cross-platform') {
-                        authType = "外部キー";
+                        authType = t('passkey_external_type');
                     }
                     if (typeof credential.response.getTransports === 'function') {
                         const transports = credential.response.getTransports();
                         if (transports.length > 0) authType += ` (${transports.join(', ')})`;
                     }
-                    showSnackbar(`${authType} を登録しました。`);
+                    showSnackbar(t('passkey_registered', {type: authType}));
                     
                     const currentNames = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.PASSKEY_NAMES) || '[]');
                     if (!currentNames.includes(username)) {
@@ -1304,19 +1304,19 @@ async function registerPasskey() {
         console.error(e);
         let msg = e.message;
         if (e.name === 'NotAllowedError') {
-            msg = "認証がキャンセルされたか、タイムアウトしました。";
+            msg = t('auth_cancelled_or_timeout');
         } else if (e.name === 'NotSupportedError') {
-            msg = "このデバイスはPasskeyをサポートしていません。";
+            msg = t('device_not_support_passkey');
         } else if (e.name === 'SecurityError') {
-            msg = "セキュリティエラー (HTTPSが必要です)。";
+            msg = t('auth_security_error');
         }
-        showAlertDialog("Passkeyの登録に失敗しました:\n" + msg);
+        showAlertDialog(t('passkey_registration_failed', {msg}));
     }
 }
 
 async function registerLocalBiometric() {
     if (!window.PublicKeyCredential) {
-        showAlertDialog("This browser does not support biometrics.");
+        showAlertDialog(t('browser_not_support_biometric_en'));
         return;
     }
 
@@ -1325,7 +1325,7 @@ async function registerLocalBiometric() {
     if (!password) return;
 
     try {
-        showSnackbar("Please authenticate to register...");
+        showSnackbar(t('biometric_register_prompt'));
         
         const userId = new Uint8Array(16);
         window.crypto.getRandomValues(userId);
@@ -1364,11 +1364,11 @@ async function registerLocalBiometric() {
         await savePasskeyFallback(password, keys.fallback);
         
         // Also add to names list for UI consistency if needed, or just notify
-        showSnackbar(isCloud ? "Biometrics (Cloud) registered." : "Biometrics (Local) registered.");
+        showSnackbar(isCloud ? t('biometric_cloud_registered') : t('biometric_local_registered'));
 
     } catch (e) {
         console.error(e);
-        showAlertDialog("Registration failed: " + e.message);
+        showAlertDialog(t('registration_failed', {msg: e.message}));
     }
 }
 
@@ -1445,11 +1445,11 @@ async function loginWithPasskey() {
         if (password) {
             if (currentUser || isCloudLogin) {
                 if (!currentUser) {
-                    showAlertDialog("Cloud session expired. Please login with Google first.");
+                    showAlertDialog(t('cloud_session_expired'));
                     return;
                 }
                 cloudKey = await deriveCloudKey(password, currentUser.uid);
-                showSnackbar(isFallback ? t('passkey_fallback_login') : "生体認証でロック解除しました");
+                showSnackbar(isFallback ? t('passkey_fallback_login') : t('passkey_unlock_success'));
                 initFirestoreSync(currentUser);
             } else {
                 const masterAuth = JSON.parse(localStorage.getItem(CONSTANTS.STORAGE.MASTER_AUTH));
@@ -1457,21 +1457,21 @@ async function loginWithPasskey() {
                     appKey = await deriveKey(password, masterAuth.salt);
                     document.getElementById('login_dialog').open = false;
                     initLocalApp();
-                    showSnackbar(isFallback ? t('passkey_fallback_login') : "生体認証でログインしました");
+                    showSnackbar(isFallback ? t('passkey_fallback_login') : t('passkey_login_success'));
                 } else {
-                    showAlertDialog("ユーザー情報が見つかりません。");
+                    showAlertDialog(t('user_info_not_found'));
                 }
             }
         } else {
-            showAlertDialog("Passkeyからデータを読み取れませんでした。");
+            showAlertDialog(t('passkey_read_failed'));
         }
     } catch (e) {
         console.error(e);
         let msg = e.message;
-        if (e.name === 'NotAllowedError') msg = "認証がキャンセルされました。";
-        else if (e.name === 'NotSupportedError') msg = "サポートされていない操作です。";
-        else if (e.name === 'SecurityError') msg = "セキュリティエラー (HTTPSが必要です)。";
-        showSnackbar("認証エラー: " + msg);
+        if (e.name === 'NotAllowedError') msg = t('auth_cancelled');
+        else if (e.name === 'NotSupportedError') msg = t('auth_not_supported');
+        else if (e.name === 'SecurityError') msg = t('auth_security_error');
+        showSnackbar(t('passkey_auth_error', {msg}));
     }
 }
 
@@ -1597,7 +1597,7 @@ async function updatePasskeyData(newPassword) {
                 extensions: { largeBlob: { write: keyBytes } }
             };
 
-            showSnackbar("Passkeyを更新するために認証してください...");
+            showSnackbar(t('passkey_update_prompt'));
             const assertion = await navigator.credentials.get({ publicKey: assertionOptions });
             const extResults = assertion.getClientExtensionResults();
             
@@ -1608,18 +1608,18 @@ async function updatePasskeyData(newPassword) {
                 localStorage.setItem(CONSTANTS.STORAGE.PASSKEY_ENCRYPTED_DATA, encryptedPassword);
             } else {
                 console.warn("Passkey update failed: largeBlob not written");
-                showSnackbar("Passkeyの更新に失敗しました (容量不足または非対応)");
+                showSnackbar(t('passkey_update_failed'));
             }
         } catch (e) {
             console.error("Passkey update skipped:", e);
             if (e.name !== 'NotAllowedError') {
-                showSnackbar("Passkey更新エラー: " + e.message);
+                showSnackbar(t('passkey_update_error', {msg: e.message}));
             }
         }
     }
     
     if (updated) {
-        showSnackbar("Passkeyのデータを更新しました");
+        showSnackbar(t('passkey_updated'));
     }
 }
 
@@ -1698,22 +1698,19 @@ function generateRecoveryKit() {
             </div>
             
             <div class="warning">
-                <strong>EMERGENCY USE ONLY / 緊急用</strong><br>
-                This document contains your login credentials. Store it in a secure location (e.g., a safe).<br>
-                If you lose your Master Password, this is the ONLY way to access your data.<br>
-                <br>
-                このドキュメントにはログイン情報が含まれています。金庫などの安全な場所に保管してください。<br>
-                マスターパスワードを紛失した場合、データにアクセスする唯一の方法となります。
+                <strong>${t('recovery_kit_emergency')}</strong><br>
+                ${t('recovery_kit_warning_1')}<br>
+                ${t('recovery_kit_warning_2')}
             </div>
 
             <div class="field">
-                <span class="label">Username / ユーザー名</span>
+                <span class="label">${t('recovery_kit_username')}</span>
                 <div class="value">${username}</div>
             </div>
 
             <div class="field">
-                <span class="label">Master Password / マスターパスワード</span>
-                <div class="value write-in">Write your Master Password here / ここにマスターパスワードを記入してください</div>
+                <span class="label">${t('recovery_kit_master_password')}</span>
+                <div class="value write-in">${t('recovery_kit_write_password')}</div>
             </div>
 
             <div class="field">
@@ -1736,7 +1733,7 @@ function generateRecoveryKit() {
         win.document.write(content);
         win.document.close();
     } else {
-        showAlertDialog("Pop-up blocked. Please allow pop-ups to download the Recovery Kit.");
+        showAlertDialog(t('popup_blocked'));
     }
 }
 
@@ -1761,7 +1758,7 @@ function startTOTPUpdate(secret) {
         const result = await generateTOTP(secret);
         if (result) {
             codeEl.textContent = result.code;
-            timerEl.textContent = '更新まで: ' + result.remaining + '秒';
+            timerEl.textContent = t('totp_timer', {remaining: result.remaining});
             if (progressBar) {
                 progressBar.style.width = ((result.remaining / 30) * 100) + '%';
             }
@@ -2014,9 +2011,9 @@ async function scanQRCode(targetInputId) {
     const handleCameraError = (err) => {
         console.error(err);
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-            showAlertDialog('カメラへのアクセスが拒否されました。ブラウザの設定で許可してください。');
+            showAlertDialog(t('camera_access_denied'));
         } else {
-            showAlertDialog('カメラにアクセスできませんでした: ' + err.message);
+            showAlertDialog(t('camera_access_failed', {msg: err.message}));
         }
         stopScan();
     };
@@ -2169,27 +2166,27 @@ async function generateAIResponse(userMessage) {
     if (msg.includes('弱い') || msg.includes('weak') || msg.includes('強度') || msg.includes('strength')) {
         const weak = adviceList.filter(a => a.priority === 'high' || a.title === t('advice_strong_pass'));
         if (weak.length > 0) {
-            return `現在、${weak.length}件の重要なアカウントで強力なパスワードへの変更が推奨されています。特に<b>${weak[0].item.title}</b>のパスワードを更新することをお勧めします。`;
+            return t('aura_weak_passwords_found', {count: weak.length, title: weak[0].item.title});
         }
-        return "素晴らしいです！現在、あなたの保管庫に極端に脆弱なパスワードは見当たりません。";
+        return t('aura_no_weak_passwords');
     }
 
     // 2. 2FA / 二段階認証
     if (msg.includes('2fa') || msg.includes('認証') || msg.includes('auth')) {
         const no2fa = adviceList.filter(a => a.title === t('advice_enable_2fa'));
         if (no2fa.length > 0) {
-            return `セキュリティをさらに高めるために、<b>${no2fa[0].item.title}</b>などで2段階認証（2FA）を有効にすることをお勧めします。OTPコードをこのアプリで管理することも可能です。`;
+            return t('aura_2fa_recommendation', {title: no2fa[0].item.title});
         }
-        return "お使いの重要なサービスでは、すでに2段階認証の設定や管理が行われているようですね。安全です！";
+        return t('aura_2fa_all_set');
     }
 
     // 3. Reuse / 使い回し
     if (msg.includes('使い回し') || msg.includes('同じ') || msg.includes('reuse') || msg.includes('same')) {
         const reused = adviceList.filter(a => a.title === t('advice_unique_pass'));
         if (reused.length > 0) {
-            return `複数のサービスで同じパスワードが使われています：<b>${reused[0].desc}</b>。1つが漏洩すると芋づる式に被害が広がるため、個別のパスワードに変更しましょう。`;
+            return t('aura_reused_passwords_found', {desc: reused[0].desc});
         }
-        return "パスワードの使い回しは検出されませんでした。完璧です！";
+        return t('aura_no_reused_passwords');
     }
 
     // 4. Specific service check
@@ -2197,10 +2194,10 @@ async function generateAIResponse(userMessage) {
         if (item.deleted) continue;
         if (msg.includes(item.title.toLowerCase()) || (item.website && msg.includes(item.website.toLowerCase()))) {
             const score = await calculatePasswordStrength(item.password);
-            let response = `<b>${item.title}</b>についてですね。`;
-            if (score < 3) response += "現在、パスワードの強度が十分ではありません。";
-            if (!item.secret) response += "2段階認証が設定されておらず、セキュリティ強化の余地があります。";
-            if (score >= 3 && item.secret) response += "現在の設定は非常に安全です！引き続きこの状態を維持してください。";
+            let response = t('aura_service_check_about', {title: item.title});
+            if (score < 3) response += t('aura_service_weak_password');
+            if (!item.secret) response += t('aura_service_no_2fa');
+            if (score >= 3 && item.secret) response += t('aura_service_secure');
             return response;
         }
     }
@@ -4346,14 +4343,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const bioLocalBtn = document.createElement('m3e-button');
         bioLocalBtn.setAttribute('variant', 'outlined');
         bioLocalBtn.style.marginLeft = '8px';
-        bioLocalBtn.textContent = currentLang === 'ja' ? "生体認証 (ローカル)" : "Biometrics (Local)";
+        bioLocalBtn.textContent = t('biometric_local');
         bioLocalBtn.addEventListener('click', registerLocalBiometric);
         setupPasskeyBtn.parentNode.insertBefore(bioLocalBtn, manageBtn.nextSibling);
 
         const unregisterBioLocalBtn = document.createElement('m3e-button');
         unregisterBioLocalBtn.setAttribute('variant', 'text');
         unregisterBioLocalBtn.style.marginLeft = '8px';
-        unregisterBioLocalBtn.textContent = currentLang === 'ja' ? "削除 (ローカル)" : "Unregister (Local)";
+        unregisterBioLocalBtn.textContent = t('unregister_local');
         unregisterBioLocalBtn.addEventListener('click', unregisterLocalBiometric);
         setupPasskeyBtn.parentNode.insertBefore(unregisterBioLocalBtn, bioLocalBtn.nextSibling);
 
@@ -4851,7 +4848,7 @@ document.addEventListener('DOMContentLoaded', () => {
                      return arrayBufferToBase64(combined);
                 };
 
-                showSnackbar("Updating cloud data...");
+                showSnackbar(t('updating_cloud_data'));
                 
                 // Pause sync to avoid decryption errors during transition
                 if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
@@ -4993,7 +4990,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirmChange) return;
 
         try {
-            showSnackbar("Updating cloud data...");
+            showSnackbar(t('updating_cloud_data'));
             
             // Pause sync to avoid decryption errors during transition
             if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
