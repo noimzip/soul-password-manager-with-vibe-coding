@@ -29,6 +29,7 @@ Soul Password Manager combines military-grade encryption (AES-256-GCM) with next
 - **Login Lockout**: Temporarily locks the account after consecutive failed login attempts to prevent brute-force attacks.
 - **Session Key Management**: Cloud encryption keys are stored in `sessionStorage` and are automatically discarded when the tab or browser is closed (improving security on shared PCs).
 - **Privacy Protection**: The screen blurs when the app goes to the background to prevent shoulder surfing. Auto-learning and caching for input fields are disabled.
+- **Security Advisor (Aura)**: Security advisor that analyzes your vault and provides personalized recommendations. Ask Aura about weak passwords, 2FA status, or password reuse for instant insights.
 
 ### 🔐 Next-Gen Authentication (Passkeys)
 
@@ -51,6 +52,8 @@ Soul Password Manager combines military-grade encryption (AES-256-GCM) with next
 - **TOTP Authenticator**: Built-in support for generating 2FA codes (Time-based One-Time Passwords).
 - **Breach Detection**: Integrated **Have I Been Pwned** check.
   - **Privacy-Preserving**: Uses _k-Anonymity_ model. Only the first 5 characters of the password's SHA-1 hash are sent to the API; the full hash never leaves your device.
+- **Security Hub**: Comprehensive security dashboard that analyzes your vault for weak passwords, accounts without 2FA, and password reuse. Provides an overall security score and actionable recommendations.
+- **Security Advisor (Aura)**: Chat with Aura, your personal security consultant, to get instant answers about your vault's security. Ask questions like "Do I have weak passwords?" or "Which accounts need 2FA?" and receive personalized, context-aware advice.
 
 ### ⚙️ Settings & Data
 

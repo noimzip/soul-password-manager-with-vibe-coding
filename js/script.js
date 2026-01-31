@@ -5472,6 +5472,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateSecurityHub();
         closeGuideAndOpen('security_hub_dialog');
     });
+    document.getElementById('guide_action_advisor')?.addEventListener('click', async () => {
+        await openSecurityAdvisor();
+        document.getElementById('guide_dialog').open = false;
+    });
     document.getElementById('guide_action_data')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
     document.getElementById('guide_action_settings')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
 
