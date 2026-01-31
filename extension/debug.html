@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soul Extension - Debug Tool</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { color: #6750a4; }
+    h2 { color: #333; font-size: 18px; margin-top: 0; }
+    button {
+      background: #6750a4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    button:hover { background: #7965af; }
+    .status { margin-top: 10px; padding: 10px; border-radius: 4px; }
+    .success { background: #e8f5e9; color: #2e7d32; }
+    .error { background: #ffebee; color: #c62828; }
+    .info { background: #e3f2fd; color: #1565c0; }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    .log-entry {
+      font-family: monospace;
+      font-size: 11px;
+      padding: 4px;
+      border-bottom: 1px solid #eee;
+    }
+    .log-entry.error { color: #c62828; }
+    .log-entry.warn { color: #f57c00; }
+    .log-entry.info { color: #1565c0; }
+    #logs { max-height: 400px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔑 Soul Extension Debug Tool</h1>
+
+  <div class="section">
+    <h2>1. PWA接続テスト</h2>
+    <button onclick="testPWAConnection()">PWA接続をテスト</button>
+    <div id="pwa-status"></div>
+  </div>
+
+  <div class="section">
+    <h2>2. パスワードデータ取得テスト</h2>
+    <button onclick="testGetPasswords()">パスワード取得</button>
+    <button onclick="testDirectMessage()">直接メッセージ送信</button>
+    <div id="password-status"></div>
+    <pre id="password-data"></pre>
+  </div>
+
+  <div class="section">
+    <h2>3. ストレージ確認</h2>
+    <button onclick="checkStorage()">キャッシュ確認</button>
+    <button onclick="clearStorage()">キャッシュクリア</button>
+    <div id="storage-status"></div>
+    <pre id="storage-data"></pre>
+  </div>
+
+  <div class="section">
+    <h2>4. コンソールログ</h2>
+    <button onclick="clearLogs()">ログクリア</button>
+    <div id="logs"></div>
+  </div>
+
+  <script>
+    const logsDiv = document.getElementById('logs');
+
+    // ログをキャプチャ
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    function addLog(type, ...args) {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${args.join(' ')}`;
+      logsDiv.appendChild(entry);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      if (args[0] && args[0].includes('[Soul')) {
+        addLog('info', ...args);
+      }
+    };
+
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      addLog('error', ...args);
+    };
+
+    console.warn = function(...args) {
+      originalWarn.apply(console, args);
+      addLog('warn', ...args);
+    };
+
+    function clearLogs() {
+      logsDiv.innerHTML = '';
+    }
+
+    async function testPWAConnection() {
+      const statusDiv = document.getElementById('pwa-status');
+      statusDiv.innerHTML = '<div class="status info">テスト中...</div>';
+
+      try {
+        const tabs = await chrome.tabs.query({});
+        console.log('[Debug] Total tabs:', tabs.length);
+
+        const pwaTab = tabs.find(tab => 
+          tab.url && (
+            tab.url.includes('noimzip.github.io/soul-password-manager') ||
+            tab.url.includes('localhost:5173') ||
+            tab.url.includes('localhost:4173')
+          )
+        );
+
+        if (pwaTab) {
+          statusDiv.innerHTML = `
+            <div class="status success">
+              ✅ PWAタブが見つかりました<br>
+              <strong>タブID:</strong> ${pwaTab.id}<br>
+              <strong>URL:</strong> ${pwaTab.url}
+            </div>
+          `;
+        } else {
+          statusDiv.innerHTML = `
+            <div class="status error">
+              ❌ PWAタブが見つかりません<br>
+              Soul PWAを開いてログインしてください
+            </div>
+          `;
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `<div class="status error">❌ エラー: ${error.message}</div>`;
+        console.error('[Debug] Error:', error);
+      }
+    }
+
+    async function testGetPasswords() {
+      const statusDiv = document.getElementById('password-status');
+      const dataDiv = document.getElementById('password-data');
+      statusDiv.innerHTML = '<div class="status info">取得中...</div>';
+
+      try {
+        const tabs = await chrome.tabs.query({});
+        const pwaTab = tabs.find(tab => 
+          tab.url && (
+            tab.url.includes('noimzip.github.io/soul-password-manager') ||
+            tab.url.includes('localhost:5173') ||
+            tab.url.includes('localhost:4173')
+          )
+        );
+
+        if (!pwaTab) {
+          statusDiv.innerHTML = '<div class="status error">❌ PWAタブが見つかりません</div>';
+          return;
+        }
+
+        console.log('[Debug] Sending message to tab:', pwaTab.id);
+
+        chrome.tabs.sendMessage(pwaTab.id, {
+          action: 'soul-get-passwords',
+          source: 'debug-tool'
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            statusDiv.innerHTML = `<div class="status error">❌ エラー: ${chrome.runtime.lastError.message}</div>`;
+            console.error('[Debug] Runtime error:', chrome.runtime.lastError);
+            return;
+          }
+
+          console.log('[Debug] Response received:', response);
+
+          if (response && response.passwords) {
+            statusDiv.innerHTML = `<div class="status success">✅ ${response.passwords.length}個のパスワードを取得</div>`;
+            dataDiv.textContent = JSON.stringify(response, null, 2);
+          } else if (response && response.error) {
+            statusDiv.innerHTML = `<div class="status error">❌ エラー: ${response.error}</div>`;
+            dataDiv.textContent = JSON.stringify(response, null, 2);
+          } else {
+            statusDiv.innerHTML = '<div class="status error">❌ 不明なレスポンス</div>';
+            dataDiv.textContent = JSON.stringify(response, null, 2);
+          }
+        });
+      } catch (error) {
+        statusDiv.innerHTML = `<div class="status error">❌ エラー: ${error.message}</div>`;
+        console.error('[Debug] Error:', error);
+      }
+    }
+
+    async function testDirectMessage() {
+      const statusDiv = document.getElementById('password-status');
+      statusDiv.innerHTML = '<div class="status info">直接メッセージ送信中...</div>';
+
+      // PWAウィンドウに直接postMessage
+      window.postMessage({
+        type: 'soul-extension-request',
+        action: 'soul-get-passwords',
+        source: 'debug-direct'
+      }, '*');
+
+      // レスポンスを待つ
+      const responseHandler = (event) => {
+        if (event.data && event.data.type === 'soul-extension-response') {
+          console.log('[Debug] Direct response:', event.data);
+          statusDiv.innerHTML = `<div class="status success">✅ 直接レスポンス受信</div>`;
+          document.getElementById('password-data').textContent = JSON.stringify(event.data.data, null, 2);
+          window.removeEventListener('message', responseHandler);
+        }
+      };
+
+      window.addEventListener('message', responseHandler);
+
+      setTimeout(() => {
+        window.removeEventListener('message', responseHandler);
+      }, 3000);
+    }
+
+    async function checkStorage() {
+      const statusDiv = document.getElementById('storage-status');
+      const dataDiv = document.getElementById('storage-data');
+
+      chrome.storage.local.get(['soul_cached_passwords'], (result) => {
+        if (result.soul_cached_passwords) {
+          const passwords = JSON.parse(result.soul_cached_passwords);
+          statusDiv.innerHTML = `<div class="status success">✅ ${passwords.length}個のパスワードがキャッシュされています</div>`;
+          dataDiv.textContent = JSON.stringify(passwords, null, 2);
+        } else {
+          statusDiv.innerHTML = '<div class="status info">キャッシュが空です</div>';
+          dataDiv.textContent = '';
+        }
+      });
+    }
+
+    async function clearStorage() {
+      chrome.storage.local.remove(['soul_cached_passwords'], () => {
+        document.getElementById('storage-status').innerHTML = '<div class="status success">✅ キャッシュをクリアしました</div>';
+        document.getElementById('storage-data').textContent = '';
+      });
+    }
+  </script>
+</body>
+</html>

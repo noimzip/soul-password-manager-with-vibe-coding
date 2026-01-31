@@ -83,8 +83,12 @@ async function loadPasswordsFromStorage() {
 // Try to communicate with PWA
 async function connectToPWA() {
   try {
+    console.log('[Soul AutoFill] Attempting to connect to PWA...');
+    
     // Find Soul PWA tab
     const tabs = await chrome.tabs.query({});
+    console.log('[Soul AutoFill] Total tabs found:', tabs.length);
+    
     const pwaTab = tabs.find(tab => 
       tab.url && (
         tab.url.includes('noimzip.github.io/soul-password-manager') ||
@@ -94,14 +98,19 @@ async function connectToPWA() {
     );
     
     if (!pwaTab) {
-      console.log('[Soul AutoFill] PWA tab not found');
+      console.log('[Soul AutoFill] PWA tab not found. Looking for URLs containing:');
+      console.log('  - noimzip.github.io/soul-password-manager');
+      console.log('  - localhost:5173');
+      console.log('  - localhost:4173');
+      console.log('[Soul AutoFill] Available tabs:', tabs.map(t => t.url));
       return false;
     }
     
-    console.log('[Soul AutoFill] Found PWA tab:', pwaTab.id);
+    console.log('[Soul AutoFill] Found PWA tab:', pwaTab.id, pwaTab.url);
     
     // Send message to PWA page
     return new Promise((resolve) => {
+      console.log('[Soul AutoFill] Sending message to PWA tab...');
       chrome.tabs.sendMessage(pwaTab.id, {
         action: 'soul-get-passwords',
         source: 'extension'
@@ -111,6 +120,8 @@ async function connectToPWA() {
           resolve(false);
           return;
         }
+        
+        console.log('[Soul AutoFill] Received response:', response);
         
         if (response && response.passwords) {
           passwords = response.passwords;
@@ -122,8 +133,11 @@ async function connectToPWA() {
           
           console.log('[Soul AutoFill] Connected to PWA, loaded', passwords.length, 'passwords');
           resolve(true);
+        } else if (response && response.error) {
+          console.error('[Soul AutoFill] PWA returned error:', response.error);
+          resolve(false);
         } else {
-          console.log('[Soul AutoFill] No password data received');
+          console.log('[Soul AutoFill] No password data received. Response:', response);
           resolve(false);
         }
       });

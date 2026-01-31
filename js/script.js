@@ -5888,7 +5888,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export passwords data for browser extension (cached in extension's storage)
 async function getPasswordsForExtension() {
+    console.log('[Soul PWA] getPasswordsForExtension called');
+    console.log('[Soul PWA] appKey:', !!appKey, 'cloudKey:', !!cloudKey);
+    console.log('[Soul PWA] savedPasswords count:', savedPasswords.length);
+    
     if (!appKey && !cloudKey) {
+        console.warn('[Soul PWA] Not logged in - cannot export passwords');
         return { error: 'Not logged in' };
     }
 
@@ -5903,12 +5908,13 @@ async function getPasswordsForExtension() {
             category: pwd.category
         }));
 
+        console.log('[Soul PWA] Returning', passwordData.length, 'passwords to extension');
         return {
             passwords: passwordData,
             count: passwordData.length
         };
     } catch (error) {
-        console.error('Failed to export passwords for extension:', error);
+        console.error('[Soul PWA] Failed to export passwords for extension:', error);
         return { error: error.message };
     }
 }
@@ -5947,12 +5953,17 @@ window.addEventListener('message', async (event) => {
         let responseData = null;
         
         if (event.data.action === 'soul-get-passwords') {
+            console.log('[Soul PWA] Processing soul-get-passwords request');
             responseData = await getPasswordsForExtension();
+            console.log('[Soul PWA] Got response data:', responseData);
         } else if (event.data.action === 'soul-get-password-by-id') {
+            console.log('[Soul PWA] Processing soul-get-password-by-id request for id:', event.data.id);
             responseData = await getPasswordById(event.data.id);
+            console.log('[Soul PWA] Got password data for id:', event.data.id);
         }
         
         // Send response back to bridge
+        console.log('[Soul PWA] Sending response back to bridge:', responseData);
         window.postMessage({
             type: 'soul-extension-response',
             data: responseData
