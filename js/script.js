@@ -5938,27 +5938,30 @@ async function getPasswordById(id) {
     }
 }
 
-// Listen for messages from browser extension (chrome.tabs.sendMessage)
-if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        console.log('[Soul PWA] Received message from extension:', message);
+// Listen for messages from browser extension (via content script bridge)
+window.addEventListener('message', async (event) => {
+    // Handle extension requests via bridge
+    if (event.data && event.data.type === 'soul-extension-request') {
+        console.log('[Soul PWA] Received extension request:', event.data);
         
-        if (message.action === 'soul-get-passwords') {
-            const data = getPasswordsForExtension();
-            sendResponse(data);
-            return true;
-        } else if (message.action === 'soul-get-password-by-id') {
-            const data = getPasswordById(message.id);
-            sendResponse(data);
-            return true;
+        let responseData = null;
+        
+        if (event.data.action === 'soul-get-passwords') {
+            responseData = await getPasswordsForExtension();
+        } else if (event.data.action === 'soul-get-password-by-id') {
+            responseData = await getPasswordById(event.data.id);
         }
         
-        return false;
-    });
-}
-
-// Listen for messages from browser extension (postMessage - legacy)
-window.addEventListener('message', async (event) => {
+        // Send response back to bridge
+        window.postMessage({
+            type: 'soul-extension-response',
+            data: responseData
+        }, '*');
+        
+        return;
+    }
+    
+    // Legacy message handling for backward compatibility
     // Only accept messages from same origin or extension
     const allowedOrigins = [
         window.location.origin,

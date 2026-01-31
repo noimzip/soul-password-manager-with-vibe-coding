@@ -8,16 +8,24 @@
 
 1. **manifest.json**
    - `tabs` 権限を追加（PWAタブを検索するため）
+   - PWA用のcontent script（pwa-bridge.js）を追加
 
-2. **popup.js**
+2. **pwa-bridge.js（新規）**
+   - PWAページに注入されるcontent script
+   - 拡張機能（popup）からのメッセージを受信
+   - window.postMessageでPWAのページコンテキストに転送
+   - PWAからの応答を拡張機能に返信
+
+3. **popup.js**
    - `fetch` APIから `chrome.tabs.sendMessage` に変更
    - PWAが開いているタブを検索
-   - 見つかったタブにメッセージを直接送信
+   - 見つかったタブにメッセージを直接送信（pwa-bridge.jsが受信）
    - パスワード入力時に実際のパスワードをPWAから取得
 
-3. **script.js (PWA側)**
-   - `chrome.runtime.onMessage` リスナーを追加
-   - 拡張機能からのメッセージを直接受信できるように
+4. **script.js (PWA側)**
+   - window.addEventListener('message')で拡張機能リクエストを受信
+   - type: 'soul-extension-request' のメッセージを処理
+   - type: 'soul-extension-response' で応答を返す
 
 ## テスト手順
 
@@ -98,13 +106,17 @@ https://noimzip.github.io/soul-password-manager-with-vibe-coding/
 ### PWA側のログを確認
 
 ```
-1. Soul PWAのタブでF12を押す
+1. Soul PWAのタブでF12を押く
 2. Console タブを確認
 ```
 
 期待されるログ：
 ```
-[Soul PWA] Received message from extension: {action: "soul-get-passwords", ...}
+[Soul PWA Bridge] Bridge script loaded
+[Soul PWA Bridge] Bridge ready
+[Soul PWA Bridge] Received from extension: {action: "soul-get-passwords", ...}
+[Soul PWA] Received extension request: {type: "soul-extension-request", ...}
+[Soul PWA Bridge] Received response from PWA: {...}
 ```
 
 ## トラブルシューティング
@@ -166,19 +178,27 @@ https://noimzip.github.io/soul-password-manager-with-vibe-coding/
          │ 3. ポップアップ表示
          │
 ┌────────▼────────┐
-│ Popup           │◄──┐
-│ (popup.js)      │   │ 5. パスワードリスト返信
-└────────┬────────┘   │
+│ Popup           │
+│ (popup.js)      │
+└────────┬────────┘
          │ 4. パスワードリクエスト
          │ (chrome.tabs.sendMessage)
+         │
+┌────────▼────────┐
+│ PWA Bridge      │◄──┐
+│ (pwa-bridge.js) │   │ 7. レスポンス
+└────────┬────────┘   │
+         │ 5. リクエスト転送    │
+         │ (window.postMessage) │
          │             │
 ┌────────▼────────────▼┐
 │ Soul PWA            │
 │ (script.js)         │
-│ chrome.runtime.     │
-│ onMessage           │
+│ window.addEventListener│
+│ ('message')         │
 └─────────────────────┘
-         │ 6. ユーザーが選択
+         │ 6. パスワードリスト返信
+         │ (window.postMessage)
          │
          ▼
      自動入力
