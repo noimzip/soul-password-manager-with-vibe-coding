@@ -898,14 +898,33 @@
 
         <div class="guide-step">
             <div class="guide-icon-wrapper">
+                <m3e-icon name="auto_awesome" class="guide-step-icon"></m3e-icon>
+            </div>
+            <div class="guide-text">
+                <h3 data-i18n="guide_step4_title">4. セキュリティアドバイザー「Aura」</h3>
+                <p data-i18n="guide_step4_desc" class="text-secondary">セキュリティアドバイザー「Aura」が、あなたの保管庫を分析して個別のセキュリティアドバイスを提供します。脆弱なパスワードや2FA未設定のアカウントについて相談できます。</p>
+                <div class="guide-tip">
+                    <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
+                    <span data-i18n="guide_tip4">ヒント: Auraに「弱いパスワードは？」「2FAは設定されている？」など質問してみましょう。</span>
+                </div>
+                <div class="mt-2">
+                    <m3e-button variant="outlined" id="guide_action_advisor" style="height: 32px;">
+                        <span data-i18n="ask_aura">Auraに相談する</span>
+                    </m3e-button>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-step">
+            <div class="guide-icon-wrapper">
                 <m3e-icon name="settings_backup_restore" class="guide-step-icon"></m3e-icon>
             </div>
             <div class="guide-text">
-                <h3 data-i18n="guide_step4_title">4. データの管理</h3>
-                <p data-i18n="guide_step4_desc" class="text-secondary">データは端末内に暗号化して保存されます。機種変更時などは設定画面からJSON形式でエクスポートしてください。</p>
+                <h3 data-i18n="guide_step5_title">5. データの管理</h3>
+                <p data-i18n="guide_step5_desc" class="text-secondary">データは端末内に暗号化して保存されます。機種変更時などは設定画面からJSON形式でエクスポートしてください。</p>
                 <div class="guide-tip">
                     <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
-                    <span data-i18n="guide_tip4">ヒント: エクスポートしたファイルは、他人に見られない安全な場所に保管してください。</span>
+                    <span data-i18n="guide_tip5">ヒント: エクスポートしたファイルは、他人に見られない安全な場所に保管してください。</span>
                 </div>
                 <div class="mt-2">
                     <m3e-button variant="outlined" id="guide_action_data" style="height: 32px;">
@@ -920,11 +939,11 @@
                 <m3e-icon name="settings" class="guide-step-icon"></m3e-icon>
             </div>
             <div class="guide-text">
-                <h3 data-i18n="guide_step5_title">5. 設定とカスタマイズ</h3>
-                <p data-i18n="guide_step5_desc" class="text-secondary">言語設定、ダークモード、自動ログアウト時間などを設定画面から変更できます。</p>
+                <h3 data-i18n="guide_step6_title">6. 設定とカスタマイズ</h3>
+                <p data-i18n="guide_step6_desc" class="text-secondary">言語設定、ダークモード、自動ログアウト時間などを設定画面から変更できます。</p>
                 <div class="guide-tip">
                     <m3e-icon name="lightbulb" class="guide-tip-icon"></m3e-icon>
-                    <span data-i18n="guide_tip5">ヒント: 生体認証（Passkey）を有効にすると、素早く安全にログインできます。</span>
+                    <span data-i18n="guide_tip6">ヒント: 生体認証（Passkey）を有効にすると、素早く安全にログインできます。</span>
                 </div>
                 <div class="mt-2">
                     <m3e-button variant="outlined" id="guide_action_settings" style="height: 32px;">
@@ -936,6 +955,7 @@
       </div>
       <div class="guide-indicators">
           <span class="guide-dot active"></span>
+          <span class="guide-dot"></span>
           <span class="guide-dot"></span>
           <span class="guide-dot"></span>
           <span class="guide-dot"></span>
