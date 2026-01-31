@@ -150,6 +150,8 @@ let currentSnackbar = null;
 let selectedIconName = null;
 let selectedIconImage = null;
 let currentIconPickerTarget = null;
+let activeFilters = new Set();
+let filterMode = 'OR'; // 'OR' or 'AND'
 const PREDEFINED_ICONS = ['key', 'lock', 'public', 'account_circle', 'mail', 'shopping_cart', 'credit_card', 'account_balance', 'cloud', 'smartphone', 'computer', 'shield', 'vpn_key', 'passkey', 'fingerprint', 'face', 'description', 'notes', 'attachment', 'link', 'apps', 'more_horiz'];
 
 
@@ -161,7 +163,7 @@ function t(key, params = {}) {
     return str;
 }
 
-function updateLanguage(lang) {
+async function updateLanguage(lang) {
     if (!TRANSLATIONS[lang]) return;
     currentLang = lang;
     localStorage.setItem(CONSTANTS.STORAGE.LANGUAGE, lang);
@@ -204,7 +206,7 @@ function updateLanguage(lang) {
     });
 
     // Re-render lists to update headings/sort options
-    renderPasswordList(document.getElementById('fld').value);
+    await renderPasswordList(document.getElementById('fld')?.value);
     renderGeneratorHistory();
     
 }
@@ -2407,7 +2409,7 @@ function renderGeneratorHistory() {
     });
 }
 
-function updateSecurityHub() {
+async function updateSecurityHub() {
     if (!savedPasswords) return;
 
     securityHubLists = {
@@ -2421,13 +2423,18 @@ function updateSecurityHub() {
     let reusedCount = 0;
     const passMap = {};
 
+    // Import zxcvbn for strength calculation
+    const { default: zxcvbn } = await import('zxcvbn');
+
     savedPasswords.forEach(item => {
         if (item.deleted) return; // Skip deleted items
         // Weak check (score < 3 is considered weak/medium)
-        const strength = calculatePasswordStrength(item.password);
-        if (strength < 3) {
-            weakCount++;
-            securityHubLists.weak.push(item);
+        if (item.password && item.password !== DECRYPTION_ERROR_MARKER) {
+            const strength = zxcvbn(item.password).score;
+            if (strength < 3) {
+                weakCount++;
+                securityHubLists.weak.push(item);
+            }
         }
 
         // 2FA check
@@ -3209,7 +3216,7 @@ function hideContextMenu() {
     contextMenuItem = null;
 }
 
-function toggleSelectionMode(active) {
+async function toggleSelectionMode(active) {
     isSelectionMode = active;
     selectedIds.clear();
     
@@ -3228,7 +3235,7 @@ function toggleSelectionMode(active) {
         fab.classList.remove('hidden');
     }
     
-    renderPasswordList(document.getElementById('fld').value);
+    await renderPasswordList(document.getElementById('fld')?.value);
 }
 
 function toggleItemSelection(id) {
@@ -3335,7 +3342,10 @@ function handleDragEnd(e) {
     document.querySelectorAll('m3e-nav-menu-item').forEach(item => item.classList.remove('over'));
 }
 
-function renderPasswordList(filterText) {
+async function renderPasswordList(filterText) {
+    // Import zxcvbn for password strength checking
+    const { default: zxcvbn } = await import('zxcvbn');
+    
     const navMenu = document.querySelector('m3e-nav-menu');
     const favList = document.getElementById('favorite_list');
     const passwordList = document.getElementById('password_list');
@@ -3367,6 +3377,53 @@ function renderPasswordList(filterText) {
         if (filterText && !item.title.toLowerCase().includes(filterText.toLowerCase()) && 
             !(item.website || '').toLowerCase().includes(filterText.toLowerCase())) {
             return;
+        }
+
+        // Apply active filters
+        if (activeFilters.size > 0) {
+            const checkFilter = (filter) => {
+                if (filter === 'filter:favorites') {
+                    return item.favorite;
+                }
+                if (filter === 'filter:weak') {
+                    if (item.password && item.password !== DECRYPTION_ERROR_MARKER) {
+                        const strength = zxcvbn(item.password).score;
+                        return strength < 3;
+                    }
+                    return false;
+                }
+                if (filter === 'filter:no2fa') {
+                    return !item.secret;
+                }
+                if (filter === 'filter:reused') {
+                    if (item.password && item.password !== DECRYPTION_ERROR_MARKER) {
+                        return savedPasswords.some(p => 
+                            p.id !== item.id && !p.deleted && 
+                            p.password && p.password !== DECRYPTION_ERROR_MARKER &&
+                            p.password === item.password
+                        );
+                    }
+                    return false;
+                }
+                if (filter.startsWith('category:')) {
+                    const category = filter.substring(9);
+                    return item.category === category;
+                }
+                return false;
+            };
+
+            const filterArray = Array.from(activeFilters);
+            let passesFilter = false;
+            
+            if (filterMode === 'AND') {
+                // AND mode: item must match ALL filters
+                passesFilter = filterArray.every(filter => checkFilter(filter));
+            } else {
+                // OR mode: item must match ANY filter
+                passesFilter = filterArray.some(filter => checkFilter(filter));
+            }
+
+            if (!passesFilter) return;
         }
 
         visibleCount++;
@@ -3421,6 +3478,125 @@ function renderPasswordList(filterText) {
             dataList.appendChild(opt);
         });
     }
+
+    // Render filter chips after password list is updated
+    renderFilterChips();
+}
+
+function renderFilterChips() {
+    const chipSet = document.getElementById('filter_chip_set');
+    if (!chipSet) return;
+
+    chipSet.innerHTML = '';
+
+    // Add AND/OR toggle button if there are active filters
+    if (activeFilters.size > 1) {
+        const toggleChip = document.createElement('m3e-filter-chip');
+        toggleChip.style.fontWeight = 'bold';
+        toggleChip.style.borderWidth = '2px';
+        toggleChip.selected = true;
+        toggleChip.title = filterMode === 'AND' ? 'すべての条件を満たすアイテムのみ表示' : 'いずれかの条件を満たすアイテムを表示';
+        
+        const icon = document.createElement('m3e-icon');
+        icon.setAttribute('name', filterMode === 'AND' ? 'done_all' : 'done');
+        icon.setAttribute('slot', 'icon');
+        toggleChip.appendChild(icon);
+        
+        const label = document.createTextNode(filterMode);
+        toggleChip.appendChild(label);
+        
+        toggleChip.addEventListener('click', async () => {
+            filterMode = filterMode === 'OR' ? 'AND' : 'OR';
+            await renderPasswordList();
+            renderFilterChips();
+        });
+        
+        chipSet.appendChild(toggleChip);
+        
+        // Add a divider for visual separation
+        const dividerChip = document.createElement('span');
+        dividerChip.style.display = 'inline-block';
+        dividerChip.style.width = '1px';
+        dividerChip.style.height = '24px';
+        dividerChip.style.backgroundColor = 'var(--md-sys-color-outline-variant)';
+        dividerChip.style.margin = '0 8px';
+        dividerChip.style.verticalAlign = 'middle';
+        chipSet.appendChild(dividerChip);
+    }
+
+    // Collect all unique categories
+    const categories = new Set();
+    savedPasswords.forEach(item => {
+        if (!item.deleted && item.category) {
+            categories.add(item.category);
+        }
+    });
+
+    // Special filters
+    const specialFilters = [
+        { id: 'filter:favorites', label: t('favorites') || 'お気に入り', icon: 'star' },
+        { id: 'filter:weak', label: t('weak_passwords') || '脆弱なパスワード', icon: 'warning' },
+        { id: 'filter:no2fa', label: t('no_2fa') || '2FA未設定', icon: 'shield' },
+        { id: 'filter:reused', label: t('reused_passwords') || '再利用パスワード', icon: 'content_copy' }
+    ];
+
+    // Add special filter chips
+    specialFilters.forEach(filter => {
+        const chip = document.createElement('m3e-filter-chip');
+        chip.dataset.filterId = filter.id;
+        
+        // Add icon
+        const icon = document.createElement('m3e-icon');
+        icon.setAttribute('name', filter.icon);
+        icon.setAttribute('slot', 'icon');
+        chip.appendChild(icon);
+        
+        // Add label
+        const label = document.createTextNode(filter.label);
+        chip.appendChild(label);
+        
+        if (activeFilters.has(filter.id)) {
+            chip.selected = true;
+        }
+
+        chip.addEventListener('click', async () => {
+            if (activeFilters.has(filter.id)) {
+                activeFilters.delete(filter.id);
+                chip.selected = false;
+            } else {
+                activeFilters.add(filter.id);
+                chip.selected = true;
+            }
+            await renderPasswordList();
+        });
+
+        chipSet.appendChild(chip);
+    });
+
+    // Add category filter chips
+    Array.from(categories).sort().forEach(category => {
+        const chip = document.createElement('m3e-filter-chip');
+        chip.textContent = category;
+        chip.dataset.filterId = `category:${category}`;
+        
+        if (activeFilters.has(`category:${category}`)) {
+            chip.selected = true;
+        }
+
+        chip.addEventListener('click', async () => {
+            const filterId = `category:${category}`;
+            if (activeFilters.has(filterId)) {
+                activeFilters.delete(filterId);
+                chip.selected = false;
+            } else {
+                activeFilters.add(filterId);
+                chip.selected = true;
+            }
+            await renderPasswordList();
+        });
+
+        chipSet.appendChild(chip);
+    });
 }
 
 function addPasswordToUI(item, index, listGroup) {
@@ -4293,8 +4469,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Security Hub
-    document.getElementById('open_security_hub_btn')?.addEventListener('click', () => {
-        updateSecurityHub();
+    document.getElementById('open_security_hub_btn')?.addEventListener('click', async () => {
+        await updateSecurityHub();
     });
 
     document.getElementById('hub_weak_item')?.addEventListener('click', () => renderSecurityList('weak'));
@@ -5295,8 +5471,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('guide_action_add')?.addEventListener('click', () => closeGuideAndOpen('add_password_dialog'));
     document.getElementById('guide_action_gen')?.addEventListener('click', () => closeGuideAndOpen('pass_maker'));
-    document.getElementById('guide_action_hub')?.addEventListener('click', () => {
-        updateSecurityHub();
+    document.getElementById('guide_action_hub')?.addEventListener('click', async () => {
+        await updateSecurityHub();
         closeGuideAndOpen('security_hub_dialog');
     });
     document.getElementById('guide_action_data')?.addEventListener('click', () => closeGuideAndOpen('settings_dialog'));
