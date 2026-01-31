@@ -86,8 +86,35 @@ Soul Password Manager combines military-grade encryption (AES-256-GCM) with next
 Soul is a developing project. For transparency, we openly disclose current technical limitations and dependencies.
 
 - **Dependency on Google Infrastructure**: Uses Google Firebase for backend (Auth/DB). While data is E2EE protected and unreadable by Google, service availability depends on Google's infrastructure.
-- **Native Integration Limits**: Built on Web technologies (PWA), it currently does not support system-level autofill (e.g., keyboard password suggestions) on iOS or Android.
+- **Native Integration Limits**: Built on Web technologies (PWA). For full autofill functionality, we provide a browser extension (Chrome/Edge/Firefox) that enables password autofill on login forms.
 - **Development Stage (Beta)**: Currently an "Unstable" version. Frequent feature additions or changes may occur, and long-term stable support like commercial products is not guaranteed.
+
+## Browser Extension
+
+Soul Password Manager offers a browser extension for Chrome, Edge, and Firefox that provides seamless password autofill functionality.
+
+### Features
+
+- 🔍 **Automatic Form Detection**: Detects login forms automatically
+- 🔑 **One-Click Autofill**: Click the Soul icon in password fields to fill credentials
+- 🎯 **Smart Matching**: Automatically suggests relevant passwords based on the current URL
+- 💾 **Offline Cache**: Caches password list for fast access
+- 🔒 **Secure Communication**: Safe communication with Soul PWA
+
+### Installation
+
+1. **Chrome / Edge**: 
+   - Open `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the `extension` folder
+
+2. **Firefox**:
+   - Open `about:debugging#/runtime/this-firefox`
+   - Click "Load Temporary Add-on"
+   - Select `manifest.json` from the `extension` folder
+
+For detailed instructions, see [extension/README.md](../extension/README.md)
 
 ## Technical Overview
 

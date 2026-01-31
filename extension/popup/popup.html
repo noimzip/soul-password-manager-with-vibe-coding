@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soul Password Manager</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="logo">
+        <span class="logo-icon">🔑</span>
+        <span class="logo-text">Soul</span>
+      </div>
+      <div class="current-url" id="currentUrl">Loading...</div>
+    </header>
+
+    <div id="loadingState" class="state-container">
+      <div class="spinner"></div>
+      <p>Connecting to Soul Password Manager...</p>
+    </div>
+
+    <div id="errorState" class="state-container hidden">
+      <div class="error-icon">⚠️</div>
+      <p id="errorMessage">Unable to connect</p>
+      <button id="openPwaBtn" class="btn btn-primary">Open Soul Password Manager</button>
+    </div>
+
+    <div id="passwordList" class="password-list hidden">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search passwords..." autocomplete="off">
+      </div>
+      <div id="passwordItems" class="password-items">
+        <!-- Password items will be inserted here -->
+      </div>
+      <div class="no-results hidden" id="noResults">
+        <p>No matching passwords found</p>
+      </div>
+    </div>
+
+    <footer class="popup-footer">
+      <button id="refreshBtn" class="btn btn-text">
+        <span>🔄</span>
+        Refresh
+      </button>
+      <button id="settingsBtn" class="btn btn-text">
+        <span>⚙️</span>
+        Settings
+      </button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

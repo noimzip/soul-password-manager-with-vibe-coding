@@ -5883,3 +5883,143 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', updateLayout);
     updateLayout(); // Initial check
 });
+
+// --- Browser Extension Integration ---
+
+// Export passwords data for browser extension (cached in extension's storage)
+async function getPasswordsForExtension() {
+    if (!appKey && !cloudKey) {
+        return { error: 'Not logged in' };
+    }
+
+    try {
+        // Return list of passwords without sensitive data for search/match
+        const passwordData = savedPasswords.map(pwd => ({
+            id: pwd.id,
+            title: pwd.title,
+            username: pwd.username,
+            url: pwd.url,
+            icon: pwd.icon,
+            category: pwd.category
+        }));
+
+        return {
+            passwords: passwordData,
+            count: passwordData.length
+        };
+    } catch (error) {
+        console.error('Failed to export passwords for extension:', error);
+        return { error: error.message };
+    }
+}
+
+// Get full password data (including password field) for specific entry
+async function getPasswordById(id) {
+    if (!appKey && !cloudKey) {
+        return { error: 'Not logged in' };
+    }
+
+    try {
+        const pwd = savedPasswords.find(p => p.id === id);
+        if (!pwd) {
+            return { error: 'Password not found' };
+        }
+
+        return {
+            id: pwd.id,
+            title: pwd.title,
+            username: pwd.username,
+            password: pwd.password,
+            url: pwd.url
+        };
+    } catch (error) {
+        console.error('Failed to get password:', error);
+        return { error: error.message };
+    }
+}
+
+// Listen for messages from browser extension (chrome.tabs.sendMessage)
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        console.log('[Soul PWA] Received message from extension:', message);
+        
+        if (message.action === 'soul-get-passwords') {
+            const data = getPasswordsForExtension();
+            sendResponse(data);
+            return true;
+        } else if (message.action === 'soul-get-password-by-id') {
+            const data = getPasswordById(message.id);
+            sendResponse(data);
+            return true;
+        }
+        
+        return false;
+    });
+}
+
+// Listen for messages from browser extension (postMessage - legacy)
+window.addEventListener('message', async (event) => {
+    // Only accept messages from same origin or extension
+    const allowedOrigins = [
+        window.location.origin,
+        'chrome-extension://' // Chrome extension
+    ];
+
+    const isAllowedOrigin = allowedOrigins.some(origin => 
+        event.origin.startsWith(origin)
+    );
+
+    if (!isAllowedOrigin) {
+        return;
+    }
+
+    const { action, data } = event.data;
+
+    if (action === 'soul-get-passwords') {
+        const result = await getPasswordsForExtension();
+        event.source.postMessage({
+            action: 'soul-passwords-response',
+            data: result
+        }, event.origin);
+    } else if (action === 'soul-get-password-by-id') {
+        const result = await getPasswordById(data.id);
+        event.source.postMessage({
+            action: 'soul-password-response',
+            data: result
+        }, event.origin);
+    }
+});
+
+// Export passwords to extension's storage when passwords change
+async function syncPasswordsToExtension() {
+    try {
+        const passwordData = await getPasswordsForExtension();
+        
+        // Try to communicate with extension via chrome.runtime
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            chrome.runtime.sendMessage(
+                'YOUR_EXTENSION_ID', // Will be replaced after extension is installed
+                {
+                    action: 'updatePasswords',
+                    passwords: passwordData.passwords
+                },
+                (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.log('Extension not installed or not responding');
+                    } else {
+                        console.log('Passwords synced to extension');
+                    }
+                }
+            );
+        }
+    } catch (error) {
+        console.error('Failed to sync passwords to extension:', error);
+    }
+}
+
+// Sync passwords when they change
+const originalSavePasswordsData = savePasswordsData;
+window.savePasswordsData = async function() {
+    await originalSavePasswordsData();
+    await syncPasswordsToExtension();
+};
