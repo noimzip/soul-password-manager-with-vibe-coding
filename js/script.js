@@ -3534,10 +3534,10 @@ function renderFilterChips() {
 
     // Special filters
     const specialFilters = [
-        { id: 'filter:favorites', label: t('favorites') || 'お気に入り', icon: 'star' },
-        { id: 'filter:weak', label: t('weak_passwords') || '脆弱なパスワード', icon: 'warning' },
-        { id: 'filter:no2fa', label: t('no_2fa') || '2FA未設定', icon: 'shield' },
-        { id: 'filter:reused', label: t('reused_passwords') || '再利用パスワード', icon: 'content_copy' }
+        { id: 'filter:favorites', label: t('favorites'), icon: 'star' },
+        { id: 'filter:weak', label: t('weak_passwords'), icon: 'warning' },
+        { id: 'filter:no2fa', label: t('no_2fa'), icon: 'shield' },
+        { id: 'filter:reused', label: t('reused_passwords'), icon: 'content_copy' }
     ];
 
     // Add special filter chips

@@ -2,6 +2,9 @@ export const TRANSLATIONS = {
     ja: {
         app_title: "Soul Password Manager",
         favorites: "お気に入り",
+        weak_passwords: "脆弱なパスワード",
+        no_2fa: "2FA未設定",
+        reused_passwords: "再利用パスワード",
         passwords: "パスワード",
         login_info: "ログイン情報",
         notes: "メモ",
@@ -271,6 +274,9 @@ export const TRANSLATIONS = {
     en: {
         app_title: "Soul Password Manager",
         favorites: "Favorites",
+        weak_passwords: "Weak Passwords",
+        no_2fa: "No 2FA",
+        reused_passwords: "Reused Passwords",
         passwords: "Passwords",
         login_info: "Login Info",
         notes: "Notes",
@@ -540,6 +546,9 @@ export const TRANSLATIONS = {
     zh: {
         app_title: "Soul Password Manager",
         favorites: "收藏夹",
+        weak_passwords: "弱密码",
+        no_2fa: "未设置 2FA",
+        reused_passwords: "重复密码",
         passwords: "密码",
         login_info: "登录信息",
         notes: "备注",
@@ -786,6 +795,9 @@ export const TRANSLATIONS = {
     ko: {
         app_title: "Soul Password Manager",
         favorites: "즐겨찾기",
+        weak_passwords: "취약한 비밀번호",
+        no_2fa: "2FA 미설정",
+        reused_passwords: "재사용 비밀번호",
         passwords: "비밀번호",
         login_info: "로그인 정보",
         notes: "메모",
@@ -1032,6 +1044,9 @@ export const TRANSLATIONS = {
     de: {
         app_title: "Soul Password Manager",
         favorites: "Favoriten",
+        weak_passwords: "Schwache Passwörter",
+        no_2fa: "Kein 2FA",
+        reused_passwords: "Wiederverwendete Passwörter",
         passwords: "Passwörter",
         login_info: "Anmeldedaten",
         notes: "Notizen",
@@ -1278,6 +1293,9 @@ export const TRANSLATIONS = {
     fr: {
         app_title: "Soul Password Manager",
         favorites: "Favoris",
+        weak_passwords: "Mots de passe faibles",
+        no_2fa: "Pas de 2FA",
+        reused_passwords: "Mots de passe réutilisés",
         passwords: "Mots de passe",
         login_info: "Infos de connexion",
         notes: "Notes",
