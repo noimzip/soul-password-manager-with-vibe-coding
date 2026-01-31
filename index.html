@@ -545,13 +545,21 @@
       </div>
 
       <div id="detail_form_actions" slot="actions">
-        <m3e-button variant="text" id="delete_password_btn" class="color-error">
+        <m3e-button variant="text" id="delete_password_btn" class="color-error hidden">
           <m3e-icon slot="icon" name="delete"></m3e-icon>
           <span data-i18n="delete">削除</span>
         </m3e-button>
-        <m3e-button variant="filled" id="update_password_btn">
+        <m3e-button variant="filled" id="update_password_btn" class="hidden">
           <m3e-icon slot="icon" name="save"></m3e-icon>
           <span data-i18n="update">更新</span>
+        </m3e-button>
+        <m3e-button variant="outlined" id="cancel_edit_btn" class="hidden">
+          <m3e-icon slot="icon" name="close"></m3e-icon>
+          <span data-i18n="cancel">キャンセル</span>
+        </m3e-button>
+        <m3e-button variant="filled" id="edit_password_btn">
+          <m3e-icon slot="icon" name="edit"></m3e-icon>
+          <span data-i18n="edit">編集</span>
         </m3e-button>
         <m3e-button autofocus id="close_detail_btn">
           <span data-i18n="close">とじる</span>

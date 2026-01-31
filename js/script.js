@@ -20,6 +20,7 @@ import "@m3e/loading-indicator/dist/index.min.js";
 import "@m3e/checkbox/dist/index.min.js";
 import "@m3e/select/dist/index.min.js";
 import "@m3e/option/dist/index.min.js";
+import "@m3e/chips/dist/index.min.js";
 
 import { TRANSLATIONS } from './translations.js';
 import DOMPurify from 'dompurify';
@@ -141,6 +142,7 @@ let selectedIds = new Set();
 let deviceCheckUnsubscribe = null;
 let newDeviceListenerUnsubscribe = null;
 let isTwoPaneMode = false;
+let isDetailEditMode = false;
 let firestoreSyncUnsubscribe = null;
 let contextMenuItem = null;
 let searchDebounceTimer = null;
@@ -2670,6 +2672,7 @@ function updateLayout() {
 
 function closeDetailView() {
     currentDetailId = null;
+    isDetailEditMode = false;
     stopTOTPUpdate();
     
     // Clear sensitive fields
@@ -2686,7 +2689,7 @@ function closeDetailView() {
 }
 
 function hasDetailChanges() {
-    if (!currentDetailId) return false;
+    if (!currentDetailId || !isDetailEditMode) return false;
     const item = savedPasswords.find(p => p.id === currentDetailId);
     if (!item) return false;
 
@@ -2777,8 +2780,59 @@ function checkDetailChanges() {
     if (updateBtn) updateBtn.disabled = !hasDetailChanges();
 }
 
-function openDetailDialog(item) {
+function setDetailEditMode(enabled) {
+    isDetailEditMode = enabled;
+    const inputs = [
+        'detail_pass_title', 'detail_pass_category', 'detail_pass_website',
+        'detail_pass_username', 'detail_pass_value', 'detail_pass_secret'
+    ];
+    
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.readOnly = !enabled;
+            // Material 3 components might need parent form-field adjustment if they support it
+            // but standard HTML readOnly should work for the input itself.
+        }
+    });
+
+    // Toggle Buttons
+    const editBtn = document.getElementById('edit_password_btn');
+    const updateBtn = document.getElementById('update_password_btn');
+    const cancelBtn = document.getElementById('cancel_edit_btn');
+    const deleteBtn = document.getElementById('delete_password_btn');
+    const closeBtn = document.getElementById('close_detail_btn');
+
+    if (editBtn) editBtn.classList.toggle('hidden', enabled);
+    if (updateBtn) updateBtn.classList.toggle('hidden', !enabled);
+    if (cancelBtn) cancelBtn.classList.toggle('hidden', !enabled);
+    if (deleteBtn) deleteBtn.classList.toggle('hidden', !enabled);
+    if (closeBtn) closeBtn.classList.toggle('hidden', enabled && !isTwoPaneMode);
+
+    // Hide edit-related actions in view mode
+    const editActions = [
+        'open_detail_icon_picker_btn', 'upload_detail_icon_btn',
+        'fill_default_username_btn', 'generate_detail_pass_btn', 'scan_qr_detail_btn'
+    ];
+    editActions.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', !enabled);
+    });
+
+    // Hide TOTP secret field container in view mode
+    const secretFieldContainer = document.getElementById('detail_pass_secret')?.closest('.flex-row-center-gap');
+    if (secretFieldContainer) {
+        secretFieldContainer.classList.toggle('hidden', !enabled);
+    }
+
+    if (!enabled) {
+        checkDetailChanges();
+    }
+}
+
+async function openDetailDialog(item) {
     currentDetailId = item.id;
+    setDetailEditMode(false);
     const dialog = document.getElementById('detail_password_dialog');
     
     document.getElementById('detail_pass_title').value = item.title || '';
@@ -3466,6 +3520,13 @@ function addPasswordToUI(item, index, listGroup) {
 
         label.appendChild(titleSpan);
 
+        if (item.username) {
+            const usernameSpan = document.createElement('span');
+            usernameSpan.className = 'nav-item-username';
+            usernameSpan.textContent = item.username;
+            label.appendChild(usernameSpan);
+        }
+
         if (item.category) {
             const catSpan = document.createElement('span');
             catSpan.className = 'category-badge';
@@ -3495,6 +3556,7 @@ function addPasswordToUI(item, index, listGroup) {
             e.stopPropagation();
             item.favorite = !item.favorite;
             await saveOrUpdateItem(item);
+            showSnackbar(item.favorite ? t('fav_added') : t('fav_removed'));
         });
         trailingContainer.appendChild(favBtn);
 
@@ -4490,9 +4552,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await saveOrUpdateItem(newItem);
                 
-                if (!isTwoPaneMode) {
-                    document.getElementById('detail_password_dialog').open = false;
-                }
+                setDetailEditMode(false);
                 showSnackbar(t('pass_updated'));
             }
         }
@@ -4671,16 +4731,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('detail_pass_favorite_btn')?.addEventListener('click', function() {
+    document.getElementById('detail_pass_favorite_btn')?.addEventListener('click', async function() {
         const icon = this.querySelector('m3e-icon');
-        if (icon.name === 'star') {
-            icon.name = 'star_border';
-            icon.style.color = '';
+        const isFav = icon.name === 'star';
+        
+        if (isDetailEditMode) {
+            // In Edit Mode, just toggle UI and let "Update" handle the save
+            if (isFav) {
+                icon.name = 'star_border';
+                icon.style.color = '';
+            } else {
+                icon.name = 'star';
+                icon.style.color = '#fbc02d';
+            }
+            checkDetailChanges();
         } else {
-            icon.name = 'star';
-            icon.style.color = '#fbc02d';
+            // In View Mode, save immediately
+            const item = savedPasswords.find(p => p.id === currentDetailId);
+            if (item) {
+                item.favorite = !isFav;
+                await saveOrUpdateItem(item);
+                
+                // Update UI
+                icon.name = item.favorite ? 'star' : 'star_border';
+                icon.style.color = item.favorite ? '#fbc02d' : '';
+                
+                showSnackbar(item.favorite ? t('fav_added') : t('fav_removed'));
+            }
         }
-        checkDetailChanges();
     });
 
     // Initial Generator Run
@@ -5612,6 +5690,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('detail_pass_icon_upload')?.addEventListener('change', (e) => {
         handleIconUpload(e, 'detail');
+    });
+
+    document.getElementById('edit_password_btn')?.addEventListener('click', () => {
+        setDetailEditMode(true);
+    });
+
+    document.getElementById('cancel_edit_btn')?.addEventListener('click', () => {
+        const item = savedPasswords.find(p => p.id === currentDetailId);
+        if (item) {
+            openDetailDialog(item); // Re-populate and exit edit mode
+        }
     });
 
     window.addEventListener('resize', updateLayout);
