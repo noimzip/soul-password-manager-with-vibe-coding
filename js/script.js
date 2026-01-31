@@ -1,29 +1,52 @@
-// Import Firebase SDKs
+// Import Firebase SDKs - Core only, Firestore loaded dynamically
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, reauthenticateWithPopup } from "firebase/auth";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence, setDoc, getDocs, getDoc } from "firebase/firestore";
 
-// Import UI Components
+// Import Critical UI Components (needed for initial render)
 import "@m3e/icon/dist/index.min.js";
 import "@m3e/button/dist/index.min.js";
-import "@m3e/fab/dist/index.min.js";
-import "@m3e/fab-menu/dist/index.min.js";
-import "@m3e/dialog/dist/index.min.js";
 import "@m3e/icon-button/dist/index.min.js";
-import "@m3e/slider/dist/index.min.js";
-import "@m3e/form-field/dist/index.min.js";
 import "@m3e/app-bar/dist/index.min.js";
-import "@m3e/nav-menu/dist/index.min.js";
-import "@m3e/divider/dist/index.min.js";
-import "@m3e/heading/dist/index.min.js";
 import "@m3e/loading-indicator/dist/index.min.js";
-import "@m3e/checkbox/dist/index.min.js";
-import "@m3e/select/dist/index.min.js";
-import "@m3e/option/dist/index.min.js";
-import "@m3e/chips/dist/index.min.js";
+
+// Deferred UI Components (loaded after initial render)
+const loadDeferredUIComponents = () => Promise.all([
+    import("@m3e/fab/dist/index.min.js"),
+    import("@m3e/fab-menu/dist/index.min.js"),
+    import("@m3e/dialog/dist/index.min.js"),
+    import("@m3e/slider/dist/index.min.js"),
+    import("@m3e/form-field/dist/index.min.js"),
+    import("@m3e/nav-menu/dist/index.min.js"),
+    import("@m3e/divider/dist/index.min.js"),
+    import("@m3e/heading/dist/index.min.js"),
+    import("@m3e/checkbox/dist/index.min.js"),
+    import("@m3e/select/dist/index.min.js"),
+    import("@m3e/option/dist/index.min.js"),
+    import("@m3e/chips/dist/index.min.js"),
+]);
 
 import { TRANSLATIONS } from './translations.js';
-import DOMPurify from 'dompurify';
+
+// --- Lazy loaded modules ---
+let DOMPurify = null;
+let firestoreModule = null;
+
+// Load DOMPurify on demand
+async function getDOMPurify() {
+    if (!DOMPurify) {
+        const module = await import('dompurify');
+        DOMPurify = module.default;
+    }
+    return DOMPurify;
+}
+
+// Load Firestore on demand
+async function getFirestoreModule() {
+    if (!firestoreModule) {
+        firestoreModule = await import("firebase/firestore");
+    }
+    return firestoreModule;
+}
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
@@ -35,10 +58,31 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APPID
 };
 
-// Initialize Firebase
+// Initialize Firebase (Auth only - Firestore loaded on demand)
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// Firestore instance (lazy initialized)
+let db = null;
+let firestorePersistenceEnabled = false;
+
+async function getDb() {
+    if (!db) {
+        const { getFirestore, enableIndexedDbPersistence } = await getFirestoreModule();
+        db = getFirestore(app);
+        
+        // Enable offline persistence only once
+        if (!firestorePersistenceEnabled) {
+            firestorePersistenceEnabled = true;
+            enableIndexedDbPersistence(db).catch((err) => {
+                if (err.code == 'failed-precondition' || err.code == 'unimplemented') {
+                    console.warn("Firestore persistence could not be enabled:", err.code);
+                }
+            });
+        }
+    }
+    return db;
+}
 
 // --- Log Capture ---
 const appLogs = [];
@@ -64,13 +108,6 @@ if (import.meta.env.DEV) {
     const originalError = console.error; console.error = (...args) => { captureLog('ERROR', args); originalError.apply(console, args); };
     window.addEventListener('error', (e) => captureLog('UNCAUGHT', [e.message, e.filename, e.lineno]));
 }
-
-// Enable Offline Persistence
-enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition' || err.code == 'unimplemented') {
-        console.warn("Firestore persistence could not be enabled:", err.code);
-    }
-});
 
 // --- Constants & State ---
 const CONSTANTS = Object.freeze({
@@ -435,7 +472,9 @@ async function decryptWithKek(jsonStr, key) {
 async function getHybridKeys(uid, overrideKey = null) {
     if (hybridKeyPair) return hybridKeyPair;
 
-    const userConfigRef = doc(db, "user_config", uid);
+    const { doc, getDoc, setDoc } = await getFirestoreModule();
+    const database = await getDb();
+    const userConfigRef = doc(database, "user_config", uid);
     const snap = await getDoc(userConfigRef);
     
     // KEK derived from Master Password (cloudKey)
@@ -836,7 +875,9 @@ async function promptForMasterPassword(returnPassword = false, checkUser = null,
             // 1. Cloud Verification (Priority if logged in)
             if (userToCheck) {
                 try {
-                    const userConfigRef = doc(db, "user_config", userToCheck.uid);
+                    const { doc, getDoc } = await getFirestoreModule();
+                    const database = await getDb();
+                    const userConfigRef = doc(database, "user_config", userToCheck.uid);
                     const snap = await getDoc(userConfigRef);
                     if (snap.exists() && snap.data().verifier) {
                         const cloudVerifier = snap.data().verifier;
@@ -2107,7 +2148,7 @@ async function openSecurityAdvisor() {
     }, 1200);
 }
 
-function sendAdvisorMessage(text, role = 'aura') {
+async function sendAdvisorMessage(text, role = 'aura') {
     const chatHistory = document.getElementById('advisor_chat_history');
     if (!chatHistory) return;
 
@@ -2115,6 +2156,7 @@ function sendAdvisorMessage(text, role = 'aura') {
     row.className = role === 'user' ? 'user-message-row' : 'advisor-avatar-row';
 
     if (role === 'user') {
+        const DOMPurify = await getDOMPurify();
         row.innerHTML = `<div class="user-bubble">${DOMPurify.sanitize(text)}</div>`;
     } else {
         row.innerHTML = `
@@ -2985,7 +3027,9 @@ async function renderDeviceList() {
     list.innerHTML = '<div style="padding:10px; text-align:center;"><m3e-loading-indicator></m3e-loading-indicator></div>';
     
     try {
-        const q = query(collection(db, "devices"), where("uid", "==", currentUser.uid));
+        const { query, collection, where, getDocs } = await getFirestoreModule();
+        const database = await getDb();
+        const q = query(collection(database, "devices"), where("uid", "==", currentUser.uid));
         const querySnapshot = await getDocs(q);
         
         list.innerHTML = '';
@@ -3953,9 +3997,13 @@ async function saveOrUpdateItem(item) {
             };
 
             if (item.id) {
-                await updateDoc(doc(db, "passwords", item.id), dataToSave);
+                const { doc, updateDoc, collection, addDoc } = await getFirestoreModule();
+                const database = await getDb();
+                await updateDoc(doc(database, "passwords", item.id), dataToSave);
             } else {
-                await addDoc(collection(db, "passwords"), dataToSave);
+                const { collection, addDoc } = await getFirestoreModule();
+                const database = await getDb();
+                await addDoc(collection(database, "passwords"), dataToSave);
             }
             // Note: onSnapshot will handle the UI update
         } catch (e) {
@@ -4072,7 +4120,9 @@ async function permanentDeleteItem(id) {
 
     if (currentUser) {
         try {
-            await deleteDoc(doc(db, "passwords", id));
+            const { doc, deleteDoc } = await getFirestoreModule();
+            const database = await getDb();
+            await deleteDoc(doc(database, "passwords", id));
         } catch (e) {
             console.error("Error deleting from cloud:", e);
             showSnackbar(t('delete_fail'));
@@ -4202,8 +4252,10 @@ async function registerLoginDevice(user) {
     };
 
     try {
+        const { doc, setDoc, onSnapshot } = await getFirestoreModule();
+        const database = await getDb();
         // Store in 'devices' collection with a composite key to allow querying by user
-        const deviceRef = doc(db, "devices", `${user.uid}_${deviceId}`);
+        const deviceRef = doc(database, "devices", `${user.uid}_${deviceId}`);
         await setDoc(deviceRef, deviceData, { merge: true });
 
         // Listen for revocation (deletion of this document)
@@ -4226,9 +4278,11 @@ async function registerLoginDevice(user) {
     }
 }
 
-function initFirestoreSync(user) {
+async function initFirestoreSync(user) {
     // console.log("Sync initialized for user:", user.uid); // Removed for production privacy
-    const q = query(collection(db, "passwords"), where("uid", "==", user.uid));
+    const { query, collection, where, onSnapshot } = await getFirestoreModule();
+    const database = await getDb();
+    const q = query(collection(database, "passwords"), where("uid", "==", user.uid));
     
     if (firestoreSyncUnsubscribe) firestoreSyncUnsubscribe();
     firestoreSyncUnsubscribe = onSnapshot(q, async (querySnapshot) => {
@@ -4423,6 +4477,9 @@ onAuthStateChanged(auth, async (user) => {
 // --- Event Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Load deferred UI components in the background
+    loadDeferredUIComponents().catch(err => console.warn('Failed to load deferred UI:', err));
+    
     // Anti-DevTools: Disable Context Menu & Shortcuts
     document.addEventListener('contextmenu', (e) => {
         if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -5692,6 +5749,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (Array.isArray(importedData)) {
                         showConfirmDialog(t('import_confirm', {count: importedData.length})).then(async res => {
                             if (res) {
+                                const DOMPurify = await getDOMPurify();
                                 for (const item of importedData) {
                                     // Sanitize imported data using DOMPurify to prevent XSS
                                     // Note: Password and Secret are NOT sanitized to preserve exact values
