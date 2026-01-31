@@ -99,6 +99,20 @@ body.loaded #loading_overlay {
     transition: background-color 0.3s ease;
 }
 
+.filter-chip-container {
+    padding: 8px 16px;
+    background-color: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.filter-chip-container m3e-chip-set {
+    display: inline-flex;
+    gap: 8px;
+}
+
 .header-title-wrapper {
     display: flex;
     align-items: center;
@@ -797,16 +811,27 @@ m3e-nav-menu-item.selected {
 
 .nav-item-label-container {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     width: 100%;
     overflow: hidden;
 }
 
 .nav-item-title {
-    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    width: 100%;
+}
+
+.nav-item-username {
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    margin-top: 2px;
 }
 
 .category-badge {
