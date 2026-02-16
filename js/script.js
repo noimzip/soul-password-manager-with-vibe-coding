@@ -194,7 +194,7 @@ const TRANSLATIONS = {
         regenerate: "再生成",
         gen_history: "生成履歴",
         clear_history: "履歴をクリア",
-        close: "とじる",
+        close: "閉じる",
         pass_check_title: "パスワードの安全性チェック",
         enter_pass: "パスワードを入力してください",
         add_pass_title: "新しいパスワードを追加",
@@ -5994,6 +5994,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guide
     document.getElementById('open_guide_btn')?.addEventListener('click', () => {
         document.getElementById('guide_dialog').open = true;
+    });
+
+    document.getElementById('guide_next_btn')?.addEventListener('click', () => {
+        document.getElementById('guide_dialog').open = false;
+    });
+
+    document.getElementById('guide_finish_btn')?.addEventListener('click', () => {
+        document.getElementById('guide_dialog').open = false;
     });
 
     // Guide Actions
