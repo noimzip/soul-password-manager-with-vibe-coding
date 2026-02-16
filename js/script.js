@@ -1875,6 +1875,7 @@ function updateLanguage(lang) {
     if (!TRANSLATIONS[lang]) return;
     currentLang = lang;
     localStorage.setItem(CONSTANTS.STORAGE.LANGUAGE, lang);
+    document.documentElement.lang = lang;
 
     // Update static elements
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -1896,8 +1897,7 @@ function updateLanguage(lang) {
         }
     });
     
-    // Update labels (custom attribute for m3e-form-field if needed, or just rely on inner text if structure allows)
-    // m3e-form-field label is an attribute
+    // Update labels
     document.querySelectorAll('m3e-form-field[data-i18n-label]').forEach(el => {
         const key = el.getAttribute('data-i18n-label');
         if (TRANSLATIONS[lang][key]) {
@@ -1916,7 +1916,6 @@ function updateLanguage(lang) {
     // Re-render lists to update headings/sort options
     renderPasswordList(document.getElementById('fld').value);
     renderGeneratorHistory();
-    
 }
 
 // --- Crypto Utilities (Local Mode - High Security) ---
@@ -4273,7 +4272,7 @@ function renderPasswordList(filterText) {
         if (item.favorite) {
             addPasswordToUI(item, index, favList);
         } else {
-            const cat = item.category || 'Passwords';
+            const cat = item.category || t('passwords');
             if (!categories[cat]) {
                 categories[cat] = [];
             }
@@ -5526,10 +5525,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Language Setting
-    document.getElementById('setting_language')?.addEventListener('change', (e) => {
-        updateLanguage(e.target.value);
-        showSnackbar(t('settings_saved'));
-    });
+    const langSelectElement = document.getElementById('setting_language');
+    if (langSelectElement) {
+        const handleLangChange = (e) => {
+            const newLang = e.target.value || e.detail?.value;
+            if (newLang && newLang !== currentLang) {
+                updateLanguage(newLang);
+                showSnackbar(t('settings_saved'));
+            }
+        };
+        langSelectElement.addEventListener('change', handleLangChange);
+        langSelectElement.addEventListener('input', handleLangChange);
+    }
 
     // Default Username Setting
     document.getElementById('save_username_btn')?.addEventListener('click', () => {
@@ -6330,11 +6337,16 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (navLang.startsWith('fr')) browserLang = 'fr';
     else if (navLang.startsWith('it')) browserLang = 'it';
 
-    updateLanguage(savedLang || browserLang);
-    const langSelect = document.getElementById('setting_language');
-    if (langSelect) {
-        langSelect.value = currentLang;
-    }
+    updateLanguage(savedLang || browserLang).then(() => {
+        const langSelect = document.getElementById('setting_language');
+        if (langSelect) {
+            langSelect.value = currentLang;
+            // Also try setting it after a short delay to ensure component is upgraded
+            setTimeout(() => {
+                if (langSelect.value !== currentLang) langSelect.value = currentLang;
+            }, 500);
+        }
+    });
 
     // Set App Version
     const versionEl = document.getElementById('setting_app_version');
