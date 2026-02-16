@@ -247,6 +247,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "【Passkey (推奨)】\nWebAuthn標準のPasskeyを使用します。対応デバイスではマスターパスワードを認証器内に安全に保存(largeBlob)し、非常に高いセキュリティを実現します。\n\n【生体認証 (ローカル)】\nこのデバイス専用の認証です。マスターパスワードはアプリ内に保存され、生体認証で保護されます。Passkeyの同期やポップアップを避けたい場合に便利です。",
         scan_qr_guide: "QRコードを枠内に合わせてください",
         qr_not_found: "QRコードが見つかりませんでした",
+        click_to_copy: "クリックでコピー",
         
         // JS Strings
         weak: "弱いパスワード",
@@ -573,6 +574,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         scan_qr_guide: "Align QR code within the frame",
         qr_not_found: "QR code not found",
+        click_to_copy: "Click to copy",
 
         // JS Strings
         weak: "Weak Password",
@@ -897,6 +899,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         scan_qr_guide: "将二维码对准框内",
         qr_not_found: "未找到二维码",
+        click_to_copy: "点击复制",
         
         // JS Strings
         weak: "弱密码",
@@ -1224,6 +1227,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         scan_qr_guide: "QR 코드를 프레임 안에 맞춰주세요",
         qr_not_found: "QR 코드를 찾을 수 없습니다",
+        click_to_copy: "클릭하여 복사",
         
         // JS Strings
         weak: "약한 비밀번호",
@@ -1548,6 +1552,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         scan_qr_guide: "QR-Code im Rahmen ausrichten",
         qr_not_found: "QR-Code nicht gefunden",
+        click_to_copy: "Zum Kopieren klicken",
         
         // JS Strings
         weak: "Schwaches Passwort",
@@ -1876,6 +1881,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         scan_qr_guide: "Alignez le code QR dans le cadre",
         qr_not_found: "Code QR introuvable",
+        click_to_copy: "Cliquer pour copier",
         
         // JS Strings
         weak: "Mot de passe faible",
@@ -2142,6 +2148,7 @@ export const TRANSLATIONS = {
         passkey_help_content: "[Passkey (Recommended)]\nUses standard WebAuthn Passkeys. On supported devices, it securely stores the master password within the authenticator (largeBlob), offering very high security.\n\n[Biometrics (Local)]\nDevice-specific authentication. The master password is stored locally in the app and protected by biometrics. Useful to avoid Passkey sync or popups.",
         scan_qr_guide: "Allinea il codice QR all'interno della cornice",
         qr_not_found: "Codice QR non trovato",
+        click_to_copy: "Clicca per copiare",
         
         // JS Strings
         weak: "Password Debole",
